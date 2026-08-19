@@ -1,5 +1,7 @@
 # Epires — Minimalist Cybernetic AI-Research Operating System
 
+> 🇷🇺 Русская версия доступна в [README_RU.md](README_RU.md).
+
 <div align="center">
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -9,93 +11,105 @@
 [![Parallel Web 1.3.0](https://img.shields.io/badge/Parallel_Web-1.3.0-orange.svg)](https://github.com/parallel-web)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Детерминированная операционная среда для автономных научных исследований, квант-моделирования и машинного обучения.**  
-*Построена на базе 10 000-мерного VSA-гиперграфа (наследие HSME), попперовской фальсификации, доказательной шкале E0–E5 и протоколе Главного Исследователя (Lead-PI).*
+**A deterministic operating environment for autonomous scientific research, quantitative modeling, and machine learning.**  
+*Built upon a 10,000-dimensional VSA Hypergraph (HSME heritage), Popperian falsification, E0–E5 evidence scaling, and the Lead Principal Investigator (Lead-PI) protocol.*
 
 </div>
 
 ---
 
-## 📑 Оглавление
+## 📑 Table of Contents
 
-1. [Введение: Проблема современных AutoResearch систем](#1-введение-проблема-современных-autoresearch-систем)
-2. [Быстрый старт (Quickstart)](#2-быстрый-старт-quickstart)
-3. [Архитектура системы](#3-архитектура-системы)
-4. [Методология ресерча и эпистемология](#4-методология-ресерча-и-эпистемология)
-   - [4.1 VSA-Гиперграф: Эксперимент как гипервектор](#41-vsa-гиперграф-эксперимент-как-гипервектор)
-   - [4.2 Принцип «Hypothesis-First» и попперовская фальсификация](#42-принцип-hypothesis-first-и-попперовская-фальсификация)
-   - [4.3 Доказательная шкала E0–E5 и доверие источникам [V]/[P]/[D]](#43-доказательная-шкала-e0e5-и-доверие-источникам-vpd)
-   - [4.4 Каскадная фальсификация DAG (Cascading Invalidation)](#44-каскадная-фальсификация-dag-cascading-invalidation)
-   - [4.5 Разделение ролей: Lead-PI против субагентов-кодеров](#45-разделение-ролей-lead-pi-против-субагентов-кодеров)
-   - [4.6 Автоматический трейсинг (Zero-Overhead Tracing)](#46-автоматический-трейсинг-zero-overhead-tracing)
-   - [4.7 Антихрупкий онбординг (Dual-Mode Onboarding)](#47-антихрупкий-онбординг-dual-mode-onboarding)
-5. [Инструментарий и CLI Справочник](#5-инструментарий-и-cli-справочник)
-6. [Model Context Protocol (MCP) Спецификация](#6-model-context-protocol-mcp-спецификация)
-7. [Тестирование и математический фаззинг](#7-тестирование-и-математический-фаззинг)
+1. [Introduction: The Autoresearch Dilemma](#1-introduction-the-autoresearch-dilemma)
+2. [Quickstart & Installation](#2-quickstart--installation)
+3. [Architecture Overview](#3-architecture-overview)
+4. [Research Methodology & Epistemology](#4-research-methodology--epistemology)
+   - [4.1 VSA Hypergraph: Experiments as Hypervectors](#41-vsa-hypergraph-experiments-as-hypervectors)
+   - [4.2 Hypothesis-First & Popperian Falsification](#42-hypothesis-first--popperian-falsification)
+   - [4.3 Evidence Scaling (E0–E5) and Source Provenance [V]/[P]/[D]](#43-evidence-scaling-e0e5-and-source-provenance-vpd)
+   - [4.4 Cascading DAG Invalidation](#44-cascading-dag-invalidation)
+   - [4.5 Separation of Concerns: Lead-PI vs Coder Subagents](#45-separation-of-concerns-lead-pi-vs-coder-subagents)
+   - [4.6 Zero-Overhead Epistemic Tracing](#46-zero-overhead-epistemic-tracing)
+   - [4.7 Antifragile Dual-Mode Onboarding](#47-antifragile-dual-mode-onboarding)
+5. [CLI Command Reference](#5-cli-command-reference)
+6. [Model Context Protocol (MCP) Specification](#6-model-context-protocol-mcp-specification)
+7. [Testing & Mathematical Fuzzing](#7-testing--mathematical-fuzzing)
+8. [License](#8-license)
 
 ---
 
-## 1. Введение: Проблема современных AutoResearch систем
+## 1. Introduction: The Autoresearch Dilemma
 
-Большинство существующих инструментов автоматизации исследований (Weco CLI, AIDE, Karpathy AutoResearch) оперируют в парадигме **«жадного линейного поиска»**:
+Current automated research and coding agents (e.g., vanilla Autoresearch, AIDE, naive Keep-or-Revert loops) typically follow a **greedy linear search loop**:
 
 $$\text{Code} \xrightarrow{\text{LLM Mutation}} \text{New Code} \xrightarrow{\text{Eval Script}} \text{Scalar Metric} \xrightarrow{\text{Keep or Revert}} \dots$$
 
-Для сложных междисциплинарных и квант-задач такой подход оказывается неэффективным по фундаментальным причинам:
-1. **Иллюзия прогресса и Reward Hacking**: агент переобучается на локальные валидационные окна, читерит на сидах и разрушает архитектуру ради мимолетного улучшения скаляра.
-2. **Отсутствие причинно-следственной памяти**: система не понимает, *почему* изменение сработало, и теряет знание об отрицательных результатах.
-3. **Плоский перебор вместо графа знаний**: эксперименты изолированы друг от друга, а зависимости между предпосылками не отслеживаются.
+When applied to serious scientific ML, quantitative finance, or complex systems, this paradigm suffers from critical failure modes:
+1. **Reward Hacking & Horizon Truncation**: Agents overfit to local validation windows, cherry-pick random seeds, and introduce technical debt to maximize a transient scalar.
+2. **Loss of Epistemic Memory**: The system fails to understand *why* a mutation succeeded and discards the valuable search-space reduction provided by negative results.
+3. **Flat Code Mutations vs Causal DAGs**: Experiments are treated as isolated text diffs rather than a structured causal graph of interconnected theoretical hypotheses.
 
-**Epires** решает эту проблему через синтез **векторно-символической памяти (VSA)**, **графа причинно-следственных связей (DAG)** и **строгого протокола доказательности**.
+**Epires** addresses this by providing an end-to-end cybernetic research operating system integrating **Vector Symbolic Architectures (VSA)**, **Hypothesis Dependency DAGs**, and **automated epistemic gatekeeping**.
 
 ---
 
-## 2. Быстрый старт (Quickstart)
+## 2. Quickstart & Installation
 
-### Установка зависимостей
+### Installation via pip
 
-Проект управляется через менеджер пакетов `uv`:
+Install directly from source:
 
 ```bash
 git clone https://github.com/himera/epires.git
 cd epires
-uv sync --extra dev
+
+# Standard installation
+pip install -e .
+
+# Development & fuzz-testing dependencies
+pip install -e ".[dev]"
 ```
 
-### Инициализация рабочего пространства
+*(For `uv` users, you can run: `uv sync --extra dev`)*
 
-Команда `init` выполняет неразрушающую настройку в текущем репозитории (как чистом, так и существующем):
+---
 
-```bash
-# Разведывательный скан репозитория (детекция стека, домена и метрик)
-uv run python main.py recon
+### Workspace Initialization
 
-# Инициализация лаборатории (создание .epires/, .gitignore, config.json, MCP конфига)
-uv run python main.py init
-```
-
-### Запуск серверов
+The `init` command performs a safe, non-destructive setup in the current directory (supporting both clean repositories and existing codebases):
 
 ```bash
-# 1. Запуск MCP-сервера для AI-агентов (Cursor / Claude Code / Antigravity):
-uv run python main.py mcp
+# 1. Reconnaissance scan (detects domain, existing docs, stack, and metrics)
+python main.py recon
 
-# 2. Запуск REST API сервера для интеграций и дашбордов:
-uv run python main.py serve --port 8000
-
-# 3. Просмотр статуса лаборатории и Mermaid DAG в терминале:
-uv run python main.py status
-uv run python main.py dag
+# 2. Initialize research environment (.epires/, .gitignore, config.json, MCP config)
+python main.py init
 ```
 
 ---
 
-## 3. Архитектура системы
+### Running the Services
+
+```bash
+# 1. Start the MCP Server for AI coding assistants (Cursor, Claude Code, Antigravity):
+python main.py mcp
+
+# 2. Start the FastAPI REST API Server:
+python main.py serve --port 8000
+
+# 3. Inspect research status and generate Mermaid DAG in the terminal:
+python main.py status
+python main.py dag
+```
+
+---
+
+## 3. Architecture Overview
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        LLM-Агент / Субагенты                           │
-│   (Управляется когнитивным протоколом: skills/epires_researcher)       │
+│                        LLM Agent / Subagents                           │
+│   (Governed by Cognitive Protocol: skills/epires_researcher)           │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ Model Context Protocol (MCP 2.0)
                                     ▼
@@ -104,7 +118,7 @@ uv run python main.py dag
 │                                                                        │
 │  ┌──────────────────────┐  ┌────────────────────┐  ┌────────────────┐  │
 │  │   VSA Hypergraph     │  │ Cascading DAG      │  │ Auto-Tracer    │  │
-│  │   (10,000-D Engine)  │  │ (Falsification)    │  │ (SQLite+MD)    │  │
+│  │   (10,000-D Engine)  │  │ (Falsification)    │  │ (SQLite + MD)  │  │
 │  └──────────┬───────────┘  └─────────┬──────────┘  └────────┬───────┘  │
 └─────────────┼────────────────────────┼──────────────────────┼──────────┘
               │                        │                      │
@@ -115,81 +129,79 @@ uv run python main.py dag
 └─────────────────────────┘  └───────────────────┘  └───────────────────┘
 ```
 
-### Структура модулей:
+### Module Layout:
 
-* `epires_core/vsa.py` — 10 000-мерная векторно-символическая алгебра ($\text{bind}$, $\text{permute}$, $\text{bundle}$, косинусная близость).
-* `epires_core/hypergraph.py` — преобразование n-арных гиперребер гипотез и экспериментов в компактные гипервекторы.
-* `epires_core/store.py` — встраиваемое SQLite хранилище, векторный индекс и алгоритм каскадной инвалидации DAG.
-* `epires_core/tracer.py` — автоматический трейсер для регистрации решений в SQLite и генерации `docs/agent-trace.md`.
-* `epires_core/config.py` — динамический конфиг проекта (`.epires/config.json`) и эвристический сканер топологии.
-* `tools/web_search.py` — многопоточный поисковый шлюз на базе SDK `parallel-web 1.3.0`.
-* `server/app.py` — FastAPI REST API (эндпоинты CRUD, Gap Analysis, Mermaid экспорт).
-* `server/mcp_server.py` — FastMCP сервер инструментов для AI-агентов.
-* `skills/epires_researcher/SKILL.md` — протокол Главного Исследователя (Lead-PI).
+* `epires_core/vsa.py` — 10,000-dimensional Bipolar VSA algebra ($\text{bind}$, $\text{permute}$, $\text{bundle}$, cosine similarity).
+* `epires_core/hypergraph.py` — Vectorization of n-ary experimental hyperedges into hypervectors.
+* `epires_core/store.py` — Embedded SQLite storage, vector index, and cascading DAG invalidation.
+* `epires_core/tracer.py` — Automated logger syncing actions between SQLite and `docs/agent-trace.md`.
+* `epires_core/config.py` — Dynamic project configuration (`.epires/config.json`) and heuristic topology scanner.
+* `tools/web_search.py` — Multi-query literature and web search gateway powered by `parallel-web 1.3.0` SDK.
+* `server/app.py` — FastAPI REST API (CRUD, Gap Analysis, Mermaid export).
+* `server/mcp_server.py` — FastMCP server exposing 8 research tools to AI agents.
+* `skills/epires_researcher/SKILL.md` — Cognitive protocol and operational standard for the Lead Principal Investigator.
 
 ---
 
-## 4. Методология ресерча и эпистемология
-
-Методология Epires переносит математическую строгость естественных наук в мир автономных AI-агентов.
+## 4. Research Methodology & Epistemology
 
 ```
 [Web/ArXiv Search] ➔ [VSA Gap Discovery] ➔ [Register Hypothesis] ➔ [Contract Delegation] ➔ [Zero-Trust Audit] ➔ [Log Evidence & DAG Update] ➔ [AutoTrace]
 ```
 
-### 4.1 VSA-Гиперграф: Эксперимент как гипервектор
+### 4.1 VSA Hypergraph: Experiments as Hypervectors
 
-В традиционных графовых базах данных (Neo4j, RDF) сложный эксперимент распадается на изолированные триплеты $(A \to B)$, теряя целостность контекста. В Epires используется концепция **Hypergraph-as-a-Vector** (наследие HSME и архитектур Kanerva SDM):
+In traditional graph databases (Neo4j, RDF), an experiment is fractured across dozens of binary relations $(A \to B)$, losing structural integrity. Epires implements **Hypergraph-as-a-Vector** (inspired by HSME and Kanerva SDM memory architectures):
 
-Каждый эксперимент или гипотеза кодируется как **гиперребро** в единый биполярный вектор $\mathbf{v} \in \{-1, +1\}^D$ размерности $D = 10\,000$ с помощью трех фундаментальных операций:
+Each hypothesis or experiment is encoded as an **n-ary hyperedge** into a single bipolar hypervector $\mathbf{v} \in \{-1, +1\}^D$ ($D = 10,000$) using three algebraic operations:
 
-1. **Bind ($\otimes$)**: Поэлементное умножение, связывающее роль со значением:
+1. **Bind ($\otimes$)**: Element-wise multiplication binding roles to values:
    $$\mathbf{v}_{\text{bound}} = \mathbf{v}_{\text{role}} \odot \mathbf{v}_{\text{value}}$$
-   *Свойство*: операция обратима $\mathbf{v}_{\text{bound}} \odot \mathbf{v}_{\text{role}} = \mathbf{v}_{\text{value}}$ и ортогональна обоим операндам.
-2. **Permute ($\sigma$)**: Циклический сдвиг вектора для кодирования направленности связей:
+   *Property*: Reversible ($\mathbf{v}_{\text{bound}} \odot \mathbf{v}_{\text{role}} = \mathbf{v}_{\text{value}}$) and quasi-orthogonal to both inputs.
+2. **Permute ($\sigma$)**: Cyclic vector permutation encoding relation directionality:
    $$\mathbf{v}_{\text{edge}} = \mathbf{v}_{\text{src}} \odot \mathbf{v}_{\text{rel}} \odot \sigma^k(\mathbf{v}_{\text{tgt}})$$
-3. **Bundle ($\oplus$)**: Мажоритарное голосование для упаковки множества сущностей в один вектор:
+3. **Bundle ($\oplus$)**: Majority voting bundling multiple entities and relations into a single composite representation:
    $$\mathbf{v}_{\text{hyperedge}} = \text{sign}\left(\sum_{i=1}^M \mathbf{v}_i\right)$$
 
-#### Gap Analysis (Поиск белых пятен)
-Через операцию проекции в гипервекторном пространстве Epires вычисляет неисследованные декартовы комбинации параметров:
+#### Automated Gap Discovery
+Using algebraic projections in the hypervector space, Epires computes unstudied Cartesian product combinations across dimensions:
 $$\text{Gaps} = \left(\mathcal{M}_{\text{models}} \times \mathcal{F}_{\text{features}} \times \mathcal{R}_{\text{regimes}}\right) \setminus \mathcal{E}_{\text{tested}}$$
 
 ---
 
-### 4.2 Принцип «Hypothesis-First» и попперовская фальсификация
+### 4.2 Hypothesis-First & Popperian Falsification
 
-> *«Никакого кода без априорного обоснования и численного критерия фальсификации.»*
+> *«No execution without prior mathematical justification and numerical falsification criteria.»*
 
-Каждая запись в реестре гипотез создается **до** написания первой строчки кода и обязана содержать:
-1. **Априорный механизм (A Priori Justification)**: Математическое или физическое доказательство права гипотезы на существование.
-2. **Критерий фальсификации Поппера (Falsification Criteria)**: Точное условие, при котором гипотеза признается **опровергнутой** (например, *«RMSLE на OOT фолде > 1.85»* или *«SDM recall уступает kNN по метрике hit@1»*).
+Every hypothesis must be registered in the VSA Hypergraph **before** code implementation begins, specifying:
+1. **A Priori Mechanism**: The theoretical rationale establishing why the hypothesis should hold.
+2. **Popperian Falsification Criteria**: Explicit numerical boundaries that refute the claim (e.g., *«RMSLE on OOT validation exceeds 1.85»* or *«SDM hit@1 precision < exact kNN by > 5%»*).
 
 ---
 
-### 4.3 Доказательная шкала E0–E5 и доверие источникам [V]/[P]/[D]
+### 4.3 Evidence Scaling (E0–E5) and Source Provenance [V]/[P]/[D]
 
-В Epires запрещено использовать субъективные оценки вроде «код работает». Любое утверждение обязано иметь верифицированный уровень доказанности:
+Claims must never exceed their verified evidence level:
 
-| Уровень | Определение | Критерий прохождения |
+| Level | Definition | Acceptance Gate |
 | :---: | :--- | :--- |
-| **E0** | Speculative Hypothesis | Априорное теоретическое обоснование в VSA-графе |
-| **E1** | Mechanism Implemented | Реализация написана и покрыта модульными тестами |
-| **E2** | Descriptive / Local Replay | Локальный смоук-тест / детерминированный прогон пройден |
-| **E3** | Targeted Evaluation | Статистически значимый выигрыш на валидационном сете |
-| **E4** | Out-of-Time / CI95 | Кросс-валидация на OOT-фолдах с 95% Bootstrap доверительным интервалом |
-| **E5** | Hidden Test / Production | Финальное подтверждение на скрытом тесте или в проде |
+| **E0** | Speculative Hypothesis | A priori mechanism registered in VSA DAG |
+| **E1** | Mechanism Implemented | Implementation complete with unit test coverage |
+| **E2** | Descriptive / Local Replay | Deterministic local replay or smoke test pass |
+| **E3** | Targeted Evaluation | Statistically significant gain on validation holdout |
+| **E4** | Out-of-Time / CI95 | Repeated OOT cross-validation with 95% Bootstrap CI strictly superior |
+| **E5** | Hidden Test / Production | Final verification on unobserved test partition or live production |
 
-#### Метки достоверности источников:
-* `[V]` (Primary Verified) — первоисточник/код/артефакт проверен лично агентом;
-* `[P]` (Secondary Reported) — вторичный источник (сторонний отчет/лидерборд);
-* `[D]` (Inferred) — логический вывод из смежных данных.
+#### Source Provenance Tags:
+* `[V]` (Primary Verified) — Directly verified primary artifact or source code;
+* `[P]` (Secondary Reported) — External report or leaderboard submission;
+* `[D]` (Inferred) — Deduced from adjacent literature.
 
 ---
 
-### 4.4 Каскадная фальсификация DAG (Cascading Invalidation)
+### 4.4 Cascading DAG Invalidation
 
-Гипотезы организованы в направленный ациклический граф зависимостей (`DEPENDS_ON`). 
+Hypotheses are structured in a directed acyclic graph (`DEPENDS_ON`).
 
 ```mermaid
 graph TD
@@ -211,33 +223,33 @@ graph TD
   H1 -.->|BLOCKS| H3
 ```
 
-Если эксперимент опровергает базовую гипотезу $H_1$, алгоритм `_cascade_falsification` автоматически находит всех ее потомков ($H_2, H_3$) через транзитивное замыкание и переводит их в статус **`BLOCKED`**. Система физически запрещает агентам тратить вычислительные ресурсы на бесперспективные ветви.
+When an empirical experiment falsifies parent hypothesis $H_1$, the `_cascade_falsification` engine computes the transitive closure and automatically transitions all downstream dependent hypotheses ($H_2, H_3$) into **`BLOCKED`** status, preventing wasted compute on invalid research branches.
 
 ---
 
-### 4.5 Разделение ролей: Lead-PI против субагентов-кодеров
+### 4.5 Separation of Concerns: Lead-PI vs Coder Subagents
 
-> **The Iron Law**: **Главный агент (Lead-PI) НЕ ПИШЕТ код реализации сам.**
+> **The Iron Law**: **The Lead Principal Investigator (Lead-PI) NEVER WRITES implementation code.**
 
-* **Lead-PI**: выполняет поиск литературы через `parallel-web`, генерирует гипотезы, формулирует ТЗ субагентам, проводит аудит diff'ов и артефактов, выносит вердикты E0–E5.
-* **Субагенты-кодеры**: получают изолированный контракт:
+* **Lead-PI**: Conducts parallel literature research via `parallel-web`, formulates hypotheses, issues structured task contracts, audits diffs/artifacts, and logs evidence verdicts.
+* **Coder Subagents**: Execute strictly defined task contracts:
   ```markdown
   ### Subagent Task Contract: [H-TAG]
-  - IN Scope: [Конкретный файл и оптимизируемая функция]
-  - OUT of Scope: [Что запрещено изменять]
-  - Goal / Metric Target: [Численная цель, например delta < -0.005]
-  - Definition of Done: [Тесты зеленые, артефакты сохранены в artifacts/]
+  - IN Scope: [Target file, class, or function]
+  - OUT of Scope: [Forbidden files or boundaries]
+  - Goal / Metric Target: [Quantitative threshold, e.g., delta < -0.005 RMSLE]
+  - Definition of Done: [Passing test suite, artifacts written to artifacts/]
   - Output Constraint: "Write digest to artifacts/<name>.md and return <= 10-line summary"
   ```
-* **Zero-Trust Summary Rule**: Lead-PI никогда не верит текстовым отчетам субагентов. Проводятся обязательная ручная сверка git diff и аудит сохраненных хешей артефактов.
+* **Zero-Trust Summary Rule**: The Lead-PI never trusts subagent summaries at face value. Code diffs, log outputs, and hash manifests must be inspected directly.
 
 ---
 
-### 4.6 Автоматический трейсинг (Zero-Overhead Tracing)
+### 4.6 Zero-Overhead Epistemic Tracing
 
-Модуль `AutoTracer` избавляет агента от рутинного форматирования логов. При каждом вызове инструмента MCP или эндпоинта FastAPI событие мгновенно фиксируется:
-1. В реляционной таблице `traces` в SQLite;
-2. В структурированной Markdown-таблице `docs/agent-trace.md` с точным временем UTC, ролью агента и текущим Git-хешем:
+The `AutoTracer` module eliminates manual logging overhead. Every tool call and state transition is captured synchronously:
+1. In the SQLite `traces` table;
+2. In the GitHub-flavored Markdown table at `docs/agent-trace.md` with UTC timestamps, agent roles, and Git commit hashes:
 
 | Timestamp (UTC) | Role | Action | H-Tag | Commit | Summary |
 |---|---|---|---|---|---|
@@ -246,72 +258,72 @@ graph TD
 
 ---
 
-### 4.7 Антихрупкий онбординг (Dual-Mode Onboarding)
+### 4.7 Antifragile Dual-Mode Onboarding
 
-Движок адаптируется под любую структуру репозитория:
+Epires adapts seamlessly to any repository structure:
 
-* **Mode A: Чистый репозиторий**: опрос пользователя о домене и метрике $\to$ генерация чистых директорий $\to$ создание `.epires/config.json` $\to$ готовность к первой гипотезе $H_0$.
-* **Mode B: Существующий репозиторий**: эвристический скан $\to$ выявление существующих документов и логов $\to$ диалог с пользователем $\to$ сохранение утвержденных путей в конфиг $\to$ векторизация старых гипотез в VSA-граф.
+* **Mode A: Clean / Empty Repositories**: Interactive user interview $\to$ directory scaffolding $\to$ `.epires/config.json` initialization $\to$ ready for baseline hypothesis $H_0$.
+* **Mode B: Existing / Custom Repositories**: Topology reconnaissance $\to$ dynamic path & metric inference $\to$ interactive user alignment $\to$ path binding in `.epires/config.json` and `AGENTS.md` $\to$ historical hypothesis ingestion.
 
 ---
 
-## 5. Инструментарий и CLI Справочник
+## 5. CLI Command Reference
 
 ```bash
-# Инициализация лаборатории в текущей папке
-epires init [--dir <path>] [--force]
+# Initialize Epires in the current repository
+python main.py init [--dir <path>] [--force]
 
-# Разведывательный аудит кодовой базы и домена
-epires recon [--dir <path>]
+# Perform reconnaissance scan on repository topology and domain
+python main.py recon [--dir <path>]
 
-# Запуск MCP сервера для агентов
-epires mcp
+# Start the MCP stdio server for AI agents
+python main.py mcp
 
-# Запуск REST API сервера
-epires serve [--host 127.0.0.1] [--port 8000]
+# Start the FastAPI REST API server
+python main.py serve [--host 127.0.0.1] [--port 8000]
 
-# Вывод статуса гипотез в терминал
-epires status
+# Display hypothesis status in terminal
+python main.py status
 
-# Вывод Mermaid DAG графа
-epires dag
+# Output Mermaid DAG diagram
+python main.py dag
 ```
 
 ---
 
-## 6. Model Context Protocol (MCP) Спецификация
+## 6. Model Context Protocol (MCP) Specification
 
-Epires предоставляет AI-агентам 8 детерминированных инструментов:
+Epires exposes 8 deterministic MCP tools:
 
-| MCP Tool | Описание |
+| MCP Tool | Description |
 | :--- | :--- |
-| `epires_register_hypothesis` | Регистрация гипотезы с априорным механизмом и критерием фальсификации |
-| `epires_log_evidence` | Фиксация эмпирических метрик, CI95 и триггера каскадной фальсификации |
-| `epires_query_graph` | Запрос состояния гипотез по ID или статусу (CONFIRMED, FALSIFIED, BLOCKED) |
-| `epires_find_gaps` | Поиск белых пятен и неисследованных комбинаций в гиперграфе |
-| `epires_associative_search` | Микросекундный ассоциативный поиск по VSA-гиперграфу через косинусную близость |
-| `epires_parallel_web_search`| Многопоточный поиск литературы и статей через SDK `parallel-web 1.3.0` |
-| `epires_export_mermaid_dag` | Экспорт графа знаний в формат Mermaid Markdown |
-| `epires_record_trace` | Запись авторской рефлексии и решений в операционный трейс |
+| `epires_register_hypothesis` | Registers a hypothesis with a priori proof and falsification criteria |
+| `epires_log_evidence` | Logs empirical evidence, metrics, CI95, and cascades falsification |
+| `epires_query_graph` | Queries hypotheses by ID or status (CONFIRMED, FALSIFIED, BLOCKED) |
+| `epires_find_gaps` | Discovers untested combinations and research white spots |
+| `epires_associative_search` | Sub-millisecond VSA cosine similarity search across the research graph |
+| `epires_parallel_web_search`| Multi-query parallel literature/web search via SDK `parallel-web 1.3.0` |
+| `epires_export_mermaid_dag` | Exports knowledge graph DAG into Mermaid Markdown |
+| `epires_record_trace` | Logs strategic rationale into SQLite traces and Markdown ledger |
 
 ---
 
-## 7. Тестирование и математический фаззинг
+## 7. Testing & Mathematical Fuzzing
 
-Движок полностью верифицирован с помощью **property-based фаззинг-тестирования** на базе библиотеки `hypothesis`:
+The engine is verified using **property-based fuzz testing** powered by `hypothesis`:
 
 ```bash
-uv run pytest -v
+pytest -v
 ============================== 19 passed in 3.10s ==============================
 ```
 
-### Проверяемые математические инварианты:
-* **VSA Reversibility**: $\text{bind}(\text{bind}(\mathbf{a}, \mathbf{b}), \mathbf{b}) \equiv \mathbf{a}$ для любых случайных векторов.
-* **DAG Cascading Invariant**: фальсификация случайного узла блокирует строго всех и только его транзитивных потомков (проверено через независимый BFS-обход).
-* **Store Unicode & Float Resilience**: устойчивость базы данных к произвольным Unicode-символам, экстремальным значениям метрик ($\pm 10^8$) и пустым тегам.
+### Verified Mathematical Invariants:
+* **VSA Invertibility**: $\text{bind}(\text{bind}(\mathbf{a}, \mathbf{b}), \mathbf{b}) \equiv \mathbf{a}$ across arbitrary hypervectors.
+* **DAG Cascading Invariant**: Falsifying any node in a random DAG strictly blocks **all and only** its transitive descendants (verified against BFS ground truth).
+* **Storage Resilience**: Complete tolerance to arbitrary Unicode payloads, extreme floats ($\pm 10^8$), and empty tags.
 
 ---
 
-## 8. Лицензия
+## 8. License
 
-Проект распространяется под лицензией MIT. Подробности в файле [LICENSE](LICENSE).
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.
