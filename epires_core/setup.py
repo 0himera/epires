@@ -120,20 +120,27 @@ def setup_claude_code(project_dir: str | Path = ".") -> List[Path]:
 
 
 def setup_opencode(project_dir: str | Path = ".") -> List[Path]:
-    """Configures OpenCode opencode.json and skills."""
+    """Configures OpenCode V1 and OpenCode 2 (opencode2) configs and skills."""
     root = Path(project_dir).resolve()
     configured = []
 
-    # 1. opencode.json (Supports both OpenCode 'mcp' and standard 'mcpServers')
-    opencode_file = root / "opencode.json"
-    def update_opencode(d: Dict[str, Any]):
+    def update_opencode_schema(d: Dict[str, Any]):
         if "$schema" not in d:
             d["$schema"] = "https://opencode.ai/config.json"
         
-        # Native OpenCode MCP syntax
+        # OpenCode V1 syntax
         if "mcp" not in d or not isinstance(d["mcp"], dict):
             d["mcp"] = {}
         d["mcp"]["epires"] = {
+            "type": "local",
+            "command": ["epires", "mcp"],
+            "enabled": True
+        }
+
+        # OpenCode V2 (opencode2) syntax
+        if "servers" not in d["mcp"] or not isinstance(d["mcp"]["servers"], dict):
+            d["mcp"]["servers"] = {}
+        d["mcp"]["servers"]["epires"] = {
             "type": "local",
             "command": ["epires", "mcp"],
             "enabled": True
@@ -147,10 +154,18 @@ def setup_opencode(project_dir: str | Path = ".") -> List[Path]:
             "args": ["mcp"],
             "cwd": str(root)
         }
-    _merge_json(opencode_file, update_opencode)
-    configured.append(opencode_file)
 
-    # 2. .opencode/skills/epires/SKILL.md
+    # 1. Project-root opencode.json
+    opencode_root = root / "opencode.json"
+    _merge_json(opencode_root, update_opencode_schema)
+    configured.append(opencode_root)
+
+    # 2. .opencode/opencode.json (for OpenCode 2 nested discovery)
+    opencode_nested = root / ".opencode" / "opencode.json"
+    _merge_json(opencode_nested, update_opencode_schema)
+    configured.append(opencode_nested)
+
+    # 3. .opencode/skills/epires/SKILL.md
     skill_file = root / ".opencode" / "skills" / "epires" / "SKILL.md"
     skill_file.parent.mkdir(parents=True, exist_ok=True)
     skill_file.write_text(get_skill_content(), encoding="utf-8")
