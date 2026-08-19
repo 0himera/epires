@@ -3,7 +3,7 @@
 Configures MCP servers, Skills, and Rules across:
 - Cursor (.cursor/mcp.json, .cursor/rules/epires.mdc, .cursor/skills/epires/SKILL.md)
 - Claude Code (.mcp.json, CLAUDE.md, .claude/skills/epires/SKILL.md)
-- OpenCode (opencode.json with "mcp", .opencode/skills/epires/SKILL.md)
+- OpenCode (opencode.json, .opencode/opencode.json, .opencode/skills/epires/SKILL.md)
 - OpenAI Codex (.codex/mcp.json, .codex/instructions.md)
 - Google Antigravity (.gemini/mcp.json, .gemini/skills/epires/SKILL.md)
 """
@@ -120,39 +120,27 @@ def setup_claude_code(project_dir: str | Path = ".") -> List[Path]:
 
 
 def setup_opencode(project_dir: str | Path = ".") -> List[Path]:
-    """Configures OpenCode V1 and OpenCode 2 (opencode2) configs and skills."""
+    """Configures OpenCode (V1 and V2) opencode.json and skills strictly matching schema."""
     root = Path(project_dir).resolve()
     configured = []
 
     def update_opencode_schema(d: Dict[str, Any]):
-        if "$schema" not in d:
-            d["$schema"] = "https://opencode.ai/config.json"
+        d["$schema"] = "https://opencode.ai/config.json"
         
-        # OpenCode V1 syntax
+        # Clean up any extraneous keys
+        if "servers" in d.get("mcp", {}):
+            del d["mcp"]["servers"]
+        if "mcpServers" in d:
+            del d["mcpServers"]
+
         if "mcp" not in d or not isinstance(d["mcp"], dict):
             d["mcp"] = {}
+
+        # Exact OpenCode local server schema
         d["mcp"]["epires"] = {
             "type": "local",
             "command": ["epires", "mcp"],
             "enabled": True
-        }
-
-        # OpenCode V2 (opencode2) syntax
-        if "servers" not in d["mcp"] or not isinstance(d["mcp"]["servers"], dict):
-            d["mcp"]["servers"] = {}
-        d["mcp"]["servers"]["epires"] = {
-            "type": "local",
-            "command": ["epires", "mcp"],
-            "enabled": True
-        }
-
-        # Standard mcpServers fallback
-        if "mcpServers" not in d or not isinstance(d["mcpServers"], dict):
-            d["mcpServers"] = {}
-        d["mcpServers"]["epires"] = {
-            "command": "epires",
-            "args": ["mcp"],
-            "cwd": str(root)
         }
 
     # 1. Project-root opencode.json
@@ -160,7 +148,7 @@ def setup_opencode(project_dir: str | Path = ".") -> List[Path]:
     _merge_json(opencode_root, update_opencode_schema)
     configured.append(opencode_root)
 
-    # 2. .opencode/opencode.json (for OpenCode 2 nested discovery)
+    # 2. .opencode/opencode.json
     opencode_nested = root / ".opencode" / "opencode.json"
     _merge_json(opencode_nested, update_opencode_schema)
     configured.append(opencode_nested)
