@@ -6,6 +6,14 @@ from .config import (
     find_project_root,
     detect_project_profile,
 )
+from .setup import (
+    setup_cursor,
+    setup_claude_code,
+    setup_opencode,
+    setup_codex,
+    setup_antigravity,
+    setup_all,
+)
 from .vsa import BipolarVSA
 from .models import (
     EvidenceLevel,

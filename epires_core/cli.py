@@ -15,6 +15,14 @@ from .config import (
     detect_project_profile,
     find_project_root,
 )
+from .setup import (
+    setup_cursor,
+    setup_claude_code,
+    setup_opencode,
+    setup_codex,
+    setup_antigravity,
+    setup_all,
+)
 from .store import EpiresStore
 from server.app import create_app
 from server.mcp_server import create_mcp_server
@@ -176,19 +184,9 @@ def init_workspace(target_dir: str = ".", force: bool = False) -> None:
         )
         print(f"[+] Created trace ledger: {config.paths.trace_path}")
 
-    # Generate MCP configuration for IDEs
-    mcp_config = {
-        "mcpServers": {
-            "epires": {
-                "command": "epires",
-                "args": ["mcp"],
-                "cwd": str(root)
-            }
-        }
-    }
-    mcp_json_path = epires_dir / "mcp_config.json"
-    mcp_json_path.write_text(json.dumps(mcp_config, indent=2), encoding="utf-8")
-    print(f"[+] Generated IDE MCP config: {mcp_json_path.relative_to(root)}")
+    # Setup MCP for IDEs
+    configured = setup_all(root)
+    print(f"[+] Configured MCP across: {', '.join(str(p.relative_to(root)) for p in configured)}")
 
     # Initialize empty DB if not present
     db_file = root / config.paths.db_path
@@ -215,6 +213,37 @@ def init_workspace(target_dir: str = ".", force: bool = False) -> None:
     print("==================================================================\n")
 
 
+def setup_flow(target_ide: str = "all", project_dir: str = ".") -> None:
+    """Configures MCP for specific IDEs or all supported environments."""
+    root = Path(project_dir).resolve()
+    target_ide = target_ide.lower()
+    
+    print("\n==================== EPIRES MCP SETUP ====================")
+    if target_ide == "cursor":
+        p = setup_cursor(root)
+        print(f"[+] Configured Cursor MCP: {p.relative_to(root)}")
+    elif target_ide in {"claude", "claude-code", "claude_code"}:
+        p = setup_claude_code(root)
+        print(f"[+] Configured Claude Code MCP: {p.relative_to(root)}")
+    elif target_ide in {"opencode", "open-code"}:
+        p = setup_opencode(root)
+        print(f"[+] Configured OpenCode: {p.relative_to(root)}")
+    elif target_ide == "codex":
+        p = setup_codex(root)
+        print(f"[+] Configured OpenAI Codex: {p.relative_to(root)}")
+    elif target_ide in {"antigravity", "agy", "gemini"}:
+        p = setup_antigravity(root)
+        print(f"[+] Configured Antigravity: {p.relative_to(root)}")
+    elif target_ide == "all":
+        paths = setup_all(root)
+        for p in paths:
+            print(f"[+] Configured: {p.relative_to(root)}")
+    else:
+        print(f"[!] Unknown IDE '{target_ide}'. Choose from: cursor, claude, opencode, codex, antigravity, all")
+        return
+    print("==========================================================\n")
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="epires",
@@ -226,6 +255,17 @@ def main():
     init_parser = subparsers.add_parser("init", help="Initialize Epires in the current project")
     init_parser.add_argument("--dir", default=".", help="Project directory (default: current directory)")
     init_parser.add_argument("--force", action="store_true", help="Force overwrite config")
+
+    # Setup
+    setup_parser = subparsers.add_parser("setup", help="Configure MCP servers for IDEs and coding agents")
+    setup_parser.add_argument(
+        "ide",
+        nargs="?",
+        default="all",
+        choices=["cursor", "claude", "claude-code", "opencode", "codex", "antigravity", "agy", "all"],
+        help="Target IDE/Agent (default: all)"
+    )
+    setup_parser.add_argument("--dir", default=".", help="Project directory (default: current directory)")
 
     # Login
     login_parser = subparsers.add_parser("login", help="Authenticate with Parallel Web Search (saves globally)")
@@ -253,6 +293,9 @@ def main():
 
     if args.command == "init":
         init_workspace(target_dir=args.dir, force=args.force)
+
+    elif args.command == "setup":
+        setup_flow(target_ide=args.ide, project_dir=args.dir)
 
     elif args.command == "login":
         login_flow(key_arg=args.key)

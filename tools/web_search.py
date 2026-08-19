@@ -2,10 +2,9 @@
 
 Supports:
 - Multi-query parallel deep search (fast, turbo, basic, advanced)
-- Full content extraction and excerpt configuration (fetch_all, fetch_snippets_first)
+- Advanced search controls (max_results, max_chars_total, excerpt settings)
 - URL text/markdown extraction via client.extract
-- Entity & finding discovery via client.beta
-- Seamless fallback to agent native search tools (Claude Code / Codex / Antigravity / Cursor)
+- Fallback to agent native search tools (Claude Code / Codex / Antigravity / Cursor / OpenCode)
 """
 
 from __future__ import annotations
@@ -74,36 +73,39 @@ def save_global_api_key(api_key: str) -> Path:
 
 class ParallelWebSearcher:
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or get_parallel_api_key()
+        self.api_key = api_key
         self._client: Optional[Parallel] = None
         self._async_client: Optional[AsyncParallel] = None
 
+    def _resolve_api_key(self) -> Optional[str]:
+        if self.api_key is not None:
+            return self.api_key if self.api_key else None
+        return get_parallel_api_key()
+
     @property
     def is_available(self) -> bool:
-        return bool(self.api_key or get_parallel_api_key())
+        return bool(self._resolve_api_key())
 
     @property
     def client(self) -> Parallel:
-        key = self.api_key or get_parallel_api_key()
+        key = self._resolve_api_key()
         if not key:
             raise ValueError(
                 "Parallel API key not configured. Use native harness search or run 'epires login'."
             )
-        if self._client is None or self.api_key != key:
-            self.api_key = key
-            self._client = Parallel(api_key=self.api_key)
+        if self._client is None:
+            self._client = Parallel(api_key=key)
         return self._client
 
     @property
     def async_client(self) -> AsyncParallel:
-        key = self.api_key or get_parallel_api_key()
+        key = self._resolve_api_key()
         if not key:
             raise ValueError(
                 "Parallel API key not configured. Use native harness search or run 'epires login'."
             )
-        if self._async_client is None or self.api_key != key:
-            self.api_key = key
-            self._async_client = AsyncParallel(api_key=self.api_key)
+        if self._async_client is None:
+            self._async_client = AsyncParallel(api_key=key)
         return self._async_client
 
     def search(
@@ -112,60 +114,48 @@ class ParallelWebSearcher:
         objective: Optional[str] = None,
         mode: str = "fast",
         max_chars: Optional[int] = None,
-        include_full_content: bool = False,
-        num_excerpts: int = 3,
+        max_results: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """Performs parallel multi-query search with advanced excerpt & content controls."""
-        key = self.api_key or get_parallel_api_key()
+        """Performs parallel multi-query search with advanced controls."""
+        key = self._resolve_api_key()
         if not key:
             return {
                 "status": "fallback_to_native",
-                "message": "PARALLEL_API_KEY not configured. You can use your native harness/IDE search tool (Claude Code / Codex / Antigravity), or run 'epires login'.",
+                "message": "PARALLEL_API_KEY not configured. You can use your native harness/IDE search tool (Claude Code / Codex / Antigravity / Cursor / OpenCode), or run 'epires login'.",
                 "queries": queries,
                 "results": []
             }
 
-        self.api_key = key
-        advanced_settings: Dict[str, Any] = {
-            "excerpt_settings": {
-                "include_excerpts": True,
-                "num_excerpts": num_excerpts
-            },
-            "full_content_settings": {
-                "include_full_content": include_full_content
-            },
-            "fetch_policy": {
-                "policy": "fetch_all" if include_full_content else "fetch_snippets_first"
-            }
-        }
-
         kwargs: Dict[str, Any] = {
             "search_queries": queries,
             "mode": mode,
-            "advanced_settings": advanced_settings
         }
         if objective:
             kwargs["objective"] = objective
         if max_chars:
             kwargs["max_chars_total"] = max_chars
+        if max_results:
+            kwargs["advanced_settings"] = {"max_results": max_results}
 
-        res = self.client.search(**kwargs)
-        return {
-            "status": "success",
-            "queries": queries,
-            "objective": objective,
-            "mode": mode,
-            "data": getattr(res, "data", None) or getattr(res, "results", None) or str(res)
-        }
+        try:
+            res = self.client.search(**kwargs)
+            return {
+                "status": "success",
+                "queries": queries,
+                "objective": objective,
+                "mode": mode,
+                "data": getattr(res, "data", None) or getattr(res, "results", None) or str(res)
+            }
+        except Exception as e:
+            return {"status": "error", "message": str(e), "queries": queries}
 
     def extract(
         self,
         urls: List[str],
         objective: Optional[str] = None,
-        include_full_content: bool = True,
     ) -> Dict[str, Any]:
         """Extracts structured text/markdown content from specific research URLs."""
-        key = self.api_key or get_parallel_api_key()
+        key = self._resolve_api_key()
         if not key:
             return {
                 "status": "fallback_to_native",
@@ -173,7 +163,6 @@ class ParallelWebSearcher:
                 "urls": urls,
             }
 
-        self.api_key = key
         kwargs: Dict[str, Any] = {
             "urls": urls,
         }
@@ -196,11 +185,10 @@ class ParallelWebSearcher:
         objective: Optional[str] = None,
         mode: str = "fast",
         max_chars: Optional[int] = None,
-        include_full_content: bool = False,
-        num_excerpts: int = 3,
+        max_results: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Asynchronous multi-query search with advanced controls."""
-        key = self.api_key or get_parallel_api_key()
+        key = self._resolve_api_key()
         if not key:
             return {
                 "status": "fallback_to_native",
@@ -209,35 +197,25 @@ class ParallelWebSearcher:
                 "results": []
             }
 
-        self.api_key = key
-        advanced_settings: Dict[str, Any] = {
-            "excerpt_settings": {
-                "include_excerpts": True,
-                "num_excerpts": num_excerpts
-            },
-            "full_content_settings": {
-                "include_full_content": include_full_content
-            },
-            "fetch_policy": {
-                "policy": "fetch_all" if include_full_content else "fetch_snippets_first"
-            }
-        }
-
         kwargs: Dict[str, Any] = {
             "search_queries": queries,
             "mode": mode,
-            "advanced_settings": advanced_settings
         }
         if objective:
             kwargs["objective"] = objective
         if max_chars:
             kwargs["max_chars_total"] = max_chars
+        if max_results:
+            kwargs["advanced_settings"] = {"max_results": max_results}
 
-        res = await self.async_client.search(**kwargs)
-        return {
-            "status": "success",
-            "queries": queries,
-            "objective": objective,
-            "mode": mode,
-            "data": getattr(res, "data", None) or getattr(res, "results", None) or str(res)
-        }
+        try:
+            res = await self.async_client.search(**kwargs)
+            return {
+                "status": "success",
+                "queries": queries,
+                "objective": objective,
+                "mode": mode,
+                "data": getattr(res, "data", None) or getattr(res, "results", None) or str(res)
+            }
+        except Exception as e:
+            return {"status": "error", "message": str(e), "queries": queries}

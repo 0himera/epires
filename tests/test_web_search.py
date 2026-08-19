@@ -5,8 +5,7 @@ from tools.web_search import ParallelWebSearcher
 
 
 def test_web_searcher_unconfigured():
-    searcher = ParallelWebSearcher(api_key=None)
-    searcher.api_key = ""  # override any ambient env key
+    searcher = ParallelWebSearcher(api_key="")
     res = searcher.search(queries=["ArXiv Hegselmann-Krause"])
     assert res["status"] == "fallback_to_native"
     assert "PARALLEL_API_KEY not configured" in res["message"]
@@ -14,8 +13,7 @@ def test_web_searcher_unconfigured():
 
 
 def test_web_extract_unconfigured():
-    searcher = ParallelWebSearcher(api_key=None)
-    searcher.api_key = ""
+    searcher = ParallelWebSearcher(api_key="")
     res = searcher.extract(urls=["https://arxiv.org/abs/2106.00000"])
     assert res["status"] == "fallback_to_native"
     assert "PARALLEL_API_KEY not configured" in res["message"]
@@ -23,8 +21,7 @@ def test_web_extract_unconfigured():
 
 @pytest.mark.asyncio
 async def test_async_web_searcher_unconfigured():
-    searcher = ParallelWebSearcher(api_key=None)
-    searcher.api_key = ""
+    searcher = ParallelWebSearcher(api_key="")
     res = await searcher.asearch(queries=["ArXiv Avellaneda-Stoikov"])
     assert res["status"] == "fallback_to_native"
     assert "PARALLEL_API_KEY not configured" in res["message"]
