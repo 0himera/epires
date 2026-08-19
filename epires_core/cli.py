@@ -219,28 +219,25 @@ def setup_flow(target_ide: str = "all", project_dir: str = ".") -> None:
     target_ide = target_ide.lower()
     
     print("\n==================== EPIRES MCP SETUP ====================")
+    paths: List[Path] = []
     if target_ide == "cursor":
-        p = setup_cursor(root)
-        print(f"[+] Configured Cursor MCP: {p.relative_to(root)}")
+        paths = setup_cursor(root)
     elif target_ide in {"claude", "claude-code", "claude_code"}:
-        p = setup_claude_code(root)
-        print(f"[+] Configured Claude Code MCP: {p.relative_to(root)}")
+        paths = setup_claude_code(root)
     elif target_ide in {"opencode", "open-code"}:
-        p = setup_opencode(root)
-        print(f"[+] Configured OpenCode: {p.relative_to(root)}")
+        paths = setup_opencode(root)
     elif target_ide == "codex":
-        p = setup_codex(root)
-        print(f"[+] Configured OpenAI Codex: {p.relative_to(root)}")
+        paths = setup_codex(root)
     elif target_ide in {"antigravity", "agy", "gemini"}:
-        p = setup_antigravity(root)
-        print(f"[+] Configured Antigravity: {p.relative_to(root)}")
+        paths = setup_antigravity(root)
     elif target_ide == "all":
         paths = setup_all(root)
-        for p in paths:
-            print(f"[+] Configured: {p.relative_to(root)}")
     else:
         print(f"[!] Unknown IDE '{target_ide}'. Choose from: cursor, claude, opencode, codex, antigravity, all")
         return
+
+    for p in paths:
+        print(f"[+] Configured: {p.relative_to(root)}")
     print("==========================================================\n")
 
 
