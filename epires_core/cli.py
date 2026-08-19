@@ -4,6 +4,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import sys
+import webbrowser
 from pathlib import Path
 import uvicorn
 
@@ -16,6 +18,34 @@ from .config import (
 from .store import EpiresStore
 from server.app import create_app
 from server.mcp_server import create_mcp_server
+from tools.web_search import get_parallel_api_key, save_global_api_key
+
+
+def login_flow(key_arg: str | None = None) -> None:
+    """Interactive authentication for Parallel Web Search."""
+    print("\n==================== EPIRES PARALLEL AUTH ====================")
+    if key_arg:
+        key = key_arg.strip()
+    else:
+        print("[*] Opening Parallel Platform in your web browser: https://platform.parallel.ai ...")
+        try:
+            webbrowser.open("https://platform.parallel.ai")
+        except Exception:
+            pass
+        print("Please copy your API key from https://platform.parallel.ai/settings/keys\n")
+        try:
+            key = input("Enter your Parallel API Key: ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print("\n[!] Login cancelled.")
+            return
+
+    if not key:
+        print("[!] No API key provided.")
+        return
+
+    saved_path = save_global_api_key(key)
+    print(f"[+] Successfully authenticated! Credentials saved to: {saved_path}")
+    print("    Parallel Web Search is now active globally across all your projects.\n")
 
 
 def init_workspace(target_dir: str = ".", force: bool = False) -> None:
@@ -89,6 +119,13 @@ def init_workspace(target_dir: str = ".", force: bool = False) -> None:
     store = EpiresStore(db_path=db_file)
     print(f"[+] Verified local VSA Hypergraph database: {config.paths.db_path}")
 
+    # Check Parallel API Key
+    p_key = get_parallel_api_key()
+    if p_key:
+        print("[+] Parallel Web Search: Authenticated (global key detected)")
+    else:
+        print("[i] Parallel Web Search: Not configured. (Run 'epires login' once to enable parallel literature search)")
+
     print("\n==================================================================")
     if profile["is_empty"]:
         print("🌱 Clean / Empty Repository Onboarded!")
@@ -114,6 +151,10 @@ def main():
     init_parser.add_argument("--dir", default=".", help="Project directory (default: current directory)")
     init_parser.add_argument("--force", action="store_true", help="Force overwrite config")
 
+    # Login
+    login_parser = subparsers.add_parser("login", help="Authenticate with Parallel Web Search (saves globally)")
+    login_parser.add_argument("--key", help="API key (optional; if omitted, opens browser)")
+
     # Recon
     recon_parser = subparsers.add_parser("recon", help="Scan and detect project topology and domain")
     recon_parser.add_argument("--dir", default=".", help="Project directory to scan")
@@ -136,6 +177,9 @@ def main():
 
     if args.command == "init":
         init_workspace(target_dir=args.dir, force=args.force)
+
+    elif args.command == "login":
+        login_flow(key_arg=args.key)
 
     elif args.command == "recon":
         profile = detect_project_profile(args.dir)
