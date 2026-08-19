@@ -182,8 +182,9 @@ def create_mcp_server(
         queries: List[str],
         objective: Optional[str] = None,
         mode: str = "fast",
-        include_full_content: bool = False,
-        num_excerpts: int = 3,
+        max_chars: Optional[int] = None,
+        max_results: Optional[int] = None,
+        **kwargs,
     ) -> str:
         """Execute parallel multi-topic literature and web search using parallel-web 1.3.0 SDK.
         
@@ -194,8 +195,9 @@ def create_mcp_server(
             queries=queries,
             objective=objective,
             mode=mode,
-            include_full_content=include_full_content,
-            num_excerpts=num_excerpts,
+            max_chars=max_chars,
+            max_results=max_results,
+            **kwargs,
         )
         return json.dumps(res, indent=2, ensure_ascii=False)
 

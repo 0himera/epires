@@ -115,6 +115,7 @@ class ParallelWebSearcher:
         mode: str = "fast",
         max_chars: Optional[int] = None,
         max_results: Optional[int] = None,
+        **kwargs,
     ) -> Dict[str, Any]:
         """Performs parallel multi-query search with advanced controls."""
         key = self._resolve_api_key()
@@ -126,19 +127,19 @@ class ParallelWebSearcher:
                 "results": []
             }
 
-        kwargs: Dict[str, Any] = {
+        search_kwargs: Dict[str, Any] = {
             "search_queries": queries,
             "mode": mode,
         }
         if objective:
-            kwargs["objective"] = objective
+            search_kwargs["objective"] = objective
         if max_chars:
-            kwargs["max_chars_total"] = max_chars
+            search_kwargs["max_chars_total"] = max_chars
         if max_results:
-            kwargs["advanced_settings"] = {"max_results": max_results}
+            search_kwargs["advanced_settings"] = {"max_results": max_results}
 
         try:
-            res = self.client.search(**kwargs)
+            res = self.client.search(**search_kwargs)
             return {
                 "status": "success",
                 "queries": queries,
@@ -186,6 +187,7 @@ class ParallelWebSearcher:
         mode: str = "fast",
         max_chars: Optional[int] = None,
         max_results: Optional[int] = None,
+        **kwargs,
     ) -> Dict[str, Any]:
         """Asynchronous multi-query search with advanced controls."""
         key = self._resolve_api_key()
@@ -197,19 +199,19 @@ class ParallelWebSearcher:
                 "results": []
             }
 
-        kwargs: Dict[str, Any] = {
+        search_kwargs: Dict[str, Any] = {
             "search_queries": queries,
             "mode": mode,
         }
         if objective:
-            kwargs["objective"] = objective
+            search_kwargs["objective"] = objective
         if max_chars:
-            kwargs["max_chars_total"] = max_chars
+            search_kwargs["max_chars_total"] = max_chars
         if max_results:
-            kwargs["advanced_settings"] = {"max_results": max_results}
+            search_kwargs["advanced_settings"] = {"max_results": max_results}
 
         try:
-            res = await self.async_client.search(**kwargs)
+            res = await self.async_client.search(**search_kwargs)
             return {
                 "status": "success",
                 "queries": queries,
