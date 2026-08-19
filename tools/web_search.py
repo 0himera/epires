@@ -1,7 +1,11 @@
-"""Parallel Web Search SDK Integration (version 1.3.0).
+"""Parallel Web Search & Extraction SDK Integration (version 1.3.0).
 
-Supports global credential discovery from ~/.epires/credentials.json,
-~/.parallel/, local .env, and environment variables.
+Supports:
+- Multi-query parallel deep search (fast, turbo, basic, advanced)
+- Full content extraction and excerpt configuration (fetch_all, fetch_snippets_first)
+- URL text/markdown extraction via client.extract
+- Entity & finding discovery via client.beta
+- Seamless fallback to agent native search tools (Claude Code / Codex / Antigravity / Cursor)
 """
 
 from __future__ import annotations
@@ -14,11 +18,9 @@ from parallel import Parallel, AsyncParallel
 
 def get_parallel_api_key() -> Optional[str]:
     """Discovers Parallel API key across environment, local .env, and global user credentials."""
-    # 1. Environment variable
     if os.getenv("PARALLEL_API_KEY"):
         return os.getenv("PARALLEL_API_KEY")
 
-    # 2. Local .env
     for env_path in [Path(".env"), Path(".epires/.env")]:
         if env_path.exists():
             try:
@@ -30,7 +32,6 @@ def get_parallel_api_key() -> Optional[str]:
             except Exception:
                 pass
 
-    # 3. Global ~/.epires/credentials.json
     global_creds = Path.home() / ".epires" / "credentials.json"
     if global_creds.exists():
         try:
@@ -40,7 +41,6 @@ def get_parallel_api_key() -> Optional[str]:
         except Exception:
             pass
 
-    # 4. Global ~/.parallel/ credentials
     for p_path in [Path.home() / ".parallel" / "credentials.json", Path.home() / ".parallel" / "config.json"]:
         if p_path.exists():
             try:
@@ -79,22 +79,30 @@ class ParallelWebSearcher:
         self._async_client: Optional[AsyncParallel] = None
 
     @property
+    def is_available(self) -> bool:
+        return bool(self.api_key or get_parallel_api_key())
+
+    @property
     def client(self) -> Parallel:
-        if not self.api_key:
+        key = self.api_key or get_parallel_api_key()
+        if not key:
             raise ValueError(
-                "Parallel API key not found. Run 'epires login' or set PARALLEL_API_KEY."
+                "Parallel API key not configured. Use native harness search or run 'epires login'."
             )
-        if self._client is None:
+        if self._client is None or self.api_key != key:
+            self.api_key = key
             self._client = Parallel(api_key=self.api_key)
         return self._client
 
     @property
     def async_client(self) -> AsyncParallel:
-        if not self.api_key:
+        key = self.api_key or get_parallel_api_key()
+        if not key:
             raise ValueError(
-                "Parallel API key not found. Run 'epires login' or set PARALLEL_API_KEY."
+                "Parallel API key not configured. Use native harness search or run 'epires login'."
             )
-        if self._async_client is None:
+        if self._async_client is None or self.api_key != key:
+            self.api_key = key
             self._async_client = AsyncParallel(api_key=self.api_key)
         return self._async_client
 
@@ -104,18 +112,38 @@ class ParallelWebSearcher:
         objective: Optional[str] = None,
         mode: str = "fast",
         max_chars: Optional[int] = None,
+        include_full_content: bool = False,
+        num_excerpts: int = 3,
     ) -> Dict[str, Any]:
-        """Performs parallel multi-query search synchronously."""
+        """Performs parallel multi-query search with advanced excerpt & content controls."""
         key = self.api_key or get_parallel_api_key()
         if not key:
             return {
-                "error": "PARALLEL_API_KEY not configured. Run 'epires login' to connect your account.",
+                "status": "fallback_to_native",
+                "message": "PARALLEL_API_KEY not configured. You can use your native harness/IDE search tool (Claude Code / Codex / Antigravity), or run 'epires login'.",
                 "queries": queries,
                 "results": []
             }
 
         self.api_key = key
-        kwargs: Dict[str, Any] = {"search_queries": queries, "mode": mode}
+        advanced_settings: Dict[str, Any] = {
+            "excerpt_settings": {
+                "include_excerpts": True,
+                "num_excerpts": num_excerpts
+            },
+            "full_content_settings": {
+                "include_full_content": include_full_content
+            },
+            "fetch_policy": {
+                "policy": "fetch_all" if include_full_content else "fetch_snippets_first"
+            }
+        }
+
+        kwargs: Dict[str, Any] = {
+            "search_queries": queries,
+            "mode": mode,
+            "advanced_settings": advanced_settings
+        }
         if objective:
             kwargs["objective"] = objective
         if max_chars:
@@ -123,11 +151,44 @@ class ParallelWebSearcher:
 
         res = self.client.search(**kwargs)
         return {
+            "status": "success",
             "queries": queries,
             "objective": objective,
-            "raw": str(res) if hasattr(res, "__dict__") else res,
+            "mode": mode,
             "data": getattr(res, "data", None) or getattr(res, "results", None) or str(res)
         }
+
+    def extract(
+        self,
+        urls: List[str],
+        objective: Optional[str] = None,
+        include_full_content: bool = True,
+    ) -> Dict[str, Any]:
+        """Extracts structured text/markdown content from specific research URLs."""
+        key = self.api_key or get_parallel_api_key()
+        if not key:
+            return {
+                "status": "fallback_to_native",
+                "message": "PARALLEL_API_KEY not configured. Use native URL reader or run 'epires login'.",
+                "urls": urls,
+            }
+
+        self.api_key = key
+        kwargs: Dict[str, Any] = {
+            "urls": urls,
+        }
+        if objective:
+            kwargs["objective"] = objective
+
+        try:
+            res = self.client.extract(**kwargs)
+            return {
+                "status": "success",
+                "urls": urls,
+                "data": getattr(res, "data", None) or getattr(res, "results", None) or str(res)
+            }
+        except Exception as e:
+            return {"status": "error", "message": str(e), "urls": urls}
 
     async def asearch(
         self,
@@ -135,18 +196,38 @@ class ParallelWebSearcher:
         objective: Optional[str] = None,
         mode: str = "fast",
         max_chars: Optional[int] = None,
+        include_full_content: bool = False,
+        num_excerpts: int = 3,
     ) -> Dict[str, Any]:
-        """Performs parallel multi-query search asynchronously."""
+        """Asynchronous multi-query search with advanced controls."""
         key = self.api_key or get_parallel_api_key()
         if not key:
             return {
-                "error": "PARALLEL_API_KEY not configured. Run 'epires login' to connect your account.",
+                "status": "fallback_to_native",
+                "message": "PARALLEL_API_KEY not configured. You can use your native harness/IDE search tool, or run 'epires login'.",
                 "queries": queries,
                 "results": []
             }
 
         self.api_key = key
-        kwargs: Dict[str, Any] = {"search_queries": queries, "mode": mode}
+        advanced_settings: Dict[str, Any] = {
+            "excerpt_settings": {
+                "include_excerpts": True,
+                "num_excerpts": num_excerpts
+            },
+            "full_content_settings": {
+                "include_full_content": include_full_content
+            },
+            "fetch_policy": {
+                "policy": "fetch_all" if include_full_content else "fetch_snippets_first"
+            }
+        }
+
+        kwargs: Dict[str, Any] = {
+            "search_queries": queries,
+            "mode": mode,
+            "advanced_settings": advanced_settings
+        }
         if objective:
             kwargs["objective"] = objective
         if max_chars:
@@ -154,8 +235,9 @@ class ParallelWebSearcher:
 
         res = await self.async_client.search(**kwargs)
         return {
+            "status": "success",
             "queries": queries,
             "objective": objective,
-            "raw": str(res) if hasattr(res, "__dict__") else res,
+            "mode": mode,
             "data": getattr(res, "data", None) or getattr(res, "results", None) or str(res)
         }

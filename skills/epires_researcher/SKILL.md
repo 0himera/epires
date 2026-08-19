@@ -65,8 +65,9 @@ When joining or initializing a research workspace, determine the project state a
 [Literature Search: parallel-web] ➔ [VSA Gap Analysis] ➔ [Register H-tag] ➔ [Delegate to Coder] ➔ [Verify Diff] ➔ [Log Evidence & DAG Update] ➔ [AutoTrace & Commit]
 ```
 
-### Step 1: Reflexion & Parallel Web Search
-* Execute multi-query parallel searches using `epires_parallel_web_search` (ArXiv, primary papers, official documentation).
+### Step 1: Reflexion & Literature Search (Dual Choice)
+* **Option A (Parallel Web Search & Extraction)**: Use `epires_parallel_web_search(queries=[...], objective="...", mode="fast"|"turbo"|"advanced", include_full_content=True, num_excerpts=3)` and `epires_parallel_extract(urls=[...])` for ultra-fast multi-query deep paper/web research.
+* **Option B (Native Harness Web Search)**: If the user prefers not to configure Parallel or lacks an API key, use the agent's native IDE search tools (e.g. Codex / Claude Code web search / Antigravity search tools) seamlessly.
 
 ### Step 2: VSA Hypergraph & Gap Discovery
 * Query existing knowledge via `epires_associative_search`.

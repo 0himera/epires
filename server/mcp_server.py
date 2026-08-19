@@ -182,9 +182,30 @@ def create_mcp_server(
         queries: List[str],
         objective: Optional[str] = None,
         mode: str = "fast",
+        include_full_content: bool = False,
+        num_excerpts: int = 3,
     ) -> str:
-        """Execute parallel multi-topic literature and web search using parallel-web 1.3.0 SDK."""
-        res = web_searcher.search(queries=queries, objective=objective, mode=mode)
+        """Execute parallel multi-topic literature and web search using parallel-web 1.3.0 SDK.
+        
+        If Parallel API key is not configured, returns a fallback status allowing the agent
+        to use native harness search tools seamlessly.
+        """
+        res = web_searcher.search(
+            queries=queries,
+            objective=objective,
+            mode=mode,
+            include_full_content=include_full_content,
+            num_excerpts=num_excerpts,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+
+    @mcp.tool()
+    def epires_parallel_extract(
+        urls: List[str],
+        objective: Optional[str] = None,
+    ) -> str:
+        """Extract structured full text/markdown from specific research URLs via Parallel SDK."""
+        res = web_searcher.extract(urls=urls, objective=objective)
         return json.dumps(res, indent=2, ensure_ascii=False)
 
     @mcp.tool()
