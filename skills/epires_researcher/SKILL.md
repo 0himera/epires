@@ -62,19 +62,22 @@ When joining or initializing a research workspace, determine the project state a
 ## 4. Operational Research Workflow
 
 ```
-[Literature Search: parallel-web] ➔ [VSA Gap Analysis] ➔ [Register H-tag] ➔ [Delegate to Coder] ➔ [Verify Diff] ➔ [Log Evidence & DAG Update] ➔ [AutoTrace & Commit]
+[Literature Search: parallel-web / native] ➔ [VSA Gap Analysis] ➔ [Register H-tag] ➔ [Delegate to Coder] ➔ [Verify Diff] ➔ [Log Evidence & DAG Update] ➔ [AutoTrace & Commit]
 ```
 
 ### Step 1: Reflexion & Literature Search (Dual Choice)
-* **Option A (Parallel Web Search & Extraction)**: Use `epires_parallel_web_search(queries=[...], objective="...", mode="fast"|"turbo"|"advanced", include_full_content=True, num_excerpts=3)` and `epires_parallel_extract(urls=[...])` for ultra-fast multi-query deep paper/web research.
+* **Option A (Parallel Web Search & Extraction)**:
+  - `epires_parallel_web_search(queries=[...], objective="...", mode="fast"|"turbo"|"basic"|"advanced", max_results=5, max_chars=10000)`
+  - `epires_parallel_extract(urls=[...], objective="...")` for direct markdown extraction from papers.
 * **Option B (Native Harness Web Search)**: If the user prefers not to configure Parallel or lacks an API key, use the agent's native IDE search tools (e.g. Codex / Claude Code web search / Antigravity search tools) seamlessly.
 
 ### Step 2: VSA Hypergraph & Gap Discovery
-* Query existing knowledge via `epires_associative_search`.
-* Discover unexplored feature/model combinations via `epires_find_gaps`.
+* Query existing knowledge via `epires_associative_search(query="...", status="CONFIRMED")`.
+* Discover unexplored parameter combinations via `epires_find_gaps(dimensions=['Model', 'Feature', 'Regime'], min_tested=1)`.
+  *(Note: Returns empty list if no experiments have been registered yet)*.
 
 ### Step 3: Register Hypothesis
-* Call `epires_register_hypothesis(id, title, a_priori_mechanism, falsification_criteria, parent_ids, ...)`.
+* Call `epires_register_hypothesis(id, title, a_priori_mechanism, falsification_criteria, parent_ids, entity_types, entity_values)`.
 
 ### Step 4: Subagent Delegation Contract
 When delegating work to a coder or runner subagent, enforce the **Strict Contract**:

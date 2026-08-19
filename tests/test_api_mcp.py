@@ -1,5 +1,6 @@
 """Tests for FastAPI endpoints and MCP Server tools."""
 
+import json
 import tempfile
 from pathlib import Path
 from fastapi.testclient import TestClient
@@ -68,6 +69,17 @@ def test_mcp_server_tools():
         db_path = str(Path(tmpdir) / "test_mcp.db")
         trace_path = str(Path(tmpdir) / "trace.md")
         mcp = create_mcp_server(db_path=db_path, trace_md=trace_path)
-
-        # Direct verification of registered tools on MCPServer
         assert mcp.name == "epires"
+
+        # Test tool manager has all 10 tools
+        tool_names = [tool.name for tool in mcp._tool_manager.list_tools()]
+        assert "epires_register_hypothesis" in tool_names
+        assert "epires_log_evidence" in tool_names
+        assert "epires_query_graph" in tool_names
+        assert "epires_find_gaps" in tool_names
+        assert "epires_associative_search" in tool_names
+        assert "epires_export_mermaid_dag" in tool_names
+        assert "epires_parallel_web_search" in tool_names
+        assert "epires_parallel_extract" in tool_names
+        assert "epires_record_trace" in tool_names
+        assert "epires_system_status" in tool_names

@@ -2,8 +2,8 @@
 
 Supports:
 - Multi-query parallel deep search (fast, turbo, basic, advanced)
-- Advanced search controls (max_results, max_chars_total, excerpt settings)
-- URL text/markdown extraction via client.extract
+- Advanced search controls (max_results, max_chars_total)
+- URL text/markdown extraction via client.extract with guaranteed JSON serialization
 - Fallback to agent native search tools (Claude Code / Codex / Antigravity / Cursor / OpenCode)
 """
 
@@ -69,6 +69,34 @@ def save_global_api_key(api_key: str) -> Path:
     existing["parallel_api_key"] = api_key.strip()
     creds_file.write_text(json.dumps(existing, indent=2), encoding="utf-8")
     return creds_file
+
+
+def serialize_sdk_object(obj: Any) -> Any:
+    """Recursively converts Stainless / Pydantic / SDK models to plain JSON-serializable structures."""
+    if obj is None:
+        return None
+    if isinstance(obj, (str, int, float, bool)):
+        return obj
+    if isinstance(obj, dict):
+        return {str(k): serialize_sdk_object(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple, set)):
+        return [serialize_sdk_object(v) for v in obj]
+    if hasattr(obj, "model_dump") and callable(obj.model_dump):
+        try:
+            return serialize_sdk_object(obj.model_dump())
+        except Exception:
+            pass
+    if hasattr(obj, "to_dict") and callable(obj.to_dict):
+        try:
+            return serialize_sdk_object(obj.to_dict())
+        except Exception:
+            pass
+    if hasattr(obj, "__dict__"):
+        try:
+            return serialize_sdk_object(obj.__dict__)
+        except Exception:
+            pass
+    return str(obj)
 
 
 class ParallelWebSearcher:
@@ -145,7 +173,7 @@ class ParallelWebSearcher:
                 "queries": queries,
                 "objective": objective,
                 "mode": mode,
-                "data": getattr(res, "data", None) or getattr(res, "results", None) or str(res)
+                "data": serialize_sdk_object(getattr(res, "data", None) or getattr(res, "results", None) or res)
             }
         except Exception as e:
             return {"status": "error", "message": str(e), "queries": queries}
@@ -154,6 +182,7 @@ class ParallelWebSearcher:
         self,
         urls: List[str],
         objective: Optional[str] = None,
+        **kwargs,
     ) -> Dict[str, Any]:
         """Extracts structured text/markdown content from specific research URLs."""
         key = self._resolve_api_key()
@@ -164,18 +193,18 @@ class ParallelWebSearcher:
                 "urls": urls,
             }
 
-        kwargs: Dict[str, Any] = {
+        extract_kwargs: Dict[str, Any] = {
             "urls": urls,
         }
         if objective:
-            kwargs["objective"] = objective
+            extract_kwargs["objective"] = objective
 
         try:
-            res = self.client.extract(**kwargs)
+            res = self.client.extract(**extract_kwargs)
             return {
                 "status": "success",
                 "urls": urls,
-                "data": getattr(res, "data", None) or getattr(res, "results", None) or str(res)
+                "data": serialize_sdk_object(getattr(res, "data", None) or getattr(res, "results", None) or res)
             }
         except Exception as e:
             return {"status": "error", "message": str(e), "urls": urls}
@@ -217,7 +246,7 @@ class ParallelWebSearcher:
                 "queries": queries,
                 "objective": objective,
                 "mode": mode,
-                "data": getattr(res, "data", None) or getattr(res, "results", None) or str(res)
+                "data": serialize_sdk_object(getattr(res, "data", None) or getattr(res, "results", None) or res)
             }
         except Exception as e:
             return {"status": "error", "message": str(e), "queries": queries}

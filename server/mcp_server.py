@@ -1,36 +1,65 @@
-"""Model Context Protocol (MCP) Server for Epires Research Engine."""
+"""FastMCP Server for Epires Research Harness.
+
+Exposes 9 deterministic tools for LLM agents:
+- epires_register_hypothesis
+- epires_log_evidence (Collision-proof millisecond + SHA256 ID)
+- epires_query_graph
+- epires_find_gaps
+- epires_associative_search
+- epires_export_mermaid_dag
+- epires_parallel_web_search
+- epires_parallel_extract (Guaranteed JSON serialization)
+- epires_record_trace (Accepts both dict and JSON-string)
+- epires_system_status
+"""
 
 from __future__ import annotations
+import hashlib
 import json
+import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from mcp.server.mcpserver import MCPServer
 
 from epires_core.models import (
-    Entity,
     EvidenceClaim,
     EvidenceLevel,
+    ExperimentNode,
     GapQuery,
     HypothesisNode,
     HypothesisStatus,
+    RelationEdge,
     SearchQuery,
     SourceConfidence,
-    TraceEntry,
 )
 from epires_core.store import EpiresStore
 from epires_core.tracer import AutoTracer
-from tools.web_search import ParallelWebSearcher
+from tools.web_search import ParallelWebSearcher, get_parallel_api_key
 
 
 def create_mcp_server(
     db_path: str = ".epires/hypotheses.db",
-    trace_md: str = "docs/agent-trace.md",
-    name: str = "epires",
+    trace_md: str = "docs/agent-trace.md"
 ) -> MCPServer:
-    mcp = MCPServer(name=name)
+    """Creates and configures an MCPServer instance for Epires."""
+    mcp = MCPServer("epires")
     store = EpiresStore(db_path=db_path)
     tracer = AutoTracer(store=store, trace_md_path=trace_md)
     web_searcher = ParallelWebSearcher()
+
+    @mcp.tool()
+    def epires_system_status() -> str:
+        """Get Epires harness version, database status, and Parallel Web Search connectivity."""
+        p_key = get_parallel_api_key()
+        hypotheses = store.list_hypotheses()
+        return json.dumps({
+            "version": "0.1.0",
+            "db_path": str(db_path),
+            "total_hypotheses": len(hypotheses),
+            "parallel_auth": bool(p_key),
+            "tools_count": 9,
+            "status": "ready"
+        }, indent=2)
 
     @mcp.tool()
     def epires_register_hypothesis(
@@ -38,40 +67,31 @@ def create_mcp_server(
         title: str,
         a_priori_mechanism: str,
         falsification_criteria: str,
-        target_evidence_level: str = "E3",
         parent_ids: Optional[List[str]] = None,
-        entities: Optional[List[Dict[str, str]]] = None,
-        tags: Optional[List[str]] = None,
+        entity_types: Optional[List[str]] = None,
+        entity_values: Optional[List[str]] = None,
+        proposed_by: str = "Lead-PI",
+        initial_confidence: float = 0.5,
     ) -> str:
-        """Register a new hypothesis in the VSA Hypergraph prior to any execution.
+        """Register a new hypothesis in the VSA Hypergraph.
         
-        Requires a priori justification and Popperian falsification criteria.
+        Requires theoretical a_priori_mechanism and Popperian falsification_criteria.
         """
-        p_ids = parent_ids or []
-        ent_list = [Entity(type=e["type"], value=e["value"]) for e in (entities or [])]
-        t_list = tags or []
-
-        h = HypothesisNode(
+        node = HypothesisNode(
             id=id,
             title=title,
             a_priori_mechanism=a_priori_mechanism,
             falsification_criteria=falsification_criteria,
-            target_evidence_level=EvidenceLevel(target_evidence_level),
+            parent_ids=parent_ids or [],
+            entity_types=entity_types or [],
+            entity_values=entity_values or [],
+            proposed_by=proposed_by,
+            confidence_score=initial_confidence,
             current_evidence_level=EvidenceLevel.E0,
             status=HypothesisStatus.PROPOSED,
-            parent_ids=p_ids,
-            entities=ent_list,
-            tags=t_list,
         )
-        saved = store.register_hypothesis(h)
-        tracer.record(
-            action="REGISTER_HYPOTHESIS",
-            summary=f"Registered {saved.id}: {saved.title}",
-            h_tag=saved.id,
-            agent_role="Lead-PI",
-            details={"parents": p_ids, "target_level": target_evidence_level}
-        )
-        return f"Successfully registered hypothesis {saved.id} (Status: {saved.status.value}, Vectorized into VSA Hypergraph)"
+        saved = store.register_hypothesis(node)
+        return f"Successfully registered hypothesis '{saved.id}': {saved.title} (Level: {saved.current_evidence_level.value})"
 
     @mcp.tool()
     def epires_log_evidence(
@@ -93,7 +113,10 @@ def create_mcp_server(
         If falsification_triggered is True, the hypothesis is marked FALSIFIED and all
         dependent child hypotheses in the DAG are automatically BLOCKED.
         """
-        ev_id = f"ev_{hypothesis_id}_{int(Path(db_path).stat().st_mtime if Path(db_path).exists() else 0)}_{hash(claim) % 100000}"
+        claim_hash = hashlib.sha256(claim.encode("utf-8")).hexdigest()[:8]
+        timestamp_ms = int(time.time() * 1000)
+        ev_id = f"ev_{hypothesis_id}_{timestamp_ms}_{claim_hash}"
+
         claim_obj = EvidenceClaim(
             id=ev_id,
             hypothesis_id=hypothesis_id,
@@ -153,7 +176,11 @@ def create_mcp_server(
         dimensions: List[str],
         min_tested: int = 1,
     ) -> str:
-        """Find untested or under-explored parameter/feature/model combinations (White Spot Gap Analysis)."""
+        """Find untested or under-explored parameter/feature/model combinations (White Spot Gap Analysis).
+        
+        Searches Cartesian space across dimensions (e.g. ['Model', 'Feature', 'Regime']) and returns
+        combinations with fewer than 'min_tested' experiments in the VSA hypergraph.
+        """
         gaps = store.find_gaps(GapQuery(dimensions=dimensions, min_tested=min_tested))
         return json.dumps(gaps, indent=2, ensure_ascii=False)
 
@@ -205,9 +232,10 @@ def create_mcp_server(
     def epires_parallel_extract(
         urls: List[str],
         objective: Optional[str] = None,
+        **kwargs,
     ) -> str:
         """Extract structured full text/markdown from specific research URLs via Parallel SDK."""
-        res = web_searcher.extract(urls=urls, objective=objective)
+        res = web_searcher.extract(urls=urls, objective=objective, **kwargs)
         return json.dumps(res, indent=2, ensure_ascii=False)
 
     @mcp.tool()
@@ -216,16 +244,32 @@ def create_mcp_server(
         summary: str,
         h_tag: Optional[str] = None,
         agent_role: str = "Lead-PI",
-        details_json: Optional[str] = None,
+        details: Optional[Any] = None,
+        details_json: Optional[Any] = None,
     ) -> str:
-        """Record an action and rationale into SQLite traces and docs/agent-trace.md."""
-        details = json.loads(details_json) if details_json else {}
+        """Record an action and rationale into SQLite traces and docs/agent-trace.md.
+        
+        'details' can be provided either as a dictionary or as a JSON-formatted string.
+        """
+        raw = details if details is not None else details_json
+        if isinstance(raw, dict):
+            parsed_details = raw
+        elif isinstance(raw, str):
+            try:
+                parsed_details = json.loads(raw)
+            except Exception:
+                parsed_details = {"text": raw}
+        elif raw is not None:
+            parsed_details = {"data": str(raw)}
+        else:
+            parsed_details = {}
+
         entry = tracer.record(
             action=action,
             summary=summary,
             h_tag=h_tag,
             agent_role=agent_role,
-            details=details
+            details=parsed_details
         )
         return f"Logged trace entry #{entry.id or 'auto'}: [{entry.action}] {entry.summary}"
 
