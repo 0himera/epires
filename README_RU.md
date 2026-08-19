@@ -1,4 +1,4 @@
-# Epires — Minimalist Cybernetic AI-Research Operating System (Русская версия)
+# Epires — Minimalist Cybernetic Auto-Research Harness (Русская версия)
 
 > 🌐 English version is available at [README.md](README.md).
 
@@ -11,8 +11,8 @@
 [![Parallel Web 1.3.0](https://img.shields.io/badge/Parallel_Web-1.3.0-orange.svg)](https://github.com/parallel-web)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Детерминированная операционная среда для автономных научных исследований, квант-моделирования и машинного обучения.**  
-*Построена на базе 10 000-мерного VSA-гиперграфа (наследие HSME), попперовской фальсификации, доказательной шкале E0–E5 и протоколе Главного Исследователя (Lead-PI).*
+**Детерминированный Auto-Research харнесс и движок управления исследованиями для AI-агентов.**  
+*Построен на базе 10 000-мерного VSA-гиперграфа (наследие HSME), попперовской фальсификации, доказательной шкале E0–E5 и протоколе Главного Исследователя (Lead-PI).*
 
 </div>
 

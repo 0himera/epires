@@ -1,4 +1,4 @@
-# Epires — Minimalist Cybernetic AI-Research Operating System
+# Epires — Minimalist Cybernetic Auto-Research Harness
 
 > 🇷🇺 Русская версия доступна в [README_RU.md](README_RU.md).
 
@@ -11,7 +11,7 @@
 [![Parallel Web 1.3.0](https://img.shields.io/badge/Parallel_Web-1.3.0-orange.svg)](https://github.com/parallel-web)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**A deterministic operating environment for autonomous scientific research, quantitative modeling, and machine learning.**  
+**A deterministic auto-research harness and governance engine for scientific discovery, quantitative modeling, and machine learning.**  
 *Built upon a 10,000-dimensional VSA Hypergraph (HSME heritage), Popperian falsification, E0–E5 evidence scaling, and the Lead Principal Investigator (Lead-PI) protocol.*
 
 </div>
@@ -49,7 +49,7 @@ When applied to serious scientific ML, quantitative finance, or complex systems,
 2. **Loss of Epistemic Memory**: The system fails to understand *why* a mutation succeeded and discards the valuable search-space reduction provided by negative results.
 3. **Flat Code Mutations vs Causal DAGs**: Experiments are treated as isolated text diffs rather than a structured causal graph of interconnected theoretical hypotheses.
 
-**Epires** addresses this by providing an end-to-end cybernetic research operating system integrating **Vector Symbolic Architectures (VSA)**, **Hypothesis Dependency DAGs**, and **automated epistemic gatekeeping**.
+**Epires** addresses this by providing an end-to-end cybernetic auto-research harness integrating **Vector Symbolic Architectures (VSA)**, **Hypothesis Dependency DAGs**, and **automated epistemic gatekeeping**.
 
 ---
 

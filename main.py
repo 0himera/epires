@@ -1,4 +1,4 @@
-"""CLI entrypoint for Epires: Minimalist Cybernetic AI-Research Operating System."""
+"""CLI entrypoint for Epires: Minimalist Cybernetic Auto-Research Harness."""
 
 from __future__ import annotations
 import argparse
