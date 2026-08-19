@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.epires/*.db
+.epires/*.db-journal
+.epires/*.db-wal
+.epires/*.db-shm
+data/
+*.parquet
+.env
