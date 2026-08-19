@@ -61,17 +61,26 @@ def find_project_root(start_dir: str | Path = ".") -> Path:
 def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
     """Inspects a directory to dynamically infer domain, stack, existing docs, and emptiness."""
     root = Path(project_dir).resolve()
-    all_files = [f for f in root.glob("**/*") if f.is_file() and not any(p in f.parts for p in [".git", ".venv", "__pycache__", ".epires"])]
     
-    if not all_files:
+    # Exclude system/internal files when checking for user codebase presence
+    ignore_parts = {".git", ".venv", "__pycache__", ".epires", ".pytest_cache"}
+    
+    user_files = [
+        f for f in root.glob("**/*") 
+        if f.is_file() 
+        and not any(p in f.parts for p in ignore_parts)
+        and f.name not in {".gitignore", "agent-trace.md"}
+    ]
+    
+    if not user_files:
         return {
             "is_empty": True,
             "project_name": root.name,
             "detected_domain": "New Research Project",
-            "detected_stack": "Python / uv",
+            "detected_stack": "Clean Workspace",
             "candidate_doc_files": [],
             "candidate_trace_files": [],
-            "suggested_metric": "Accuracy / Loss"
+            "suggested_metric": "Primary Metric (e.g. Accuracy / Loss / Sharpe / RMSLE)"
         }
 
     # Detect stack
@@ -88,7 +97,7 @@ def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
     candidate_traces = []
     domain_hints = []
     
-    for f in all_files:
+    for f in user_files:
         rel_path = str(f.relative_to(root))
         lower_name = f.name.lower()
         if lower_name.endswith(".md") or lower_name.endswith(".txt"):
@@ -98,27 +107,35 @@ def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
             
             # Read snippet for domain classification
             try:
-                content_snippet = f.read_text(encoding="utf-8", errors="ignore")[:2000].lower()
-                if any(w in content_snippet for w in ["trading", "perp", "orderbook", "funding", "microstructure", "sharpe"]):
+                content_snippet = f.read_text(encoding="utf-8", errors="ignore")[:3000].lower()
+                if any(w in content_snippet for w in ["trading", "perp", "orderbook", "order flow", "funding rate", "microstructure", "sharpe", "avellaneda"]):
                     domain_hints.append("Quantitative Trading / Market Microstructure")
-                elif any(w in content_snippet for w in ["gmv", "forecasting", "time-series", "rmsle", "tweedie", "catboost"]):
+                elif any(w in content_snippet for w in ["gmv", "forecasting", "time-series", "rmsle", "tweedie", "catboost", "lightgbm", "tabular"]):
                     domain_hints.append("Temporal Forecasting / Tabular ML")
-                elif any(w in content_snippet for w in ["reinforcement", "marl", "self-play", "posg", "agent", "ppo"]):
+                elif any(w in content_snippet for w in ["reinforcement learning", "marl", "self-play", "posg", "multi-agent", "ppo", "q-learning", "game theory"]):
                     domain_hints.append("Multi-Agent Reinforcement Learning / Game Theory")
-                elif any(w in content_snippet for w in ["physics", "quantum", "material", "molecular", "pde"]):
+                elif any(w in content_snippet for w in ["physics", "quantum", "material", "molecular", "pde", "hamiltonian"]):
                     domain_hints.append("Computational Physics & Materials")
             except Exception:
                 pass
 
-    # Majority domain hint
-    detected_domain = max(set(domain_hints), key=domain_hints.count) if domain_hints else "Scientific Machine Learning & Optimization"
+    if domain_hints:
+        detected_domain = max(set(domain_hints), key=domain_hints.count)
+    else:
+        detected_domain = "General Scientific & Quantitative Research"
+
+    suggested_metric = (
+        "RMSLE" if "Forecasting" in detected_domain 
+        else ("Sharpe Ratio" if "Trading" in detected_domain 
+        else ("Reward / WinRate" if "Reinforcement" in detected_domain else "Objective Score"))
+    )
 
     return {
         "is_empty": False,
         "project_name": root.name,
         "detected_domain": detected_domain,
-        "detected_stack": " / ".join(stack) or "Unknown",
+        "detected_stack": " / ".join(stack) or "Custom",
         "candidate_doc_files": candidate_docs[:10],
         "candidate_trace_files": candidate_traces[:5],
-        "suggested_metric": "RMSLE" if "Forecasting" in detected_domain else ("Sharpe Ratio" if "Trading" in detected_domain else "Score")
+        "suggested_metric": suggested_metric
     }
