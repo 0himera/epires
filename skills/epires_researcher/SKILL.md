@@ -14,7 +14,33 @@ description: Operating protocol and cognitive scaffolding for the Principal Inve
 
 ---
 
-## 2. Hypothesis-First & Falsification Discipline
+## 2. Adaptive Workspace Onboarding Protocol
+
+When joining or initializing a research workspace, determine the project state and follow the appropriate onboarding path:
+
+### Mode A: Clean / Empty Repository
+1. **Dialogue**: Ask the user for the high-level research goal, scientific/financial domain, and target evaluation metric (e.g. RMSLE, Sharpe, Accuracy, Loss).
+2. **Directory Structure**: Create standard directories (`docs/`, `artifacts/`, `src/`, `tests/`).
+3. **Initialization**: Run `epires init` (or initialize `.epires/config.json`).
+4. **First Hypothesis**: Formulate and register the baseline hypothesis $H_0 / H_1$ via `epires_register_hypothesis`.
+
+### Mode B: Existing / Custom Repository
+1. **Topology Scan**: Inspect directory structure, read existing documents, notes, and configs (`pyproject.toml`, `Cargo.toml`, etc.).
+2. **Dynamic Path & Domain Resolution**:
+   - Identify where hypotheses and notes reside (e.g., `research/`, `specs/`, `findings.md`, `README.md`).
+   - Identify where artifacts/logs are generated.
+   - Infer the research domain (e.g., *Quantitative Trading*, *Temporal Forecasting*, *Multi-Agent RL*).
+3. **Interactive Alignment with User**:
+   - Present the detected structure concisely.
+   - Ask clarifying questions regarding path bindings, metric priorities, and whether to merge or separate protocol files (`AGENTS.md` vs `.epires/SKILL.md`).
+   - Ask if historical hypotheses should be ingested into the VSA Hypergraph.
+4. **Self-Documenting Configuration**:
+   - Save resolved paths into `.epires/config.json`.
+   - Explicitly document all verified file paths into `AGENTS.md`.
+
+---
+
+## 3. Hypothesis-First & Falsification Discipline
 1. **Hypothesis-First**: No experiment may be executed without first registering the hypothesis in the VSA Hypergraph via `epires_register_hypothesis`.
 2. **A Priori Justification**: Before empirics, prove the theoretical mechanism or mathematical basis of the claim.
 3. **Popperian Falsification Criteria**: Explicitly define what numerical result or condition **falsifies** the hypothesis.
@@ -33,14 +59,18 @@ description: Operating protocol and cognitive scaffolding for the Principal Inve
 
 ---
 
-## 3. Tooling & Research Workflow
+## 4. Operational Research Workflow
+
+```
+[Literature Search: parallel-web] ➔ [VSA Gap Analysis] ➔ [Register H-tag] ➔ [Delegate to Coder] ➔ [Verify Diff] ➔ [Log Evidence & DAG Update] ➔ [AutoTrace & Commit]
+```
 
 ### Step 1: Reflexion & Parallel Web Search
-* Before proposing hypotheses or after surprising findings, execute deep parallel searches using `epires_parallel_web_search` (ArXiv, primary papers, official documentation).
+* Execute multi-query parallel searches using `epires_parallel_web_search` (ArXiv, primary papers, official documentation).
 
 ### Step 2: VSA Hypergraph & Gap Discovery
-* Use `epires_associative_search` to query existing knowledge.
-* Use `epires_find_gaps` to discover untested combinations of models, features, and regimes.
+* Query existing knowledge via `epires_associative_search`.
+* Discover unexplored feature/model combinations via `epires_find_gaps`.
 
 ### Step 3: Register Hypothesis
 * Call `epires_register_hypothesis(id, title, a_priori_mechanism, falsification_criteria, parent_ids, ...)`.
@@ -62,7 +92,7 @@ When delegating work to a coder or runner subagent, enforce the **Strict Contrac
 * Confirm that test outputs are green and metric claims match logs.
 
 ### Step 6: Epistemic Update & Cascading Invalidation
-* Call `epires_log_evidence(...)` with the verified metrics, confidence tag, and artifact hash.
+* Call `epires_log_evidence(...)` with verified metrics, confidence tag, and artifact hash.
 * If falsification criteria are met, set `falsification_triggered=True`. The VSA DAG will automatically **BLOCK** all downstream dependent hypotheses.
 
 ### Step 7: Export & Commit

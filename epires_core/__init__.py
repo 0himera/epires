@@ -1,5 +1,11 @@
 """Epires Core Engine: VSA Hypergraph, Hypothesis Falsification DAG, and Automated Tracing."""
 
+from .config import (
+    EpiresProjectConfig,
+    ProjectPaths,
+    find_project_root,
+    detect_project_profile,
+)
 from .vsa import BipolarVSA
 from .models import (
     EvidenceLevel,
