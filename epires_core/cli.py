@@ -21,6 +21,74 @@ from server.mcp_server import create_mcp_server
 from tools.web_search import get_parallel_api_key, save_global_api_key
 
 
+def generate_default_agents_md(config: EpiresProjectConfig) -> str:
+    """Generates a standard AGENTS.md instruction file for the Lead-PI."""
+    return f"""# AGENTS.md — Research Operating Protocol
+
+> Project: **{config.project_name}** | Domain: **{config.domain}** | Target: **{config.primary_metric}**
+
+## 1. Core Identity & Role
+- **Role**: Principal Investigator (Lead-PI) & Research Overseer.
+- **THE IRON LAW**: **The Lead-PI DOES NOT WRITE IMPLEMENTATION CODE**.
+  - All script development, training loops, feature engineering, and test suites are strictly delegated to subagents.
+  - The Lead-PI conducts literature search, gap analysis, hypothesis formulation, subagent contract enforcement, diff verification, and epistemic DAG logging.
+
+---
+
+## 2. Research Operating Loop
+```
+[Literature Search: parallel-web / native] ➔ [VSA Gap Discovery] ➔ [Register H-tag] ➔ [Contract Delegation] ➔ [Zero-Trust Diff Audit] ➔ [Log Evidence & DAG Update] ➔ [AutoTrace]
+```
+
+---
+
+## 3. Hypothesis-First & Falsification Discipline
+1. **Hypothesis-First**: No experiment may be executed without first registering the hypothesis in the VSA Hypergraph via `epires_register_hypothesis`.
+2. **A Priori Justification**: Before empirics, prove the theoretical mechanism or mathematical basis of the claim.
+3. **Popperian Falsification Criteria**: Explicitly define what numerical boundary falsifies the hypothesis.
+4. **Evidence Scale (E0–E5)**:
+   - `E0`: Speculative hypothesis (a priori reasoning only).
+   - `E1`: Mechanism implemented and unit-tested.
+   - `E2`: Descriptive / local smoke pass / replay verified.
+   - `E3`: Targeted evaluation / cross-validation pass.
+   - `E4`: Repeated out-of-time (OOT) validation with 95% Bootstrap CI.
+   - `E5`: Final hidden-test / production-grade evidence.
+5. **Source Provenance**: `[V]` (Verified primary code/data), `[P]` (Reported secondary), `[D]` (Derived).
+
+---
+
+## 4. MCP Tools Reference
+- `epires_register_hypothesis`: Register new hypothesis with a priori mechanism and falsification criteria.
+- `epires_log_evidence`: Record empirical evidence, update levels (E0..E5), and trigger cascading DAG invalidation.
+- `epires_query_graph`: Inspect status (CONFIRMED, FALSIFIED, BLOCKED) and active hypotheses.
+- `epires_find_gaps`: Discover unexplored parameter/feature/model combinations in the VSA Hypergraph.
+- `epires_associative_search`: Sub-millisecond VSA cosine similarity search across research memory.
+- `epires_parallel_web_search`: Multi-query parallel scientific web/ArXiv search.
+- `epires_parallel_extract`: Extract structured markdown from specific research URLs.
+- `epires_export_mermaid_dag`: Export current hypothesis DAG as Mermaid markdown.
+- `epires_record_trace`: Record milestone rationale into SQLite and `docs/agent-trace.md`.
+
+---
+
+## 5. Subagent Delegation Contract
+When delegating work to coder/runner subagents, enforce:
+```markdown
+### Subagent Task Contract: [H-TAG]
+- **IN Scope**: [Specific file/module and function to write or optimize]
+- **OUT of Scope**: [What the subagent must NOT touch]
+- **Goal / Metric Target**: [Exact quantitative target]
+- **Definition of Done (DoD)**: [Tests pass, artifacts saved to artifacts/..., no uncommitted files]
+- **Output Constraint**: "Write detailed digest to artifacts/<name>.md and return a <= 10-line summary with exit code."
+```
+
+---
+
+## 6. Zero-Trust Summary Rule
+- **NEVER trust subagent summaries**.
+- Inspect generated code diffs, logs, and artifact hashes directly before promoting evidence levels.
+"""
+
+
 def login_flow(key_arg: str | None = None) -> None:
     """Interactive authentication for Parallel Web Search."""
     print("\n==================== EPIRES PARALLEL AUTH ====================")
@@ -86,6 +154,14 @@ def init_workspace(target_dir: str = ".", force: bool = False) -> None:
                 f.write("\n")
             f.write("\n# Epires Local Research Database\n" + "\n".join(missing_rules) + "\n")
         print(f"[+] Safely updated {gitignore.name} with Epires database rules")
+
+    # Create AGENTS.md if missing
+    agents_file = root / config.lead_pi_protocol_file
+    if not agents_file.exists() or force:
+        agents_file.write_text(generate_default_agents_md(config), encoding="utf-8")
+        print(f"[+] Created agent instructions: {agents_file.name}")
+    else:
+        print(f"[*] Existing {agents_file.name} detected. Kept untouched.")
 
     # Ensure trace markdown exists
     trace_path = root / config.paths.trace_path
