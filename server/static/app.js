@@ -316,22 +316,21 @@
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
-    const width = 184;
-    const height = 42;
+    const width = 240;
+    const height = 52;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
 
-    const count = 22;
+    const count = 26;
     const nodes = [];
     for (let i = 0; i < count; i++) {
       const theta = (i / count) * Math.PI * 2;
       const phi = Math.acos((i / (count - 1)) * 2 - 1);
-      nodes.push({ theta, phi, radius: 13 + (i % 3) * 2, speed: 0.007 + (i % 4) * 0.003 });
+      nodes.push({ theta, phi, radius: 17 + (i % 3) * 3, speed: 0.007 + (i % 4) * 0.003 });
     }
 
     let angle = 0;
-    let scanX = 0;
     let isHovered = false;
 
     canvas.addEventListener('mouseenter', () => { isHovered = true; });
@@ -341,12 +340,10 @@
       ctx.clearRect(0, 0, width, height);
       const isNoir = document.documentElement.getAttribute('data-theme') === 'noir';
       const primaryColor = isNoir ? '244, 243, 238' : '18, 19, 22';
-      const accentColor = isNoir ? '52, 211, 153' : '5, 150, 105';
 
       const cx = width / 2;
       const cy = height / 2;
-      angle += isHovered ? 0.028 : 0.012;
-      scanX = (scanX + 0.6) % (width + 40);
+      angle += isHovered ? 0.024 : 0.010;
 
       // Projected 3D points
       const projected = nodes.map((n) => {
@@ -355,14 +352,14 @@
         const y3d = n.radius * Math.cos(n.phi);
         const z3d = n.radius * Math.sin(n.phi) * Math.sin(currentTheta);
 
-        const pitch = 0.32;
+        const pitch = 0.30;
         const yRot = y3d * Math.cos(pitch) - z3d * Math.sin(pitch);
         const zRot = y3d * Math.sin(pitch) + z3d * Math.cos(pitch);
 
-        const scale = 1 / (1 - zRot / 55);
+        const scale = 1 / (1 - zRot / 70);
         const px = cx + x3d * scale;
         const py = cy + yRot * scale;
-        const depthAlpha = Math.max(0.18, Math.min(0.85, (zRot + 16) / 32));
+        const depthAlpha = Math.max(0.18, Math.min(0.85, (zRot + 20) / 40));
 
         return { x: px, y: py, z: zRot, alpha: depthAlpha };
       });
@@ -374,8 +371,8 @@
           const dx = projected[i].x - projected[j].x;
           const dy = projected[i].y - projected[j].y;
           const dist = Math.hypot(dx, dy);
-          if (dist < 25) {
-            const edgeAlpha = (1 - dist / 25) * projected[i].alpha * projected[j].alpha * 0.5;
+          if (dist < 32) {
+            const edgeAlpha = (1 - dist / 32) * projected[i].alpha * projected[j].alpha * 0.45;
             ctx.strokeStyle = `rgba(${primaryColor}, ${edgeAlpha})`;
             ctx.beginPath();
             ctx.moveTo(projected[i].x, projected[i].y);
@@ -385,38 +382,20 @@
         }
       }
 
-      // Sweeping scanline effect
-      const curScan = scanX - 20;
-      if (curScan >= 0 && curScan <= width) {
-        const grad = ctx.createLinearGradient(curScan - 10, 0, curScan + 10, 0);
-        grad.addColorStop(0, `rgba(${accentColor}, 0)`);
-        grad.addColorStop(0.5, `rgba(${accentColor}, 0.22)`);
-        grad.addColorStop(1, `rgba(${accentColor}, 0)`);
-        ctx.fillStyle = grad;
-        ctx.fillRect(curScan - 10, 3, 20, height - 6);
-
-        ctx.strokeStyle = `rgba(${accentColor}, 0.6)`;
-        ctx.lineWidth = 0.8;
-        ctx.beginPath();
-        ctx.moveTo(curScan, 5);
-        ctx.lineTo(curScan, height - 5);
-        ctx.stroke();
-      }
-
       // Nodes
       projected.forEach(p => {
         ctx.fillStyle = `rgba(${primaryColor}, ${p.alpha})`;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.z > 0 ? 1.3 : 0.85, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.z > 0 ? 1.4 : 0.9, 0, Math.PI * 2);
         ctx.fill();
       });
 
-      // Subtle registration ticks
-      ctx.strokeStyle = `rgba(${primaryColor}, 0.22)`;
+      // Registration ticks
+      ctx.strokeStyle = `rgba(${primaryColor}, 0.25)`;
       ctx.lineWidth = 0.6;
       ctx.beginPath();
-      ctx.moveTo(10, cy); ctx.lineTo(18, cy);
-      ctx.moveTo(width - 18, cy); ctx.lineTo(width - 10, cy);
+      ctx.moveTo(12, cy); ctx.lineTo(22, cy);
+      ctx.moveTo(width - 22, cy); ctx.lineTo(width - 12, cy);
       ctx.stroke();
 
       requestAnimationFrame(draw);
