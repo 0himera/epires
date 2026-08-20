@@ -3,97 +3,79 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EPIRES // Epistemic Research Infrastructure</title>
+  <title>EPIRES // Research Infrastructure</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="editorial-body">
-  <!-- Full-Page Noise & Tactile Grain Canvas -->
+  <!-- Full-Page Noise & Tactile Grain Overlay -->
   <canvas id="noise-canvas" class="noise-overlay" aria-hidden="true"></canvas>
 
   <div class="print-container">
-    <!-- Top Editorial Header: Structured, Balanced & High-Information -->
+    <!-- Top Editorial Header: Minimalist, Airy & 100% Dynamic -->
     <header class="print-header">
       <div class="header-left">
         <h1 class="editorial-headline" id="hdr-project-domain">
-          Computational research infrastructure; simulation-based discovery
+          <!-- Dynamically populated from config.domain -->
         </h1>
         <div class="header-sub-meta">
-          <span class="meta-tag" id="project-name">socomputing</span>
-          <span class="meta-sep">/</span>
-          <span class="meta-tag" id="project-metric">Recall@10 (maximize)</span>
-          <span class="meta-sep">/</span>
-          <span class="meta-tag" id="hdr-task-desc">Autonomous empirical discovery & hypothesis governance</span>
+          <span class="meta-tag" id="project-name"></span>
+          <span class="meta-sep" id="sep-metric" style="display: none;">/</span>
+          <span class="meta-tag" id="project-metric"></span>
+          <span class="meta-sep" id="sep-task" style="display: none;">/</span>
+          <span class="meta-tag meta-desc" id="hdr-task-desc"></span>
         </div>
       </div>
 
       <div class="header-right">
-        <!-- Technical Architecture Spec Box (Balances Header Whitespace) -->
-        <div class="spec-panel">
-          <div class="spec-row">
-            <span class="spec-k">VSA SPACE:</span>
-            <span class="spec-v">D=10,000 (σ=0.01)</span>
-          </div>
-          <div class="spec-row">
-            <span class="spec-k">CAPACITY:</span>
-            <span class="spec-v" id="vsa-capacity-text">C=11 / 500 max</span>
-          </div>
-          <div class="spec-row">
-            <span class="spec-k">PROTOCOL:</span>
-            <span class="spec-v spec-active">LEAD-PI ACTIVE</span>
-          </div>
-        </div>
-
-        <div class="header-ctrl-group">
-          <button class="theme-toggle-btn" id="btn-theme-toggle" title="Toggle Paper / Noir theme">
-            <span id="theme-label">PAPER</span>
-          </button>
-          <button class="editorial-action-btn" id="btn-refresh">
-            <span>SYNC</span>
-          </button>
-        </div>
+        <button class="theme-toggle-btn" id="btn-theme-toggle" title="Toggle Paper / Noir theme">
+          <span id="theme-label">PAPER</span>
+        </button>
+        <button class="editorial-action-btn" id="btn-refresh">
+          <span>SYNC</span>
+        </button>
       </div>
     </header>
 
-    <!-- Balanced Tabular KPI Ribbon -->
+    <!-- Minimalist Tabular KPI Ribbon -->
     <section class="kpi-strip">
       <div class="kpi-cell" data-filter="ALL">
         <span class="kpi-lbl">TOTAL SPECIMENS</span>
-        <span class="kpi-num" id="kpi-total">11</span>
+        <span class="kpi-num" id="kpi-total">--</span>
       </div>
 
       <div class="kpi-cell" data-filter="IN_PROGRESS">
         <span class="kpi-lbl">IN PROGRESS</span>
-        <span class="kpi-num in-progress-num" id="kpi-in-progress">09</span>
+        <span class="kpi-num in-progress-num" id="kpi-in-progress">--</span>
       </div>
 
       <div class="kpi-cell" data-filter="FALSIFIED">
         <span class="kpi-lbl">FALSIFIED (REFUTED)</span>
-        <span class="kpi-num falsified-num" id="kpi-falsified">02</span>
+        <span class="kpi-num falsified-num" id="kpi-falsified">--</span>
       </div>
 
       <div class="kpi-cell" data-filter="CONFIRMED">
         <span class="kpi-lbl">CONFIRMED</span>
-        <span class="kpi-num confirmed-num" id="kpi-confirmed">00</span>
+        <span class="kpi-num confirmed-num" id="kpi-confirmed">--</span>
       </div>
 
       <div class="kpi-cell kpi-spectrum-cell">
-        <span class="kpi-lbl">EVIDENCE MATURITY SPECTRUM</span>
+        <span class="kpi-lbl">EVIDENCE MATURITY LADDER</span>
         <div class="spectrum-pills" id="evidence-spectrum">
-          <!-- Populated by JS -->
+          <!-- Dynamically populated from hypothesis levels -->
         </div>
       </div>
     </section>
 
     <!-- Main Workspace Stage -->
     <div class="workspace-stage">
-      <!-- Left Stage: Topological DAG Canvas -->
+      <!-- Left Stage: Topological Morphic DAG Canvas -->
       <section class="canvas-section">
         <div class="canvas-top-bar">
           <div class="filter-pills" id="dag-filter-group">
-            <button class="f-pill active" data-status="ALL">ALL [11]</button>
+            <button class="f-pill active" data-status="ALL">ALL</button>
             <button class="f-pill" data-status="IN_PROGRESS">IN PROGRESS</button>
             <button class="f-pill f-pill-falsified" data-status="FALSIFIED">FALSIFIED</button>
             <button class="f-pill f-pill-confirmed" data-status="CONFIRMED">CONFIRMED</button>
@@ -126,33 +108,33 @@
               <div class="inner-sq"></div>
             </div>
             <h3 class="empty-heading">NO SPECIMEN SELECTED</h3>
-            <p class="empty-desc">Click any hypothesis card on the canvas to inspect its theoretical mathematical mechanism, Popperian boundaries, and empirical test claims.</p>
+            <p class="empty-desc">Select any hypothesis facet on the topological canvas to inspect its theoretical mechanism and empirical falsification criteria.</p>
           </div>
 
           <div id="inspector-body" class="dossier-filled" style="display: none;">
             <div class="specimen-card-top">
               <div class="spec-meta-row">
-                <span class="spec-id" id="ins-id">VSAR-004</span>
-                <span class="spec-badge" id="ins-status">IN_PROGRESS</span>
-                <span class="spec-level-tag" id="ins-level">LEVEL E0</span>
+                <span class="spec-id" id="ins-id"></span>
+                <span class="spec-badge" id="ins-status"></span>
+                <span class="spec-level-tag" id="ins-level"></span>
               </div>
-              <h2 class="spec-title-text" id="ins-title">Error-feedback delta rule on hypervectors</h2>
+              <h2 class="spec-title-text" id="ins-title"></h2>
             </div>
 
             <!-- Monograph Sections -->
             <div class="dossier-block">
               <span class="block-lbl">§ 1.0 THEORETICAL MECHANISM</span>
-              <div class="block-prose" id="ins-mechanism">...</div>
+              <div class="block-prose" id="ins-mechanism"></div>
             </div>
 
             <div class="dossier-block falsification-block">
               <span class="block-lbl">§ 2.0 POPPERIAN FALSIFICATION BOUNDARY</span>
-              <div class="block-prose falsification-prose" id="ins-falsification">...</div>
+              <div class="block-prose falsification-prose" id="ins-falsification"></div>
             </div>
 
             <div class="dossier-block">
               <span class="block-lbl">§ 3.0 DAG ANTECEDENTS</span>
-              <div class="dep-pill-row" id="ins-parents">None</div>
+              <div class="dep-pill-row" id="ins-parents"></div>
             </div>
 
             <div class="dossier-block">
@@ -168,7 +150,7 @@
         <div class="tab-pane" id="tab-traces">
           <div class="trace-search-box">
             <input type="text" id="traces-search" placeholder="Filter operational log..." class="clean-input">
-            <span class="trace-badge" id="traces-count-text">15 entries</span>
+            <span class="trace-badge" id="traces-count-text"></span>
           </div>
           <div class="trace-list" id="traces-stream-container"></div>
         </div>

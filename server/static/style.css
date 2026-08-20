@@ -1,6 +1,6 @@
 /* ==========================================================================
-   EPIRES ARCHIVAL EDITORIAL & MONOTONE DESIGN SYSTEM
-   High-DPI 2K Optimized Typographic Hierarchy with Tactile Full-Screen Grain
+   EPIRES ARCHIVAL EDITORIAL & MATHEMATICAL FACET DESIGN SYSTEM
+   Fluid Relative Typography & Units (rem, clamp, ch) for Universal Scaling
    ========================================================================== */
 
 :root {
@@ -35,7 +35,7 @@
   --pastel-in-progress-border: rgba(245, 158, 11, 0.35);
 
   --svg-node-bg: #ffffff;
-  --svg-node-stroke: rgba(0, 0, 0, 0.14);
+  --svg-node-stroke: rgba(0, 0, 0, 0.15);
   --svg-node-hover-stroke: #121316;
   --svg-edge-stroke: rgba(0, 0, 0, 0.2);
   --svg-edge-highlight: #121316;
@@ -81,8 +81,14 @@
   --svg-edge-highlight: #ffffff;
 }
 
-* {
+/* Universal Root Scaling */
+html {
+  font-size: clamp(13px, 0.35vw + 10px, 19px);
   box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
   margin: 0;
   padding: 0;
 }
@@ -91,7 +97,7 @@ body.editorial-body {
   background-color: var(--bg-app);
   color: var(--ink-primary);
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: 1rem;
   line-height: 1.5;
   overflow: hidden;
   height: 100vh;
@@ -100,13 +106,7 @@ body.editorial-body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-@media (min-width: 1700px) {
-  body.editorial-body {
-    font-size: 15px;
-  }
-}
-
-/* Full-Screen Shader / Paper Grain Overlay */
+/* Full-Screen Shader / Paper Grain Canvas */
 .noise-overlay {
   position: fixed;
   top: 0;
@@ -133,48 +133,54 @@ body.editorial-body {
 }
 
 /* --------------------------------------------------------------------------
-   1. Clean Editorial Header (Generous Whitespace & Balanced Info)
+   1. Clean Editorial Header (Generous & Purposeful Whitespace)
    -------------------------------------------------------------------------- */
 .print-header {
   display: flex;
   justify-content: space-between;
-  align-items: stretch;
-  padding: 18px 32px;
+  align-items: flex-end;
+  padding: 1.4rem 2rem 1.1rem 2rem;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--rule-hairline);
   flex-shrink: 0;
-  gap: 28px;
+  gap: 2rem;
 }
 
 .header-left {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  max-width: 860px;
+  gap: 0.4rem;
+  max-width: 68ch;
 }
 
 .editorial-headline {
   font-family: var(--font-sans);
-  font-size: clamp(20px, 1.8vw, 28px);
+  font-size: clamp(1.4rem, 1.6vw + 0.5rem, 2.2rem);
   font-weight: 700;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.035em;
   color: var(--ink-primary);
-  line-height: 1.2;
+  line-height: 1.15;
+  min-height: 1.2em;
 }
 
 .header-sub-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.6rem;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.78rem;
   color: var(--ink-muted);
+  flex-wrap: wrap;
 }
 
 .meta-tag {
   color: var(--ink-primary);
   font-weight: 600;
+}
+
+.meta-desc {
+  color: var(--ink-secondary);
+  font-weight: 400;
 }
 
 .meta-sep {
@@ -184,45 +190,8 @@ body.editorial-body {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
-}
-
-/* Technical Specification Box (Fills Header Right Gracefully) */
-.spec-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: var(--bg-plate-subtle);
-  border: 1px solid var(--rule-crisp);
-  padding: 8px 14px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-
-.spec-row {
-  display: flex;
-  gap: 8px;
-}
-
-.spec-k {
-  color: var(--ink-muted);
-  font-size: 9.5px;
-  letter-spacing: 0.05em;
-}
-
-.spec-v {
-  color: var(--ink-primary);
-  font-weight: 600;
-}
-
-.spec-active {
-  color: var(--pastel-confirmed-ink);
-}
-
-.header-ctrl-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .theme-toggle-btn {
@@ -230,9 +199,9 @@ body.editorial-body {
   border: 1px solid var(--rule-crisp);
   color: var(--ink-secondary);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 0.75rem;
   font-weight: 700;
-  padding: 6px 12px;
+  padding: 0.45rem 0.9rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -247,10 +216,10 @@ body.editorial-body {
   color: var(--bg-surface);
   border: none;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  padding: 6px 14px;
+  padding: 0.45rem 1rem;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.1s ease;
 }
@@ -265,15 +234,15 @@ body.editorial-body {
    -------------------------------------------------------------------------- */
 .kpi-strip {
   display: grid;
-  grid-template-columns: repeat(4, 180px) 1fr;
+  grid-template-columns: repeat(4, minmax(110px, 160px)) 1fr;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--rule-hairline);
-  padding: 0 32px;
+  padding: 0 2rem;
   flex-shrink: 0;
 }
 
 .kpi-cell {
-  padding: 12px 20px 12px 0;
+  padding: 0.8rem 1.2rem 0.8rem 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -282,16 +251,16 @@ body.editorial-body {
 
 .kpi-lbl {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
-  margin-bottom: 2px;
+  margin-bottom: 0.15rem;
 }
 
 .kpi-num {
   font-family: var(--font-mono);
-  font-size: clamp(20px, 2vw, 28px);
+  font-size: clamp(1.3rem, 1.4vw + 0.4rem, 1.9rem);
   font-weight: 700;
   color: var(--ink-primary);
   letter-spacing: -0.02em;
@@ -319,16 +288,16 @@ body.editorial-body {
 
 .spectrum-pills {
   display: flex;
-  gap: 4px;
-  margin-top: 4px;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
 }
 
 .s-pill {
-  padding: 3px 8px;
+  padding: 0.2rem 0.55rem;
   background: var(--bg-plate-subtle);
   border: 1px solid var(--rule-hairline);
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 0.68rem;
   color: var(--ink-muted);
 }
 
@@ -362,15 +331,14 @@ body.editorial-body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 28px;
-  height: 46px;
+  padding: 0.65rem 1.8rem;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--rule-hairline);
 }
 
 .filter-pills {
   display: flex;
-  gap: 6px;
+  gap: 0.4rem;
 }
 
 .f-pill {
@@ -378,9 +346,9 @@ body.editorial-body {
   border: 1px solid var(--rule-crisp);
   color: var(--ink-secondary);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 0.28rem 0.75rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -403,17 +371,17 @@ body.editorial-body {
 .canvas-tools {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.4rem;
 }
 
 .tool-btn {
-  width: 28px;
-  height: 26px;
+  width: 1.8rem;
+  height: 1.65rem;
   border: 1px solid var(--rule-crisp);
   background: var(--bg-surface);
   color: var(--ink-secondary);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -431,10 +399,10 @@ body.editorial-body {
   background: var(--bg-surface);
   color: var(--ink-secondary);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 4px 10px;
-  height: 26px;
+  padding: 0 0.75rem;
+  height: 1.65rem;
   cursor: pointer;
 }
 
@@ -462,7 +430,7 @@ body.editorial-body {
    4. Right Monograph Section
    -------------------------------------------------------------------------- */
 .monograph-section {
-  width: 480px;
+  width: clamp(380px, 28vw, 560px);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -472,18 +440,18 @@ body.editorial-body {
 
 .monograph-tabs {
   display: flex;
-  padding: 0 20px;
+  padding: 0 1.5rem;
   border-bottom: 1px solid var(--rule-hairline);
   background: var(--bg-surface);
 }
 
 .m-tab {
-  padding: 14px 16px;
+  padding: 0.9rem 1.1rem;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
@@ -504,7 +472,7 @@ body.editorial-body {
   display: none;
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 1.6rem;
 }
 
 .tab-pane.active {
@@ -518,35 +486,35 @@ body.editorial-body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 40px;
+  padding: 2.5rem;
 }
 
 .empty-wireframe-icon {
-  width: 42px;
-  height: 42px;
+  width: 2.8rem;
+  height: 2.8rem;
   border: 1px solid var(--rule-crisp);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 1.2rem;
 }
 
 .inner-sq {
-  width: 20px;
-  height: 20px;
+  width: 1.3rem;
+  height: 1.3rem;
   border: 1px dashed var(--rule-crisp);
 }
 
 .empty-heading {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  margin-bottom: 8px;
+  margin-bottom: 0.6rem;
 }
 
 .empty-desc {
-  font-size: 12.5px;
+  font-size: 0.85rem;
   color: var(--ink-muted);
   line-height: 1.6;
 }
@@ -554,33 +522,33 @@ body.editorial-body {
 .dossier-filled {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 1.4rem;
 }
 
 .specimen-card-top {
   border-bottom: 1px solid var(--rule-hairline);
-  padding-bottom: 16px;
+  padding-bottom: 1.1rem;
 }
 
 .spec-meta-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
 }
 
 .spec-id {
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--ink-primary);
 }
 
 .spec-badge {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 0.15rem 0.55rem;
   border: 1px solid;
 }
 
@@ -592,13 +560,13 @@ body.editorial-body {
 
 .spec-level-tag {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 0.68rem;
   color: var(--ink-muted);
 }
 
 .spec-title-text {
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 1.15rem;
   font-weight: 600;
   line-height: 1.35;
   color: var(--ink-primary);
@@ -608,24 +576,24 @@ body.editorial-body {
 .dossier-block {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.4rem;
 }
 
 .block-lbl {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
 }
 
 .block-prose {
-  font-size: 12.5px;
+  font-size: 0.85rem;
   line-height: 1.6;
   color: var(--ink-secondary);
   background: var(--bg-plate-subtle);
   border: 1px solid var(--rule-hairline);
-  padding: 12px 14px;
+  padding: 0.85rem 1rem;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -642,15 +610,15 @@ body.editorial-body {
 
 .dep-pill-row {
   display: flex;
-  gap: 6px;
+  gap: 0.4rem;
   flex-wrap: wrap;
 }
 
 .dep-node-pill {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 3px 10px;
+  padding: 0.25rem 0.7rem;
   background: var(--bg-plate);
   border: 1px solid var(--rule-crisp);
   color: var(--ink-primary);
@@ -665,23 +633,23 @@ body.editorial-body {
 .evidence-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.55rem;
 }
 
 .evidence-card {
   background: var(--bg-plate-subtle);
   border: 1px solid var(--rule-hairline);
-  padding: 10px 12px;
+  padding: 0.75rem 0.9rem;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.3rem;
 }
 
 .ev-header {
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 0.68rem;
   font-weight: 600;
 }
 
@@ -695,16 +663,16 @@ body.editorial-body {
 }
 
 .ev-claim-body {
-  font-size: 12px;
+  font-size: 0.82rem;
   line-height: 1.5;
   color: var(--ink-secondary);
 }
 
 .empty-evidence {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.78rem;
   color: var(--ink-muted);
-  padding: 16px;
+  padding: 1.2rem;
   text-align: center;
   border: 1px dashed var(--rule-crisp);
 }
@@ -716,8 +684,8 @@ body.editorial-body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
-  gap: 10px;
+  margin-bottom: 1rem;
+  gap: 0.75rem;
 }
 
 .clean-input {
@@ -726,8 +694,8 @@ body.editorial-body {
   border: 1px solid var(--rule-crisp);
   color: var(--ink-primary);
   font-family: var(--font-mono);
-  font-size: 11px;
-  padding: 6px 12px;
+  font-size: 0.78rem;
+  padding: 0.45rem 0.8rem;
   outline: none;
 }
 
@@ -737,7 +705,7 @@ body.editorial-body {
 
 .trace-badge {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 0.68rem;
   color: var(--ink-muted);
   font-weight: 600;
 }
@@ -745,23 +713,23 @@ body.editorial-body {
 .trace-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.55rem;
 }
 
 .trace-card {
   background: var(--bg-plate-subtle);
   border: 1px solid var(--rule-hairline);
-  padding: 10px 12px;
+  padding: 0.75rem 0.9rem;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .tr-head {
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 0.68rem;
 }
 
 .tr-action {
@@ -774,7 +742,7 @@ body.editorial-body {
 }
 
 .tr-summary {
-  font-size: 12px;
+  font-size: 0.82rem;
   line-height: 1.45;
   color: var(--ink-secondary);
 }
@@ -783,30 +751,30 @@ body.editorial-body {
    6. White Spot Gaps
    -------------------------------------------------------------------------- */
 .gaps-info {
-  margin-bottom: 16px;
+  margin-bottom: 1.1rem;
 }
 
 .gaps-info h3 {
-  font-size: 12.5px;
+  font-size: 0.88rem;
   font-weight: 700;
-  margin-bottom: 2px;
+  margin-bottom: 0.15rem;
 }
 
 .gaps-info p {
-  font-size: 11.5px;
+  font-size: 0.78rem;
   color: var(--ink-muted);
 }
 
 .gaps-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.55rem;
 }
 
 .gap-pill-item {
   background: var(--bg-plate-subtle);
   border: 1px dashed var(--rule-crisp);
-  padding: 10px 12px;
+  padding: 0.75rem 0.9rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -814,21 +782,21 @@ body.editorial-body {
 
 .gap-lbl-text {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.78rem;
   color: var(--ink-primary);
 }
 
 .gap-tag {
   font-family: var(--font-mono);
-  font-size: 8.5px;
-  padding: 2px 6px;
+  font-size: 0.62rem;
+  padding: 0.15rem 0.45rem;
   background: var(--pastel-in-progress-bg);
   border: 1px solid var(--pastel-in-progress-border);
   color: var(--pastel-in-progress-ink);
 }
 
 /* --------------------------------------------------------------------------
-   7. SVG Topological Morphic Nodes (Tight Chamfer Geometry rx="3")
+   7. SVG Topological Morphic Nodes (Elongated Faceted Honeycomb Geometry)
    -------------------------------------------------------------------------- */
 .dag-node-group {
   cursor: grab;

@@ -1,6 +1,6 @@
 /**
  * EPIRES HYPERGRAPH ENGINE // CLIENT CONTROLLER
- * High-DPI 2K Optimized Editorial Paper Theme with Tight Chamfered Geometry
+ * Minimalist Archival Paper Theme with Elongated Faceted Honeycomb Polygons & Fluid Architecture
  */
 
 (function () {
@@ -26,8 +26,9 @@
     pollingInterval: null
   };
 
-  const NODE_WIDTH = 270;
-  const NODE_HEIGHT = 92;
+  // Dimensions for Elongated Faceted Honeycomb Cards
+  const NODE_WIDTH = 290;
+  const NODE_HEIGHT = 88;
   const GAP_X = 64;
   const GAP_Y = 100;
 
@@ -38,9 +39,10 @@
     noiseCanvas: document.getElementById('noise-canvas'),
     projectName: document.getElementById('project-name'),
     projectMetric: document.getElementById('project-metric'),
-    hdrProjectDomain: document.getElementById('hdr-project-domain'),
+    sepMetric: document.getElementById('sep-metric'),
     hdrTaskDesc: document.getElementById('hdr-task-desc'),
-    vsaCapacityText: document.getElementById('vsa-capacity-text'),
+    sepTask: document.getElementById('sep-task'),
+    hdrProjectDomain: document.getElementById('hdr-project-domain'),
     btnThemeToggle: document.getElementById('btn-theme-toggle'),
     themeLabel: document.getElementById('theme-label'),
     kpiTotal: document.getElementById('kpi-total'),
@@ -73,7 +75,7 @@
   };
 
   // --------------------------------------------------------------------------
-  // Full-Screen Procedural Paper Grain Shader
+  // Full-Screen Procedural Paper Grain Shader Canvas
   // --------------------------------------------------------------------------
   function initNoiseShader() {
     const canvas = dom.noiseCanvas;
@@ -100,7 +102,7 @@
         data[i] = val;
         data[i + 1] = val;
         data[i + 2] = val;
-        data[i + 3] = 48; // Alpha opacity
+        data[i + 3] = 45; // Subtle tactile alpha
       }
 
       ctx.putImageData(imgData, 0, 0);
@@ -148,7 +150,7 @@
       state.traces = tracesRes || [];
       state.gaps = gapsRes || [];
 
-      bindConfigToHeader();
+      bindDynamicConfig();
       updateKPISummary();
       renderDAG();
       renderTraces();
@@ -162,20 +164,42 @@
     }
   }
 
-  function bindConfigToHeader() {
+  function bindDynamicConfig() {
     const conf = state.config;
-    if (dom.projectName && conf.project_name) {
-      dom.projectName.textContent = conf.project_name;
+
+    // 1. Domain Headline
+    if (dom.hdrProjectDomain) {
+      dom.hdrProjectDomain.textContent = conf.domain || 'Autonomous Research & Hypothesis Governance';
     }
-    if (dom.hdrProjectDomain && conf.domain) {
-      dom.hdrProjectDomain.textContent = conf.domain;
+
+    // 2. Project Name
+    if (dom.projectName) {
+      dom.projectName.textContent = conf.project_name || 'research_project';
     }
-    if (dom.hdrTaskDesc && conf.task_description) {
-      dom.hdrTaskDesc.textContent = conf.task_description;
+
+    // 3. Primary Metric & Goal
+    if (dom.projectMetric) {
+      if (conf.primary_metric) {
+        const goal = conf.metric_goal ? ` (${conf.metric_goal})` : '';
+        dom.projectMetric.textContent = `${conf.primary_metric}${goal}`;
+        dom.projectMetric.style.display = 'inline';
+        if (dom.sepMetric) dom.sepMetric.style.display = 'inline';
+      } else {
+        dom.projectMetric.style.display = 'none';
+        if (dom.sepMetric) dom.sepMetric.style.display = 'none';
+      }
     }
-    if (dom.projectMetric && conf.primary_metric) {
-      const goalStr = conf.metric_goal ? ` (${conf.metric_goal})` : '';
-      dom.projectMetric.textContent = `${conf.primary_metric}${goalStr}`;
+
+    // 4. Task Description
+    if (dom.hdrTaskDesc) {
+      if (conf.task_description) {
+        dom.hdrTaskDesc.textContent = conf.task_description;
+        dom.hdrTaskDesc.style.display = 'inline';
+        if (dom.sepTask) dom.sepTask.style.display = 'inline';
+      } else {
+        dom.hdrTaskDesc.style.display = 'none';
+        if (dom.sepTask) dom.sepTask.style.display = 'none';
+      }
     }
   }
 
@@ -192,10 +216,6 @@
     dom.kpiConfirmed.textContent = String(confirmed).padStart(2, '0');
     dom.kpiInProgress.textContent = String(inProg).padStart(2, '0');
     dom.kpiFalsified.textContent = String(falsified).padStart(2, '0');
-
-    if (dom.vsaCapacityText) {
-      dom.vsaCapacityText.textContent = `C=${total} / 500 max`;
-    }
 
     // Evidence Maturity Spectrum
     const levels = { E0: 0, E1: 0, E2: 0, E3: 0, E4: 0, E5: 0 };
@@ -245,7 +265,7 @@
 
     layers.forEach((layerNodes, layerIdx) => {
       const totalWidth = layerNodes.length * NODE_WIDTH + (layerNodes.length - 1) * GAP_X;
-      const startX = Math.max(50, 600 - totalWidth / 2);
+      const startX = Math.max(40, 600 - totalWidth / 2);
 
       layerNodes.forEach((node, nodeIdx) => {
         if (!state.nodePositions.has(node.id)) {
@@ -261,7 +281,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // SVG Tight Chamfer DAG Rendering (rx="3")
+  // SVG Elongated Faceted Honeycomb DAG Rendering
   // --------------------------------------------------------------------------
   function renderDAG() {
     const svg = dom.svg;
@@ -319,7 +339,7 @@
       });
     });
 
-    // 2. Strict Architectural Chamfered Nodes (rx="3")
+    // 2. Elongated Faceted Honeycomb Nodes
     filteredNodes.forEach(node => {
       const pos = state.nodePositions.get(node.id);
       if (!pos) return;
@@ -334,29 +354,36 @@
       gNode.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
       gNode.dataset.id = node.id;
 
-      const truncatedTitle = node.title.length > 34 ? node.title.substring(0, 32) + '…' : node.title;
+      const truncatedTitle = node.title.length > 36 ? node.title.substring(0, 34) + '…' : node.title;
 
       let statusColor = 'var(--ink-secondary)';
       if (isFalsified) statusColor = 'var(--pastel-falsified-ink)';
       if (isConfirmed) statusColor = 'var(--pastel-confirmed-ink)';
       if (node.status === 'IN_PROGRESS') statusColor = 'var(--pastel-in-progress-ink)';
 
+      // Asymmetric Faceted Hexagonal Honeycomb Polygon Points
+      // (16,0) -> (274,0) -> (290,16) -> (290,72) -> (274,88) -> (16,88) -> (0,72) -> (0,16)
+      const polyPoints = `16,0 ${NODE_WIDTH - 16},0 ${NODE_WIDTH},16 ${NODE_WIDTH},${NODE_HEIGHT - 16} ${NODE_WIDTH - 16},${NODE_HEIGHT} 16,${NODE_HEIGHT} 0,${NODE_HEIGHT - 16} 0,16`;
+
       gNode.innerHTML = `
-        <!-- Main Card Plate -->
-        <rect class="node-plate" width="${NODE_WIDTH}" height="${NODE_HEIGHT}" rx="3" ry="3" />
+        <!-- Elongated Faceted Honeycomb Plate -->
+        <polygon class="node-plate" points="${polyPoints}" />
+
+        <!-- Subtle Left Accent Ticks -->
+        <line x1="8" y1="20" x2="8" y2="${NODE_HEIGHT - 20}" stroke="var(--rule-hairline)" stroke-width="1.5" />
 
         <!-- Header: ID + Level -->
-        <text x="16" y="24" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="13">${node.id}</text>
-        <text x="${NODE_WIDTH - 16}" y="24" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="10" font-weight="600" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
+        <text x="20" y="24" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="13">${node.id}</text>
+        <text x="${NODE_WIDTH - 20}" y="24" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="10" font-weight="600" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
 
-        <!-- Divider -->
-        <line x1="16" y1="32" x2="${NODE_WIDTH - 16}" y2="32" stroke="var(--rule-hairline)" stroke-width="1" />
+        <!-- Divider Line -->
+        <line x1="20" y1="32" x2="${NODE_WIDTH - 20}" y2="32" stroke="var(--rule-hairline)" stroke-width="1" />
 
-        <!-- Clean Title -->
-        <text x="16" y="52" fill="var(--ink-primary)" font-family="Inter" font-size="12.5" font-weight="500">${truncatedTitle}</text>
+        <!-- Title -->
+        <text x="20" y="52" fill="var(--ink-primary)" font-family="Inter" font-size="12.5" font-weight="500">${truncatedTitle}</text>
 
         <!-- Status Tag -->
-        <text x="16" y="74" fill="${statusColor}" font-family="IBM Plex Mono" font-size="10" font-weight="700">[ ${node.status} ]</text>
+        <text x="20" y="73" fill="${statusColor}" font-family="IBM Plex Mono" font-size="10" font-weight="700">[ ${node.status} ]</text>
       `;
 
       // Drag listener
