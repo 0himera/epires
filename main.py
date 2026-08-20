@@ -1,4 +1,4 @@
-"""CLI entrypoint for Epires: Deterministic Auto-Research Harness."""
+"""CLI entrypoint for Epires: Epistemic Auto-Research Harness."""
 
 from epires_core.cli import main
 

@@ -1,4 +1,4 @@
-# Epires — Deterministic Auto-Research Harness
+# Epires — Epistemic Auto-Research Harness
 
 > 🇷🇺 Русская версия доступна в [README_RU.md](README_RU.md).
 
@@ -11,7 +11,7 @@
 [![Parallel Web 1.3.0](https://img.shields.io/badge/Parallel_Web-1.3.0-orange.svg)](https://github.com/parallel-web)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**A deterministic auto-research harness and governance engine for scientific discovery, quantitative modeling, and machine learning.**  
+**An epistemic auto-research harness and governance engine for scientific discovery, quantitative modeling, and machine learning.**  
 *Built upon a 10,000-dimensional VSA Hypergraph (HSME heritage), Popperian falsification, E0–E5 evidence scaling, and the Lead Principal Investigator (Lead-PI) protocol.*
 
 </div>

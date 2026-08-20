@@ -1,4 +1,4 @@
-# Epires — Детерминированный Auto-Research харнесс (Русская версия)
+# Epires — Эпистемический Auto-Research харнесс (Русская версия)
 
 > 🌐 English version is available at [README.md](README.md).
 
@@ -11,7 +11,7 @@
 [![Parallel Web 1.3.0](https://img.shields.io/badge/Parallel_Web-1.3.0-orange.svg)](https://github.com/parallel-web)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Детерминированный Auto-Research харнесс и движок управления исследованиями для AI-агентов.**  
+**Эпистемический Auto-Research харнесс и движок управления исследованиями для AI-агентов.**  
 *Построен на базе 10 000-мерного VSA-гиперграфа (наследие HSME), попперовской фальсификации, доказательной шкале E0–E5 и протоколе Главного Исследователя (Lead-PI).*
 
 </div>

@@ -61,7 +61,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     app = FastAPI(
         title="Epires Research Engine",
         version="0.1.0",
-        description="Deterministic Research Engine: VSA Hypergraph, Hypothesis Falsification DAG & Automated Tracing"
+        description="Epistemic Research Engine: VSA Hypergraph, Hypothesis Falsification DAG & Automated Tracing"
     )
 
     app.add_middleware(
