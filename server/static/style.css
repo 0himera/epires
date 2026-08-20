@@ -967,6 +967,61 @@ body.editorial-body {
   border: 1px dashed var(--rule-crisp);
 }
 
+.ledger-artifacts-section {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--rule-crisp);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.ledger-section-title {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: var(--ink-bluegray);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ledger-artifact-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ledger-artifact-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.38rem 0.65rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--rule-crisp);
+  color: var(--ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+  word-break: break-all;
+}
+
+.ledger-artifact-chip:hover {
+  background: var(--bg-plate);
+  color: var(--ink-primary);
+  border-color: var(--ink-primary);
+}
+
+.ledger-artifact-chip .art-icon {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.ledger-artifact-chip .art-name {
+  font-weight: 500;
+}
+
 /* --------------------------------------------------------------------------
    5. Operational Trace Feed
    -------------------------------------------------------------------------- */

@@ -1674,6 +1674,34 @@
           dom.insEvidenceList.appendChild(card);
         });
       }
+
+      // 4. Associated Research Artifact Files from Provenance
+      const artFiles = (state.provenance && state.provenance.artifact_files) || [];
+      const idClean = String(id).toLowerCase().replace(/[^a-z0-9]/g, '');
+      const numMatch = id.match(/\d+/);
+      const numStr = numMatch ? numMatch[0] : '';
+      const matchedArts = artFiles.filter(a => {
+        const nameClean = a.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return nameClean.includes(idClean) || (numStr.length >= 3 && nameClean.includes(numStr));
+      });
+
+      if (matchedArts.length > 0) {
+        const artSection = makeElement('div', 'ledger-artifacts-section');
+        artSection.appendChild(makeElement('div', 'ledger-section-title', `RESEARCH ARTIFACTS (${matchedArts.length})`));
+        const artList = makeElement('div', 'ledger-artifact-chips');
+        matchedArts.forEach(art => {
+          const chip = makeElement('a', 'ledger-artifact-chip');
+          chip.href = `/artifacts/${encodeURIComponent(art.rel_path || art.name)}`;
+          chip.target = '_blank';
+          chip.rel = 'noopener';
+          chip.title = `View artifact ${art.name} (${Math.round(art.size_bytes / 1024)} KB)`;
+          chip.appendChild(makeElement('span', 'art-icon', '📄'));
+          chip.appendChild(makeElement('span', 'art-name', art.name));
+          artList.appendChild(chip);
+        });
+        artSection.appendChild(artList);
+        dom.insEvidenceList.appendChild(artSection);
+      }
     } catch (err) {
       if (inspectorGeneration !== state.inspectorGeneration) return;
       clearElement(dom.insEvidenceList);

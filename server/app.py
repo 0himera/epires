@@ -331,6 +331,32 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
         """Expose persisted source, artifact, relation, and trace provenance."""
         records = atlas_records()
         links: List[Dict[str, Any]] = []
+
+        # Scan filesystem artifacts from configured directory
+        conf = EpiresProjectConfig.load()
+        art_dir_setting = conf.paths.artifacts_dir if conf and conf.paths and conf.paths.artifacts_dir else "artifacts"
+        artifacts_dir_candidates = [
+            Path(art_dir_setting),
+            Path("artifacts"),
+            Path(".epires/artifacts"),
+        ]
+        fs_artifacts: List[Dict[str, Any]] = []
+        found_dir: Optional[Path] = None
+        for cand in artifacts_dir_candidates:
+            if cand and cand.exists() and cand.is_dir():
+                found_dir = cand
+                for p in sorted(cand.glob("**/*")):
+                    if p.is_file() and not p.name.startswith("."):
+                        rel_path = str(p.relative_to(cand))
+                        fs_artifacts.append({
+                            "name": p.name,
+                            "path": f"{cand.name}/{rel_path}",
+                            "rel_path": rel_path,
+                            "size_bytes": p.stat().st_size,
+                            "mtime": p.stat().st_mtime,
+                        })
+                break
+
         for evidence in records["evidence"]:
             links.append({
                 "source_type": "evidence",
@@ -404,8 +430,23 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
                     "target_id": trace.h_tag,
                     "relation": "ABOUT",
                 })
+
+        db_artifacts = set()
+        for ev in records["evidence"]:
+            if ev.citation_or_path:
+                db_artifacts.add(ev.citation_or_path)
+            if ev.artifact_hash:
+                db_artifacts.add(ev.artifact_hash)
+        for exp in records["experiments"]:
+            for ap in exp.artifact_paths:
+                db_artifacts.add(ap)
+
+        total_artifacts_count = max(len(fs_artifacts), len(db_artifacts), len(set(a["path"] for a in fs_artifacts) | db_artifacts))
+
         return atlas_envelope({
             "basis": "persisted_store_records",
+            "artifact_count": total_artifacts_count,
+            "artifact_files": fs_artifacts,
             "hypotheses": records["hypotheses"],
             "evidence": records["evidence"],
             "experiments": records["experiments"],
@@ -413,6 +454,41 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
             "traces": records["traces"],
             "links": links,
         })
+
+    @app.get("/artifacts")
+    def list_artifacts() -> Dict[str, Any]:
+        """List all discovered research artifacts from filesystem and ledger."""
+        conf = EpiresProjectConfig.load()
+        art_dir_setting = conf.paths.artifacts_dir if conf and conf.paths and conf.paths.artifacts_dir else "artifacts"
+        artifacts_dir = Path(art_dir_setting)
+        if not artifacts_dir.exists() and Path("artifacts").exists():
+            artifacts_dir = Path("artifacts")
+        files = []
+        if artifacts_dir.exists() and artifacts_dir.is_dir():
+            for p in sorted(artifacts_dir.glob("**/*")):
+                if p.is_file() and not p.name.startswith("."):
+                    files.append({
+                        "name": p.name,
+                        "path": f"{artifacts_dir.name}/{p.relative_to(artifacts_dir)}",
+                        "size_bytes": p.stat().st_size,
+                        "mtime": p.stat().st_mtime,
+                    })
+        return {"artifacts": files, "count": len(files)}
+
+    @app.get("/artifacts/{artifact_path:path}")
+    def get_artifact_content(artifact_path: str) -> Any:
+        """Serve artifact file content directly."""
+        conf = EpiresProjectConfig.load()
+        art_dir_setting = conf.paths.artifacts_dir if conf and conf.paths and conf.paths.artifacts_dir else "artifacts"
+        base_dir = Path(art_dir_setting)
+        target = (base_dir / artifact_path).resolve()
+        if not target.exists() or not target.is_file():
+            target = (Path("artifacts") / artifact_path).resolve()
+        if not target.exists() or not target.is_file():
+            target = Path(artifact_path).resolve()
+        if target.exists() and target.is_file():
+            return FileResponse(target)
+        raise HTTPException(status_code=404, detail="Artifact not found")
 
     # -------------------------------------------------------------------------
     # Hypotheses Endpoints
