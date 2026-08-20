@@ -3,264 +3,261 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EPIRES // Cybernetic Research Control Center</title>
+  <title>EPIRES // Epistemic Hypergraph Engine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
-  <div class="app-layout">
-    <!-- Top Cybernetic Header -->
-    <header class="hud-header">
-      <div class="header-branding">
-        <div class="hud-logo-stamp">
-          <span class="stamp-glyph">⬡</span>
-          <span class="brand-title">EPIRES</span>
-          <span class="brand-sub">RESEARCH HARNESS // VSA HYPERGRAPH</span>
+<body class="editorial-theme">
+  <div class="canvas-grid-bg"></div>
+
+  <div class="editorial-shell">
+    <!-- Top Monographic Masthead -->
+    <header class="masthead">
+      <div class="masthead-left">
+        <div class="masthead-serial">
+          <span class="barcode-glyph">||| | ||| || |||| | ||| |</span>
+          <span class="serial-text">DOC REF. EP-2026-VSA</span>
         </div>
-        <div class="project-pill" id="project-meta">
-          <span class="label">PROJECT:</span>
-          <span class="value" id="project-name">socomputing</span>
-          <span class="separator">/</span>
-          <span class="label">DOMAIN:</span>
-          <span class="value" id="project-domain">Cybernetic AI & VSA</span>
+        <div class="masthead-title-block">
+          <h1 class="main-title">EPIRES</h1>
+          <span class="edition-tag">VOL. 01 / SPECULATIVE CYBERNETICS</span>
         </div>
       </div>
 
-      <div class="header-telemetry">
-        <div class="telemetry-badge">
-          <span class="dot live-pulse"></span>
-          <span class="badge-text" id="live-indicator">SYS: LIVE</span>
+      <div class="masthead-center">
+        <div class="meta-field">
+          <span class="meta-k">WORKSPACE //</span>
+          <span class="meta-v" id="project-name">socomputing</span>
         </div>
-        <div class="telemetry-item">
-          <span class="label">SUPERPOSITION:</span>
-          <span class="mono-value" id="vsa-capacity-text">C=11 / 500</span>
-          <div class="capacity-bar"><div class="capacity-fill" id="vsa-capacity-bar" style="width: 2.2%;"></div></div>
+        <div class="meta-field">
+          <span class="meta-k">DOMUS //</span>
+          <span class="meta-v" id="project-domain">VSA vs RAG Cybernetic Control</span>
         </div>
-        <div class="telemetry-item">
-          <span class="label">FALSIFICATION:</span>
-          <span class="mono-value stat-falsified" id="kpi-falsification-rate">18.2%</span>
+        <div class="meta-field">
+          <span class="meta-k">SUPERPOSITION //</span>
+          <span class="meta-v" id="vsa-capacity-text">C=11 / C_max=500 (SNR regime)</span>
         </div>
-        <button class="hud-btn hud-btn-sm" id="btn-refresh" title="Force Refresh Data">
-          <span class="btn-icon">↻</span> REFRESH
+      </div>
+
+      <div class="masthead-right">
+        <div class="status-seal">
+          <div class="seal-inner">
+            <span class="seal-glyph">因果</span>
+            <div class="seal-text">
+              <span class="seal-state" id="live-indicator">SYS: ACTIVE</span>
+              <span class="seal-sub">LEAD-PI PROTOCOL</span>
+            </div>
+          </div>
+        </div>
+        <button class="editorial-btn" id="btn-refresh">
+          <span>SYNC STATE</span>
+          <span class="btn-arrow">→</span>
         </button>
       </div>
     </header>
 
-    <!-- KPI Matrix Ribbon -->
-    <section class="kpi-ribbon">
-      <div class="kpi-card" data-filter="ALL">
-        <div class="kpi-header">
-          <span class="kpi-tag">TOTAL HYPOTHESES</span>
-          <span class="corner-tick">⌜</span>
+    <!-- Epistemic Metric Band -->
+    <section class="metric-band">
+      <div class="metric-block" data-filter="ALL">
+        <div class="metric-meta">
+          <span class="m-index">01</span>
+          <span class="m-label">TOTAL HYPOTHESES</span>
         </div>
-        <div class="kpi-body">
-          <span class="kpi-number" id="kpi-total">11</span>
-          <span class="kpi-sub">Epistemic nodes</span>
-        </div>
+        <div class="metric-val" id="kpi-total">11</div>
+        <div class="metric-footer">Superposition nodes</div>
       </div>
 
-      <div class="kpi-card kpi-card-confirmed" data-filter="CONFIRMED">
-        <div class="kpi-header">
-          <span class="kpi-tag">CONFIRMED [E1..E5]</span>
-          <span class="status-indicator confirmed"></span>
+      <div class="metric-block" data-filter="IN_PROGRESS">
+        <div class="metric-meta">
+          <span class="m-index">02</span>
+          <span class="m-label">IN PROGRESS</span>
         </div>
-        <div class="kpi-body">
-          <span class="kpi-number" id="kpi-confirmed">0</span>
-          <span class="kpi-sub">Empirically verified</span>
-        </div>
+        <div class="metric-val" id="kpi-in-progress">09</div>
+        <div class="metric-footer">Empirical exploration</div>
       </div>
 
-      <div class="kpi-card kpi-card-in-progress" data-filter="IN_PROGRESS">
-        <div class="kpi-header">
-          <span class="kpi-tag">IN PROGRESS</span>
-          <span class="status-indicator in_progress"></span>
+      <div class="metric-block metric-falsified" data-filter="FALSIFIED">
+        <div class="metric-meta">
+          <span class="m-index">03</span>
+          <span class="m-label">FALSIFIED (REFUTED)</span>
         </div>
-        <div class="kpi-body">
-          <span class="kpi-number" id="kpi-in-progress">9</span>
-          <span class="kpi-sub">Simulations active</span>
-        </div>
+        <div class="metric-val" id="kpi-falsified">02</div>
+        <div class="metric-footer" id="kpi-falsification-rate">18.2% Falsification rate</div>
       </div>
 
-      <div class="kpi-card kpi-card-falsified" data-filter="FALSIFIED">
-        <div class="kpi-header">
-          <span class="kpi-tag">FALSIFIED</span>
-          <span class="status-indicator falsified"></span>
+      <div class="metric-block" data-filter="CONFIRMED">
+        <div class="metric-meta">
+          <span class="m-index">04</span>
+          <span class="m-label">CONFIRMED [E1..E5]</span>
         </div>
-        <div class="kpi-body">
-          <span class="kpi-number stat-falsified" id="kpi-falsified">2</span>
-          <span class="kpi-sub">Popperian refutations</span>
-        </div>
+        <div class="metric-val" id="kpi-confirmed">00</div>
+        <div class="metric-footer">Passed promotion gate</div>
       </div>
 
-      <div class="kpi-card kpi-card-blocked" data-filter="BLOCKED">
-        <div class="kpi-header">
-          <span class="kpi-tag">CASCADE BLOCKED</span>
-          <span class="status-indicator blocked"></span>
+      <div class="metric-block spectrum-block">
+        <div class="metric-meta">
+          <span class="m-index">05</span>
+          <span class="m-label">EVIDENCE SPECTRUM</span>
         </div>
-        <div class="kpi-body">
-          <span class="kpi-number" id="kpi-blocked">0</span>
-          <span class="kpi-sub">Invalidated branches</span>
+        <div class="spectrum-ladder" id="evidence-spectrum">
+          <!-- Populated by JS -->
         </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-header">
-          <span class="kpi-tag">EVIDENCE SPECTRUM</span>
-          <span class="kpi-code">E0→E5</span>
-        </div>
-        <div class="kpi-body">
-          <div class="evidence-ladder" id="evidence-spectrum">
-            <span class="level-pill active" title="E0: Speculative">E0: 11</span>
-            <span class="level-pill" title="E1: Unit Tested">E1: 0</span>
-            <span class="level-pill" title="E2: Local Replay">E2: 0</span>
-            <span class="level-pill" title="E3: Targeted Eval">E3: 0</span>
-            <span class="level-pill" title="E4: OOT Bootstrap">E4: 0</span>
-            <span class="level-pill" title="E5: Production">E5: 0</span>
-          </div>
-        </div>
+        <div class="metric-footer">Epistemic maturity tiers</div>
       </div>
     </section>
 
-    <!-- Main Workspace View: Left Canvas + Right Inspector -->
-    <main class="main-workspace">
-      <!-- DAG Canvas Panel -->
-      <section class="dag-panel">
-        <div class="panel-hud-bar">
-          <div class="hud-title-group">
-            <span class="hud-symbol">⌜</span>
-            <h2 class="hud-title">EPISTEMIC DAG CANVAS</h2>
-            <span class="hud-meta">// DIRECTED ACYCLIC HYPERGRAPH</span>
+    <!-- Main Stage: Canvas + Dossier -->
+    <div class="stage-container">
+      <!-- Left Stage: SVG DAG Canvas -->
+      <section class="canvas-stage">
+        <div class="stage-nav">
+          <div class="nav-left">
+            <span class="section-num">FIG. A //</span>
+            <span class="section-title">EPISTEMIC DEPENDENCY HYPERGRAPH</span>
           </div>
-          <div class="canvas-controls">
-            <div class="filter-pills" id="dag-filter-group">
-              <button class="filter-pill active" data-status="ALL">ALL</button>
-              <button class="filter-pill" data-status="CONFIRMED">CONFIRMED</button>
-              <button class="filter-pill" data-status="IN_PROGRESS">IN_PROGRESS</button>
-              <button class="filter-pill" data-status="FALSIFIED">FALSIFIED</button>
+
+          <div class="nav-right">
+            <div class="filter-group" id="dag-filter-group">
+              <button class="filter-btn active" data-status="ALL">ALL [11]</button>
+              <button class="filter-btn" data-status="IN_PROGRESS">IN_PROGRESS</button>
+              <button class="filter-btn" data-status="FALSIFIED">FALSIFIED</button>
+              <button class="filter-btn" data-status="CONFIRMED">CONFIRMED</button>
             </div>
-            <div class="zoom-controls">
-              <button class="icon-btn" id="btn-zoom-in" title="Zoom In">+</button>
-              <button class="icon-btn" id="btn-zoom-out" title="Zoom Out">−</button>
-              <button class="icon-btn" id="btn-zoom-reset" title="Fit to View">⊡</button>
+
+            <div class="viewport-tools">
+              <button class="tool-btn" id="btn-zoom-in" title="Zoom in">+</button>
+              <button class="tool-btn" id="btn-zoom-out" title="Zoom out">−</button>
+              <button class="tool-btn" id="btn-zoom-reset" title="Reset viewport">FIT</button>
             </div>
           </div>
         </div>
 
-        <div class="canvas-viewport" id="canvas-container">
+        <div class="svg-viewport-wrapper" id="canvas-container">
           <svg id="dag-svg" class="dag-svg"></svg>
-          <div class="canvas-grid-overlay"></div>
-          <div class="canvas-hud-watermark">
-            <span class="wm-barcode">||| | || ||| || | ||| |||| |</span>
-            <span class="wm-text">VSA SUPERPOSITION FIELD [D=10,000]</span>
+          
+          <!-- Technical HUD Watermarks -->
+          <div class="hud-watermark watermark-tl">
+            <span>ORTHOGONAL VSA SPACE: D=10,000</span>
+            <span>GAUSSIAN NOISE REGIME: σ = 1/√D = 0.01</span>
+          </div>
+
+          <div class="hud-watermark watermark-br">
+            <div class="radar-concentric"></div>
+            <span>SUPERPOSITION FIELD CAPACITY: 500 ITEMS</span>
           </div>
         </div>
       </section>
 
-      <!-- Right Inspector / Tabs -->
-      <aside class="inspector-panel">
-        <div class="inspector-tabs">
-          <button class="tab-btn active" data-tab="inspector">HYPOTHESIS INSPECTOR</button>
-          <button class="tab-btn" data-tab="traces">AGENT TRACES</button>
-          <button class="tab-btn" data-tab="gaps">WHITE SPOT GAPS</button>
+      <!-- Right Stage: Specimen Dossier (Inspector) & Log Tabs -->
+      <aside class="dossier-stage">
+        <div class="dossier-tabs">
+          <button class="d-tab-btn active" data-tab="inspector">SPECIMEN DOSSIER</button>
+          <button class="d-tab-btn" data-tab="traces">OPERATIONAL LOG</button>
+          <button class="d-tab-btn" data-tab="gaps">WHITE SPOTS</button>
         </div>
 
-        <!-- Tab 1: Hypothesis Inspector -->
-        <div class="tab-content active" id="tab-inspector">
-          <div id="inspector-empty" class="inspector-placeholder">
-            <div class="ph-glyph">⬡</div>
-            <p class="ph-title">NO HYPOTHESIS SELECTED</p>
-            <p class="ph-desc">Click any node on the Epistemic DAG to inspect its theoretical mechanism, Popperian falsification criteria, and evidence history.</p>
+        <!-- Tab 1: Hypothesis Inspector Dossier -->
+        <div class="dossier-body active" id="tab-inspector">
+          <div id="inspector-empty" class="dossier-placeholder">
+            <div class="placeholder-graphic">
+              <div class="concentric-ring"></div>
+              <span class="ph-glyph">⬡</span>
+            </div>
+            <div class="ph-heading">NO SPECIMEN SELECTED</div>
+            <p class="ph-text">Select any hypothesis node from the hypergraph canvas to review its theoretical mechanism, Popperian falsification criteria, and empirical evidence claims.</p>
           </div>
 
-          <div id="inspector-body" class="inspector-details" style="display: none;">
-            <!-- HUD Card Header -->
-            <div class="hud-spec-card">
-              <div class="spec-header">
-                <div class="h-tag-row">
-                  <span class="h-id" id="ins-id">VSAR-004</span>
-                  <span class="status-badge" id="ins-status">IN_PROGRESS</span>
-                  <span class="level-badge" id="ins-level">LEVEL E0</span>
-                </div>
-                <h3 class="spec-title" id="ins-title">Error-feedback delta rule on hypervectors</h3>
+          <div id="inspector-body" class="dossier-content" style="display: none;">
+            <!-- Specimen Badge Header -->
+            <div class="specimen-badge">
+              <div class="badge-top-row">
+                <span class="badge-id" id="ins-id">VSAR-004</span>
+                <span class="badge-status-pill" id="ins-status">IN_PROGRESS</span>
+                <span class="badge-level" id="ins-level">LEVEL E0</span>
               </div>
+              <h2 class="badge-title" id="ins-title">Error-feedback delta rule on hypervectors = cybernetic memory</h2>
+            </div>
 
-              <!-- Cybernetic Feedback Flow Box -->
-              <div class="cybernetic-flow-badge">
-                <div class="flow-step">
-                  <span class="step-lbl">CAUSE</span>
-                  <span class="step-val" id="ins-cause">VSA Superposition</span>
-                </div>
-                <span class="flow-arrow">→</span>
-                <div class="flow-step">
-                  <span class="step-lbl">CONDITION</span>
-                  <span class="step-val" id="ins-condition">Widrow-Hoff Error ΔW</span>
-                </div>
-                <span class="flow-arrow">→</span>
-                <div class="flow-step">
-                  <span class="step-lbl">RESULT</span>
-                  <span class="step-val" id="ins-result">O(1) Self-Correction</span>
-                </div>
+            <!-- Cybernetic Diagram Badge (Inspired by Ref 4) -->
+            <div class="cybernetic-plate">
+              <div class="plate-col">
+                <span class="plate-lbl">CAUSE [因]</span>
+                <span class="plate-val" id="ins-cause">VSA Superposition</span>
               </div>
-
-              <!-- A Priori Mechanism -->
-              <div class="spec-section">
-                <div class="sec-label">A PRIORI THEORETICAL MECHANISM</div>
-                <div class="sec-content mono-box" id="ins-mechanism">...</div>
+              <div class="plate-div">→</div>
+              <div class="plate-col">
+                <span class="plate-lbl">CONDITION [縁]</span>
+                <span class="plate-val" id="ins-condition">Widrow-Hoff Error ΔW</span>
               </div>
-
-              <!-- Popperian Falsification Criteria -->
-              <div class="spec-section">
-                <div class="sec-label falsification-label">POPPERIAN FALSIFICATION BOUNDARY</div>
-                <div class="sec-content falsification-box" id="ins-falsification">...</div>
+              <div class="plate-div">→</div>
+              <div class="plate-col">
+                <span class="plate-lbl">RESULT [果]</span>
+                <span class="plate-val" id="ins-result">O(1) Self-Correction</span>
               </div>
+            </div>
 
-              <!-- Dependencies -->
-              <div class="spec-section">
-                <div class="sec-label">DAG DEPENDENCIES</div>
-                <div class="dep-tags" id="ins-parents">None</div>
+            <!-- Monograph Sections -->
+            <div class="monograph-section">
+              <div class="mono-header">
+                <span class="mono-idx">§ 1.0</span>
+                <span class="mono-lbl">A PRIORI THEORETICAL MECHANISM</span>
               </div>
+              <div class="mono-text" id="ins-mechanism">...</div>
+            </div>
 
-              <!-- Evidence Claims Ledger -->
-              <div class="spec-section">
-                <div class="sec-label">EMPIRICAL EVIDENCE CLAIMS (<span id="ins-evidence-count">0</span>)</div>
-                <div class="evidence-list" id="ins-evidence-list">
-                  <div class="empty-evidence">No empirical runs recorded yet.</div>
-                </div>
+            <div class="monograph-section falsification-section">
+              <div class="mono-header">
+                <span class="mono-idx">§ 2.0</span>
+                <span class="mono-lbl">POPPERIAN FALSIFICATION BOUNDARY</span>
+              </div>
+              <div class="falsification-text" id="ins-falsification">...</div>
+            </div>
+
+            <div class="monograph-section">
+              <div class="mono-header">
+                <span class="mono-idx">§ 3.0</span>
+                <span class="mono-lbl">DAG GENEALOGY / PARENTS</span>
+              </div>
+              <div class="dep-container" id="ins-parents">None</div>
+            </div>
+
+            <div class="monograph-section">
+              <div class="mono-header">
+                <span class="mono-idx">§ 4.0</span>
+                <span class="mono-lbl">EMPIRICAL EVIDENCE CLAIMS (<span id="ins-evidence-count">0</span>)</span>
+              </div>
+              <div class="evidence-stream" id="ins-evidence-list">
+                <div class="empty-entry">No empirical passes recorded. Level: E0 (A Priori).</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Tab 2: Agent Traces Feed -->
-        <div class="tab-content" id="tab-traces">
-          <div class="traces-header">
-            <span class="traces-count" id="traces-count-text">15 entries recorded</span>
-            <input type="text" id="traces-search" placeholder="Filter by action or H-tag..." class="hud-input hud-input-sm">
+        <!-- Tab 2: Operational Log -->
+        <div class="dossier-body" id="tab-traces">
+          <div class="log-controls">
+            <input type="text" id="traces-search" placeholder="Search logs by action, role, H-tag..." class="editorial-input">
+            <span class="log-count" id="traces-count-text">15 ENTRIES</span>
           </div>
-          <div class="traces-stream" id="traces-stream-container">
-            <!-- Populated via JS -->
+          <div class="log-table-container" id="traces-stream-container">
+            <!-- Populated by JS -->
           </div>
         </div>
 
-        <!-- Tab 3: White Spot Gaps Matrix -->
-        <div class="tab-content" id="tab-gaps">
-          <div class="gaps-header">
-            <p class="gaps-desc">White Spot Gap Analysis discovers unexplored combinations across VSA parameter dimensions.</p>
-            <div class="gaps-controls">
-              <span class="label">DIMENSIONS:</span>
-              <span class="dim-pill active">Model</span>
-              <span class="dim-pill active">Feature</span>
-              <span class="dim-pill active">Regime</span>
-            </div>
+        <!-- Tab 3: White Spot Gaps -->
+        <div class="dossier-body" id="tab-gaps">
+          <div class="gaps-editorial-header">
+            <h3>WHITE SPOT GAP ANALYSIS</h3>
+            <p>Cartesian product scan across registered parameter domains to isolate untested regimes before subagent execution.</p>
           </div>
-          <div class="gaps-matrix" id="gaps-matrix-container">
-            <!-- Populated via JS -->
+          <div class="gaps-list" id="gaps-matrix-container">
+            <!-- Populated by JS -->
           </div>
         </div>
       </aside>
-    </main>
+    </div>
   </div>
 
   <script src="/static/app.js"></script>

@@ -1,6 +1,6 @@
 /**
- * EPIRES RESEARCH DASHBOARD // CLIENT LOGIC
- * Zero-dependency, lightweight Swiss/Cybernetic HUD application
+ * EPIRES HYPERGRAPH ENGINE // CLIENT CONTROLLER
+ * Monotone Swiss Brutalist & Technical Cybernetic HUD Interface
  */
 
 (function () {
@@ -14,19 +14,19 @@
     selectedHypothesisId: null,
     activeFilter: 'ALL',
     activeTab: 'inspector',
-    transform: { x: 40, y: 40, scale: 0.9 },
+    transform: { x: 50, y: 50, scale: 0.88 },
     isDragging: false,
     dragStart: { x: 0, y: 0 },
     pollingInterval: null
   };
 
-  // Status Color Mapping
-  const STATUS_COLORS = {
-    CONFIRMED: '#10b981',
-    FALSIFIED: '#f43f5e',
-    IN_PROGRESS: '#f59e0b',
-    BLOCKED: '#64748b',
-    PROPOSED: '#38bdf8'
+  // Status Styling Colors (Monotone & Crisp Accents)
+  const STATUS_CONFIG = {
+    CONFIRMED: { color: '#34d399', label: 'CONFIRMED' },
+    FALSIFIED: { color: '#f43f5e', label: 'FALSIFIED' },
+    IN_PROGRESS: { color: '#f59e0b', label: 'IN_PROGRESS' },
+    BLOCKED: { color: '#64748b', label: 'BLOCKED' },
+    PROPOSED: { color: '#ecebe6', label: 'PROPOSED' }
   };
 
   // DOM Elements
@@ -37,18 +37,16 @@
     kpiConfirmed: document.getElementById('kpi-confirmed'),
     kpiInProgress: document.getElementById('kpi-in-progress'),
     kpiFalsified: document.getElementById('kpi-falsified'),
-    kpiBlocked: document.getElementById('kpi-blocked'),
     kpiFalsificationRate: document.getElementById('kpi-falsification-rate'),
     vsaCapacityText: document.getElementById('vsa-capacity-text'),
-    vsaCapacityBar: document.getElementById('vsa-capacity-bar'),
     evidenceSpectrum: document.getElementById('evidence-spectrum'),
     btnRefresh: document.getElementById('btn-refresh'),
     btnZoomIn: document.getElementById('btn-zoom-in'),
     btnZoomOut: document.getElementById('btn-zoom-out'),
     btnZoomReset: document.getElementById('btn-zoom-reset'),
-    tabButtons: document.querySelectorAll('.tab-btn'),
-    tabContents: document.querySelectorAll('.tab-content'),
-    filterPills: document.querySelectorAll('.filter-pill'),
+    tabButtons: document.querySelectorAll('.d-tab-btn'),
+    tabContents: document.querySelectorAll('.dossier-body'),
+    filterButtons: document.querySelectorAll('.filter-btn'),
     inspectorEmpty: document.getElementById('inspector-empty'),
     inspectorBody: document.getElementById('inspector-body'),
     insId: document.getElementById('ins-id'),
@@ -70,7 +68,7 @@
   };
 
   // --------------------------------------------------------------------------
-  // Data Fetching & Sync
+  // Data Fetching & State Synchronization
   // --------------------------------------------------------------------------
   async function fetchAllData() {
     try {
@@ -88,7 +86,7 @@
       state.traces = tracesRes || [];
       state.gaps = gapsRes || [];
 
-      updateKPICards();
+      updateMastheadAndKPIs();
       renderDAG();
       renderTraces();
       renderGaps();
@@ -97,33 +95,28 @@
         renderInspector(state.selectedHypothesisId);
       }
     } catch (err) {
-      console.error('Error fetching research data:', err);
+      console.error('Data fetch error:', err);
     }
   }
 
   // --------------------------------------------------------------------------
-  // KPI Matrix Update
+  // KPI Metrics & Spectrum Bar
   // --------------------------------------------------------------------------
-  function updateKPICards() {
+  function updateMastheadAndKPIs() {
     const total = state.hypotheses.length;
     const confirmed = state.hypotheses.filter(h => h.status === 'CONFIRMED').length;
     const inProg = state.hypotheses.filter(h => h.status === 'IN_PROGRESS' || h.status === 'PROPOSED').length;
     const falsified = state.hypotheses.filter(h => h.status === 'FALSIFIED').length;
-    const blocked = state.hypotheses.filter(h => h.status === 'BLOCKED').length;
 
-    dom.kpiTotal.textContent = total;
-    dom.kpiConfirmed.textContent = confirmed;
-    dom.kpiInProgress.textContent = inProg;
-    dom.kpiFalsified.textContent = falsified;
-    dom.kpiBlocked.textContent = blocked;
+    dom.kpiTotal.textContent = String(total).padStart(2, '0');
+    dom.kpiConfirmed.textContent = String(confirmed).padStart(2, '0');
+    dom.kpiInProgress.textContent = String(inProg).padStart(2, '0');
+    dom.kpiFalsified.textContent = String(falsified).padStart(2, '0');
 
     const falsRate = total > 0 ? ((falsified / total) * 100).toFixed(1) + '%' : '0.0%';
-    dom.kpiFalsificationRate.textContent = falsRate;
+    dom.kpiFalsificationRate.textContent = `${falsRate} Refutation Rate`;
 
-    // VSA Capacity (C vs C_max = 500)
-    dom.vsaCapacityText.textContent = `C=${total} / 500`;
-    const capPct = Math.min(100, Math.max(1, (total / 500) * 100));
-    dom.vsaCapacityBar.style.width = capPct + '%';
+    dom.vsaCapacityText.textContent = `C=${total} / 500 (SNR ~ 1.0 boundary)`;
 
     // Evidence Spectrum E0..E5
     const levels = { E0: 0, E1: 0, E2: 0, E3: 0, E4: 0, E5: 0 };
@@ -134,20 +127,19 @@
 
     dom.evidenceSpectrum.innerHTML = Object.keys(levels).map(lvl => {
       const count = levels[lvl];
-      const cls = count > 0 ? 'level-pill active' : 'level-pill';
-      return `<span class="${cls}" title="${lvl}">${lvl}: ${count}</span>`;
+      const cls = count > 0 ? 'spec-step active' : 'spec-step';
+      return `<div class="${cls}"><span>${lvl}</span><br><b>${count}</b></div>`;
     }).join('');
   }
 
   // --------------------------------------------------------------------------
-  // Epistemic DAG Layout & SVG Rendering
+  // Epistemic DAG Layout & Wireframe Rendering
   // --------------------------------------------------------------------------
   function computeDAGLayout(nodes) {
-    // Topological layering
     const nodeMap = new Map();
-    nodes.forEach(n => nodeMap.set(n.id, { ...n, layer: 0, x: 0, y: 0, inDeg: 0 }));
+    nodes.forEach(n => nodeMap.set(n.id, { ...n, layer: 0, x: 0, y: 0 }));
 
-    // Assign layers based on longest path from roots
+    // Layer assignment based on topological distance
     let changed = true;
     let iterations = 0;
     while (changed && iterations < 50) {
@@ -167,22 +159,20 @@
       });
     }
 
-    // Group nodes by layer
     const layers = [];
     nodeMap.forEach(n => {
       while (layers.length <= n.layer) layers.push([]);
       layers[n.layer].push(n);
     });
 
-    const NODE_WIDTH = 220;
-    const NODE_HEIGHT = 80;
-    const GAP_X = 70;
-    const GAP_Y = 110;
+    const NODE_WIDTH = 240;
+    const NODE_HEIGHT = 84;
+    const GAP_X = 64;
+    const GAP_Y = 100;
 
-    // Position coordinates
     layers.forEach((layerNodes, layerIdx) => {
       const totalWidth = layerNodes.length * NODE_WIDTH + (layerNodes.length - 1) * GAP_X;
-      const startX = Math.max(60, 600 - totalWidth / 2);
+      const startX = Math.max(50, 620 - totalWidth / 2);
 
       layerNodes.forEach((node, nodeIdx) => {
         node.x = startX + nodeIdx * (NODE_WIDTH + GAP_X);
@@ -192,21 +182,21 @@
       });
     });
 
-    return { nodeMap, layers, NODE_WIDTH, NODE_HEIGHT };
+    return { nodeMap, NODE_WIDTH, NODE_HEIGHT };
   }
 
   function renderDAG() {
     const svg = dom.svg;
     svg.innerHTML = '';
 
-    // Create defs for arrow markers
+    // Arrow markers
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     defs.innerHTML = `
       <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="rgba(255,255,255,0.4)" />
+        <path d="M 0 2 L 8 5 L 0 8 z" fill="rgba(255,255,255,0.3)" />
       </marker>
-      <marker id="arrow-selected" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#38bdf8" />
+      <marker id="arrow-active" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 2 L 8 5 L 0 8 z" fill="#ffffff" />
       </marker>
     `;
     svg.appendChild(defs);
@@ -219,12 +209,11 @@
 
     const { nodeMap, NODE_WIDTH, NODE_HEIGHT } = computeDAGLayout(filteredNodes);
 
-    // Root viewport group for Pan/Zoom
     const gViewport = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     gViewport.setAttribute('id', 'dag-viewport');
     gViewport.setAttribute('transform', `translate(${state.transform.x}, ${state.transform.y}) scale(${state.transform.scale})`);
 
-    // 1. Draw Edges
+    // 1. Draw Connection Lines
     filteredNodes.forEach(node => {
       const target = nodeMap.get(node.id);
       if (!target) return;
@@ -241,51 +230,52 @@
         const midY = (y1 + y2) / 2;
         const pathData = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
 
+        const isRelated = state.selectedHypothesisId && (state.selectedHypothesisId === node.id || state.selectedHypothesisId === parentId);
+
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', pathData);
-        path.setAttribute('class', 'edge-path');
-        path.setAttribute('marker-end', 'url(#arrow)');
-        path.dataset.source = source.id;
-        path.dataset.target = target.id;
+        path.setAttribute('class', `edge-path ${isRelated ? 'highlighted' : ''}`);
+        path.setAttribute('marker-end', isRelated ? 'url(#arrow-active)' : 'url(#arrow)');
 
         gViewport.appendChild(path);
       });
     });
 
-    // 2. Draw Nodes
+    // 2. Draw Technical Specimen Node Badges
     filteredNodes.forEach(node => {
       const pos = nodeMap.get(node.id);
       if (!pos) return;
 
+      const isSelected = state.selectedHypothesisId === node.id;
+      const statusCfg = STATUS_CONFIG[node.status] || { color: '#ffffff', label: node.status };
+
       const gNode = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      gNode.setAttribute('class', `dag-node-group ${state.selectedHypothesisId === node.id ? 'selected' : ''}`);
+      gNode.setAttribute('class', `dag-node-group ${isSelected ? 'selected' : ''}`);
       gNode.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
       gNode.dataset.id = node.id;
 
-      const statusColor = STATUS_COLORS[node.status] || '#38bdf8';
-      const truncatedTitle = node.title.length > 32 ? node.title.substring(0, 30) + '...' : node.title;
+      const truncatedTitle = node.title.length > 34 ? node.title.substring(0, 32) + '…' : node.title;
 
       gNode.innerHTML = `
-        <!-- Main Card Container -->
-        <rect class="node-box" width="${NODE_WIDTH}" height="${NODE_HEIGHT}" rx="3" ry="3"
-              fill="#131620" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
-        
-        <!-- Status Indicator Bar -->
-        <rect x="0" y="0" width="4" height="${NODE_HEIGHT}" rx="2" ry="2" fill="${statusColor}" />
+        <!-- Main Card Plate -->
+        <rect class="node-plate" width="${NODE_WIDTH}" height="${NODE_HEIGHT}" rx="2" ry="2" />
 
-        <!-- Header Row: ID + Level Pill -->
-        <text x="12" y="20" fill="#ffffff" font-family="IBM Plex Mono" font-weight="700" font-size="11" letter-spacing="0.05em">${node.id}</text>
-        <rect x="${NODE_WIDTH - 42}" y="10" width="32" height="14" rx="2" fill="rgba(255,255,255,0.06)" />
-        <text x="${NODE_WIDTH - 26}" y="20" fill="#9ca3af" font-family="IBM Plex Mono" font-size="8.5" text-anchor="middle">${node.current_evidence_level || 'E0'}</text>
+        <!-- Top Left Corner Cutout Accent -->
+        <path d="M 0 0 L 8 0 L 0 8 Z" fill="${statusCfg.color}" />
 
-        <!-- Node Title -->
-        <text x="12" y="42" fill="#f4f4f6" font-family="Inter" font-size="11" font-weight="500">${truncatedTitle}</text>
+        <!-- Header Row: ID + Level -->
+        <text x="14" y="20" fill="#ffffff" font-family="IBM Plex Mono" font-weight="700" font-size="12" letter-spacing="0.04em">${node.id}</text>
+        <text x="${NODE_WIDTH - 12}" y="20" fill="#9ea0a8" font-family="IBM Plex Mono" font-size="9" font-weight="600" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
 
-        <!-- Status Tag Badge -->
-        <text x="12" y="66" fill="${statusColor}" font-family="IBM Plex Mono" font-size="9" font-weight="600">[${node.status}]</text>
-        
-        <!-- Corner HUD Ticks -->
-        <text x="${NODE_WIDTH - 12}" y="${NODE_HEIGHT - 6}" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono" font-size="8">⌟</text>
+        <!-- Divider Line -->
+        <line x1="12" y1="28" x2="${NODE_WIDTH - 12}" y2="28" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+
+        <!-- Title -->
+        <text x="12" y="46" fill="#ecebe6" font-family="Inter" font-size="11" font-weight="500">${truncatedTitle}</text>
+
+        <!-- Status Tag & Mini Barcode -->
+        <text x="12" y="70" fill="${statusCfg.color}" font-family="IBM Plex Mono" font-size="9.5" font-weight="700">[ ${statusCfg.label} ]</text>
+        <text x="${NODE_WIDTH - 12}" y="70" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono" font-size="8" text-anchor="end">|| | ||</text>
       `;
 
       gNode.addEventListener('click', (e) => {
@@ -300,13 +290,12 @@
   }
 
   // --------------------------------------------------------------------------
-  // Hypothesis Selection & Inspector Rendering
+  // Specimen Dossier (Inspector)
   // --------------------------------------------------------------------------
   async function selectHypothesis(id) {
     state.selectedHypothesisId = id;
-    renderDAG(); // updates selection highlights
+    renderDAG();
 
-    // Switch to inspector tab if not active
     if (state.activeTab !== 'inspector') {
       switchTab('inspector');
     }
@@ -327,58 +316,54 @@
 
     dom.insId.textContent = node.id;
     dom.insStatus.textContent = node.status;
-    dom.insStatus.className = `status-badge ${node.status}`;
+    dom.insStatus.className = `badge-status-pill ${node.status}`;
     dom.insLevel.textContent = `LEVEL ${node.current_evidence_level || 'E0'}`;
     dom.insTitle.textContent = node.title;
-    dom.insMechanism.textContent = node.a_priori_mechanism || 'No a priori mechanism registered.';
-    dom.insFalsification.textContent = node.falsification_criteria || 'No falsification criteria specified.';
+    dom.insMechanism.textContent = node.a_priori_mechanism || 'No mathematical mechanism provided.';
+    dom.insFalsification.textContent = node.falsification_criteria || 'No Popperian boundary registered.';
 
-    // Cybernetic Flow Steps inference
+    // Cybernetic Flow Plate Inference
     dom.insCause.textContent = node.entity_types && node.entity_types.length > 0 ? node.entity_types.join(', ') : 'VSA Superposition';
-    dom.insCondition.textContent = node.falsification_criteria.length > 24 ? node.falsification_criteria.substring(0, 24) + '...' : 'Threshold Bound';
-    dom.insResult.textContent = node.status === 'FALSIFIED' ? 'Refuted (Pruned)' : 'Active Memory';
+    dom.insCondition.textContent = node.falsification_criteria.length > 26 ? node.falsification_criteria.substring(0, 24) + '…' : 'Refutation Gate';
+    dom.insResult.textContent = node.status === 'FALSIFIED' ? 'Refuted / Pruned' : 'Active Hypothesis';
 
-    // Parent Dependencies
+    // Parent Connections
     if (node.parent_ids && node.parent_ids.length > 0) {
       dom.insParents.innerHTML = node.parent_ids.map(p =>
-        `<span class="dep-pill" onclick="window.selectHypothesis('${p}')">${p}</span>`
+        `<span class="dep-stamp" onclick="window.selectHypothesis('${p}')">↑ ${p}</span>`
       ).join('');
     } else {
-      dom.insParents.innerHTML = '<span class="text-muted">None (Root Hypothesis)</span>';
+      dom.insParents.innerHTML = '<span class="type-muted">Root Hypothesis (No Antecedents)</span>';
     }
 
-    // Fetch Evidence History
+    // Load Empirical Evidence
     try {
       const res = await fetch(`/hypotheses/${id}`).then(r => r.json());
       const evidence = res.evidence || [];
       dom.insEvidenceCount.textContent = evidence.length;
 
       if (evidence.length === 0) {
-        dom.insEvidenceList.innerHTML = '<div class="empty-evidence">No empirical evidence logged yet. Level: E0 (Theoretical).</div>';
+        dom.insEvidenceList.innerHTML = '<div class="empty-entry">No empirical passes recorded. Level: E0 (A Priori).</div>';
       } else {
         dom.insEvidenceList.innerHTML = evidence.map(ev => `
-          <div class="evidence-card">
-            <div class="ev-header">
-              <span class="mono-value">[${ev.evidence_level}, ${ev.source_confidence}]</span>
-              <span class="${ev.falsification_triggered ? 'stat-falsified' : 'text-muted'}">
-                ${ev.falsification_triggered ? 'FALSIFICATION TRIGGERED' : 'PASS'}
+          <div class="evidence-entry">
+            <div class="entry-head">
+              <span class="entry-tag">[${ev.evidence_level}, ${ev.source_confidence}] // ${ev.metric_name || 'EMPID'}</span>
+              <span class="entry-status ${ev.falsification_triggered ? 'falsified' : ''}">
+                ${ev.falsification_triggered ? 'REFUTATION TRIGGERED' : 'EMPIRICAL PASS'}
               </span>
             </div>
-            <div class="ev-claim">${ev.claim}</div>
-            <div class="ev-meta">
-              ${ev.metric_name ? `<span>Metric: ${ev.metric_name}=${ev.metric_value}</span>` : ''}
-              ${ev.citation_or_path ? `<span>Ref: ${ev.citation_or_path}</span>` : ''}
-            </div>
+            <div class="entry-claim">${ev.claim}</div>
           </div>
         `).join('');
       }
     } catch (err) {
-      dom.insEvidenceList.innerHTML = '<div class="empty-evidence">Failed to load evidence records.</div>';
+      dom.insEvidenceList.innerHTML = '<div class="empty-entry">Error loading evidence log.</div>';
     }
   }
 
   // --------------------------------------------------------------------------
-  // Agent Traces Rendering
+  // Operational Log Rendering
   // --------------------------------------------------------------------------
   function renderTraces() {
     const container = dom.tracesStreamContainer;
@@ -391,24 +376,23 @@
              (t.h_tag && t.h_tag.toLowerCase().includes(filter));
     });
 
-    dom.tracesCountText.textContent = `${state.traces.length} entries recorded`;
+    dom.tracesCountText.textContent = `${state.traces.length} ENTRIES`;
 
     if (filtered.length === 0) {
-      container.innerHTML = '<div class="empty-evidence">No traces matching query.</div>';
+      container.innerHTML = '<div class="empty-entry">No log entries matching filter.</div>';
       return;
     }
 
     container.innerHTML = filtered.map(t => {
-      const dateStr = t.timestamp ? t.timestamp.split('T')[1]?.substring(0, 8) || t.timestamp : '';
+      const timeStr = t.timestamp ? t.timestamp.split('T')[1]?.substring(0, 8) || t.timestamp : '';
       return `
-        <div class="trace-item">
-          <div class="trace-top">
-            <span class="trace-action">${t.action}</span>
-            <span class="trace-role">${t.agent_role || 'Lead-PI'}</span>
-            <span class="trace-time">${dateStr}</span>
+        <div class="log-row">
+          <div class="log-meta-row">
+            <span class="log-action-tag">${t.action} // ${t.agent_role || 'Lead-PI'}</span>
+            <span class="log-time">${timeStr}</span>
           </div>
-          <div class="trace-summary">${t.summary}</div>
-          ${t.h_tag ? `<div class="trace-htag">H-TAG: ${t.h_tag}</div>` : ''}
+          <div class="log-body">${t.summary}</div>
+          ${t.h_tag ? `<div class="log-tag-badge">TARGET: ${t.h_tag}</div>` : ''}
         </div>
       `;
     }).join('');
@@ -421,17 +405,17 @@
     const container = dom.gapsMatrixContainer;
     if (state.gaps.length === 0) {
       container.innerHTML = `
-        <div class="empty-evidence">
-          No white spot gaps found with min_tested=1. All currently declared dimensions have coverage or evidence is in baseline stage.
+        <div class="empty-entry">
+          White spot scan clear: all active dimensions currently covered by baseline hypotheses.
         </div>
       `;
       return;
     }
 
     container.innerHTML = state.gaps.map(g => `
-      <div class="gap-card">
-        <div class="gap-dims">${JSON.stringify(g.combination || g)}</div>
-        <span class="gap-badge">UNTESTED (0 runs)</span>
+      <div class="gap-item">
+        <div class="gap-spec">${JSON.stringify(g.combination || g)}</div>
+        <span class="gap-status-stamp">0 EXPERIMENTS</span>
       </div>
     `).join('');
   }
@@ -450,7 +434,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Pan & Zoom Controls
+  // Viewport Pan & Zoom
   // --------------------------------------------------------------------------
   function setupPanZoom() {
     const container = dom.canvasContainer;
@@ -473,23 +457,23 @@
 
     container.addEventListener('wheel', (e) => {
       e.preventDefault();
-      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-      state.transform.scale = Math.max(0.2, Math.min(3.0, state.transform.scale * zoomFactor));
+      const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
+      state.transform.scale = Math.max(0.2, Math.min(2.5, state.transform.scale * zoomFactor));
       updateTransform();
     }, { passive: false });
 
     dom.btnZoomIn.addEventListener('click', () => {
-      state.transform.scale = Math.min(3.0, state.transform.scale * 1.2);
+      state.transform.scale = Math.min(2.5, state.transform.scale * 1.15);
       updateTransform();
     });
 
     dom.btnZoomOut.addEventListener('click', () => {
-      state.transform.scale = Math.max(0.2, state.transform.scale * 0.8);
+      state.transform.scale = Math.max(0.2, state.transform.scale * 0.85);
       updateTransform();
     });
 
     dom.btnZoomReset.addEventListener('click', () => {
-      state.transform = { x: 40, y: 40, scale: 0.9 };
+      state.transform = { x: 50, y: 50, scale: 0.88 };
       updateTransform();
     });
   }
@@ -502,41 +486,33 @@
   }
 
   // --------------------------------------------------------------------------
-  // Event Listeners & Initialization
+  // Initialization
   // --------------------------------------------------------------------------
   function init() {
     setupPanZoom();
 
-    // Tab buttons
     dom.tabButtons.forEach(btn => {
       btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
 
-    // Filter pills
-    dom.filterPills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        dom.filterPills.forEach(p => p.classList.remove('active'));
-        pill.classList.add('active');
-        state.activeFilter = pill.dataset.status;
+    dom.filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        dom.filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.activeFilter = btn.dataset.status;
         renderDAG();
       });
     });
 
-    // Refresh button
     dom.btnRefresh.addEventListener('click', fetchAllData);
-
-    // Search input
     dom.tracesSearch.addEventListener('input', renderTraces);
 
-    // Expose selectHypothesis globally for inline clicks
     window.selectHypothesis = selectHypothesis;
 
-    // Initial Fetch & Start Polling (every 2.5s)
     fetchAllData();
     state.pollingInterval = setInterval(fetchAllData, 2500);
   }
 
-  // Run on DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
