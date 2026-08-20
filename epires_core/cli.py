@@ -291,7 +291,7 @@ def main():
 
     # Ingest
     ingest_parser = subparsers.add_parser("ingest", help="Bulk import hypotheses & evidence from Markdown, JSON, or JSONL")
-    ingest_parser.add_argument("file", help="Path to findings.md, hypotheses.json, or experiments.jsonl")
+    ingest_parser.add_argument("file", nargs="?", default=None, help="Path to findings.md, hypotheses.json, or experiments.jsonl (auto-detected if omitted)")
     ingest_parser.add_argument("--dry-run", action="store_true", help="Preview extracted records without modifying database")
     ingest_parser.add_argument("--upsert", action="store_true", default=True, help="Update existing hypotheses if present (default: True)")
     ingest_parser.add_argument("--no-upsert", action="store_false", dest="upsert", help="Do not overwrite existing hypotheses")
@@ -303,7 +303,7 @@ def main():
 
     # Import
     import_parser = subparsers.add_parser("import", help="Import research graph from JSON bundle")
-    import_parser.add_argument("file", help="Path to exported graph bundle JSON file")
+    import_parser.add_argument("file", nargs="?", default="research-graph.json", help="Path to exported graph bundle JSON file (default: research-graph.json)")
     import_parser.add_argument("--dry-run", action="store_true", help="Preview import without modifying database")
     import_parser.add_argument("--upsert", action="store_true", default=True, help="Upsert existing hypotheses (default: True)")
 
@@ -333,7 +333,27 @@ def main():
         root = find_project_root()
         config = EpiresProjectConfig.load(root)
         store = EpiresStore(db_path=str(root / config.paths.db_path))
-        target_file = Path(args.file).resolve()
+
+        if not args.file:
+            candidates = [
+                root / "findings.md",
+                root / "hypotheses.md",
+                root / "experiments.md",
+                root / "research.md",
+                root / "notes.md",
+                root / "docs" / "findings.md",
+                root / "docs" / "hypotheses.md",
+                root / "docs" / "research.md",
+                root / "README.md",
+            ]
+            found = [c for c in candidates if c.exists()]
+            if not found:
+                print("[!] No findings file found. Please specify file: epires ingest <path/to/findings.md>")
+                sys.exit(1)
+            target_file = found[0]
+            print(f"[*] Auto-detected research findings file: {target_file.relative_to(root)}")
+        else:
+            target_file = Path(args.file).resolve()
         
         print(f"[*] Ingesting research findings from {target_file.name} ...")
         res = ingest_file(store=store, file_path=target_file, dry_run=args.dry_run, upsert=args.upsert)
