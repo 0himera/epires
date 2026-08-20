@@ -148,10 +148,6 @@ body.editorial-body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-image:
-    linear-gradient(to right, var(--paper-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--paper-grid) 1px, transparent 1px);
-  background-size: 5.5rem 5.5rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -1404,10 +1400,10 @@ body.editorial-body {
 .svg-stage-viewport {
   background-color: var(--bg-app);
   background-image:
-    linear-gradient(to right, var(--paper-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--paper-grid) 1px, transparent 1px),
-    linear-gradient(135deg, transparent 49.8%, color-mix(in srgb, var(--paper-grid) 45%, transparent) 50%, transparent 50.2%);
-  background-size: 4.5rem 4.5rem, 4.5rem 4.5rem, 18rem 18rem;
+    radial-gradient(circle, color-mix(in srgb, var(--ink-primary) 18%, transparent) 1.2px, transparent 1.3px),
+    radial-gradient(circle, color-mix(in srgb, var(--ink-primary) 7%, transparent) 0.9px, transparent 1px);
+  background-size: 48px 48px, 24px 24px;
+  background-position: 0 0, 12px 12px;
 }
 
 .canvas-section::after,
@@ -2246,9 +2242,8 @@ body.editorial-body {
   border: 1px solid var(--rule-crisp);
   background-color: var(--bg-surface);
   background-image:
-    linear-gradient(to right, var(--paper-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--paper-grid) 1px, transparent 1px);
-  background-size: 3.25rem 3.25rem;
+    radial-gradient(circle, color-mix(in srgb, var(--ink-primary) 14%, transparent) 1.1px, transparent 1.2px);
+  background-size: 24px 24px;
 }
 
 .snapshot-folio > * { position: relative; z-index: 1; }
