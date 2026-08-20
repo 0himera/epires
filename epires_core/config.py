@@ -61,17 +61,17 @@ def find_project_root(start_dir: str | Path = ".") -> Path:
 def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
     """Inspects a directory to dynamically infer domain, stack, existing docs, and emptiness."""
     root = Path(project_dir).resolve()
-    
+
     # Exclude system/internal files when checking for user codebase presence
     ignore_parts = {".git", ".venv", "__pycache__", ".epires", ".pytest_cache"}
-    
+
     user_files = [
-        f for f in root.glob("**/*") 
-        if f.is_file() 
+        f for f in root.glob("**/*")
+        if f.is_file()
         and not any(p in f.parts for p in ignore_parts)
         and f.name not in {".gitignore", "agent-trace.md"}
     ]
-    
+
     if not user_files:
         return {
             "is_empty": True,
@@ -96,7 +96,7 @@ def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
     candidate_docs = []
     candidate_traces = []
     domain_hints = []
-    
+
     for f in user_files:
         rel_path = str(f.relative_to(root))
         lower_name = f.name.lower()
@@ -104,7 +104,7 @@ def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
             candidate_docs.append(rel_path)
             if "trace" in lower_name or "log" in lower_name:
                 candidate_traces.append(rel_path)
-            
+
             # Read snippet for domain classification
             try:
                 content_snippet = f.read_text(encoding="utf-8", errors="ignore")[:3000].lower()
@@ -125,8 +125,8 @@ def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
         detected_domain = "General Scientific & Quantitative Research"
 
     suggested_metric = (
-        "RMSLE" if "Forecasting" in detected_domain 
-        else ("Sharpe Ratio" if "Trading" in detected_domain 
+        "RMSLE" if "Forecasting" in detected_domain
+        else ("Sharpe Ratio" if "Trading" in detected_domain
         else ("Reward / WinRate" if "Reinforcement" in detected_domain else "Objective Score"))
     )
 

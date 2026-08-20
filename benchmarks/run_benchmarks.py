@@ -1,7 +1,6 @@
 """Fast Quantitative Benchmark and Evaluation Suite for Epires Research Harness."""
 
 from __future__ import annotations
-import json
 import random
 import tempfile
 import time

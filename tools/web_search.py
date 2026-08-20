@@ -58,7 +58,7 @@ def save_global_api_key(api_key: str) -> Path:
     creds_dir = Path.home() / ".epires"
     creds_dir.mkdir(parents=True, exist_ok=True)
     creds_file = creds_dir / "credentials.json"
-    
+
     existing = {}
     if creds_file.exists():
         try:

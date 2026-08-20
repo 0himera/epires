@@ -10,7 +10,7 @@ def test_autotracer_records_sqlite_and_markdown():
     with tempfile.TemporaryDirectory() as tmpdir:
         db_path = Path(tmpdir) / "test.db"
         trace_path = Path(tmpdir) / "agent-trace.md"
-        
+
         store = EpiresStore(db_path=db_path, vsa_dim=1000)
         tracer = AutoTracer(store=store, trace_md_path=trace_path)
 

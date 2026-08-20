@@ -25,7 +25,6 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from mcp.server.mcpserver import MCPServer
 
@@ -37,7 +36,6 @@ from epires_core.models import (
     GapQuery,
     HypothesisNode,
     HypothesisStatus,
-    RelationEdge,
     SearchQuery,
     SourceConfidence,
 )
@@ -202,7 +200,7 @@ def create_mcp_server(
             artifact_hash=artifact_hash,
         )
         saved_ev, blocked_children = store.log_evidence(claim_obj)
-        
+
         msg = f"Evidence [{saved_ev.evidence_level.value}, {saved_ev.source_confidence.value}] recorded for {hypothesis_id}."
         if falsification_triggered:
             msg += f"\n[ALERT] Falsification triggered! Marked {hypothesis_id} as FALSIFIED."

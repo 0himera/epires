@@ -1,11 +1,9 @@
 """System Health, Diagnostic, and MCP Doctor for Epires."""
 
 from __future__ import annotations
-import json
-import sqlite3
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from .config import EpiresProjectConfig, find_project_root
 from .store import EpiresStore

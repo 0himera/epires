@@ -1,0 +1,179 @@
+name: CI / Quality, Tests & Security
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Code Quality & Linting
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dev dependencies
+        run: uv sync --extra dev
+
+      - name: Run Ruff Linter
+        run: uv run ruff check .
+
+      - name: Run Ruff Format Check
+        run: uv run ruff format --check .
+
+  # ---------------------------------------------------------------------------
+  # 2. Multi-OS & Multi-Python Test Matrix
+  # ---------------------------------------------------------------------------
+  test:
+    name: Test (${{ matrix.os }} / Python ${{ matrix.python-version }})
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run pytest with Coverage
+        run: uv run pytest --cov=epires_core --cov=server --cov-report=xml --cov-report=term-missing
+
+      - name: Upload Coverage Artifact (Ubuntu/3.12 only)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # 3. Mathematical & Fuzz Invariants
+  # ---------------------------------------------------------------------------
+  fuzz:
+    name: Property-Based Fuzzing (Hypothesis)
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run Hypothesis Fuzz Test Battery
+        run: uv run pytest tests/test_fuzz_dag.py tests/test_fuzz_store.py tests/test_fuzz_vsa.py -v
+
+  # ---------------------------------------------------------------------------
+  # 4. Packaging, Metadata Verification & CLI Smoke Test
+  # ---------------------------------------------------------------------------
+  build-and-smoke:
+    name: Package Build & CLI Smoke Battery
+    needs: [test, fuzz]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: Validate distribution packages with Twine
+        run: uvx twine check dist/*
+
+      - name: Install built wheel into isolated environment
+        run: |
+          uv venv /tmp/smoke_env
+          uv pip install --python /tmp/smoke_env dist/*.whl
+
+      - name: Execute CLI Smoke Battery
+        run: |
+          /tmp/smoke_env/bin/epires -v
+          /tmp/smoke_env/bin/epires --version
+          /tmp/smoke_env/bin/epires version
+          /tmp/smoke_env/bin/epires schema --format json
+          /tmp/smoke_env/bin/epires doctor
+
+      - name: Test Project Lifecycle (init, status, dag)
+        run: |
+          mkdir -p /tmp/test_project
+          cd /tmp/test_project
+          /tmp/smoke_env/bin/epires init --force
+          /tmp/smoke_env/bin/epires status
+          /tmp/smoke_env/bin/epires dag
+          /tmp/smoke_env/bin/epires doctor
+
+  # ---------------------------------------------------------------------------
+  # 5. Benchmarks & Retrieval Quality Regression Tracking
+  # ---------------------------------------------------------------------------
+  benchmark:
+    name: Retrieval & Latency Benchmarks
+    needs: build-and-smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run Benchmark Suite
+        run: |
+          uv run python benchmarks/run_benchmarks.py | tee benchmark_output.txt
+
+      - name: Publish Benchmark Summary to Job Step
+        run: |
+          echo "### 🚀 Epires Automated Benchmark & Retrieval Quality Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          cat benchmark_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

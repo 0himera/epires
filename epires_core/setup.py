@@ -11,7 +11,7 @@ Configures MCP servers, Skills, and Rules across:
 from __future__ import annotations
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 def get_skill_content() -> str:
@@ -19,7 +19,7 @@ def get_skill_content() -> str:
     skill_file = Path(__file__).resolve().parent.parent / "skills" / "epires_researcher" / "SKILL.md"
     if skill_file.exists():
         return skill_file.read_text(encoding="utf-8")
-    
+
     return """---
 name: epires_researcher
 description: Operating protocol and cognitive scaffolding for the Principal Investigator (Lead-PI) in Epires.
@@ -166,7 +166,7 @@ def setup_opencode(project_dir: str | Path = ".") -> List[Path]:
 
     def update_opencode_schema(d: Dict[str, Any]):
         d["$schema"] = "https://opencode.ai/config.json"
-        
+
         # Clean up any extraneous keys
         if "servers" in d.get("mcp", {}):
             del d["mcp"]["servers"]
@@ -267,7 +267,7 @@ def setup_all(project_dir: str | Path = ".") -> List[Path]:
     configured: List[Path] = []
     for fn in [setup_cursor, setup_claude_code, setup_opencode, setup_codex, setup_antigravity]:
         configured.extend(fn(root))
-    
+
     seen = set()
     result = []
     for p in configured:

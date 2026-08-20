@@ -1,4 +1,5 @@
-import random, tempfile
+import random
+import tempfile
 import numpy as np
 from pathlib import Path
 from epires_core.models import HypothesisNode, Entity, SearchQuery, HypothesisStatus, EvidenceLevel
@@ -52,7 +53,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
         test_cases.append(("mixed", sq, target.id))
 
     res = {"pure_vsa": [], "pure_fts": [], "naive_hybrid": [], "rrf_hybrid": []}
-    
+
     for qtype, sq, target_id in test_cases:
         # VSA
         terms = sq.query.split() if sq.query else []

@@ -192,7 +192,7 @@ def test_cascading_falsification_dag(temp_store: EpiresStore):
     h1_after = temp_store.get_hypothesis("H1")
     assert h1_after.status == HypothesisStatus.FALSIFIED
     assert h1_after.current_evidence_level == EvidenceLevel.E3
-    
+
     # Verify H2 and H3 are automatically BLOCKED
     assert "H2" in blocked
     assert "H3" in blocked
@@ -247,7 +247,7 @@ def test_gap_analysis(temp_store: EpiresStore):
 
     # Query gaps across Model and Feature
     gaps = temp_store.find_gaps(GapQuery(dimensions=["Model", "Feature"], min_tested=1))
-    
+
     # Should identify untested combinations: (CatBoost, Wavelets) and (LightGBM, Lags)
     untested = [g["combination"] for g in gaps if g["status"] == "UNTESTED"]
     assert {"Model": "CatBoost", "Feature": "Wavelets"} in untested or {"Model": "LightGBM", "Feature": "Lags"} in untested

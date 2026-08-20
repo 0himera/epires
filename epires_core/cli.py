@@ -7,6 +7,7 @@ import json
 import sys
 import webbrowser
 from pathlib import Path
+from typing import List
 import uvicorn
 
 from .config import (
@@ -132,7 +133,7 @@ def init_workspace(target_dir: str = ".", force: bool = False) -> None:
 
     profile = detect_project_profile(root)
     config_file = epires_dir / "config.json"
-    
+
     # Load existing or create fresh config
     if config_file.exists() and not force:
         config = EpiresProjectConfig.load(root)
@@ -217,7 +218,7 @@ def setup_flow(target_ide: str = "all", project_dir: str = ".") -> None:
     """Configures MCP for specific IDEs or all supported environments."""
     root = Path(project_dir).resolve()
     target_ide = target_ide.lower()
-    
+
     print("\n==================== EPIRES MCP SETUP ====================")
     paths: List[Path] = []
     if target_ide == "cursor":
@@ -390,10 +391,10 @@ def main():
             print(f"[*] Auto-detected research findings file: {target_file.relative_to(root)}")
         else:
             target_file = Path(args.file).resolve()
-        
+
         print(f"[*] Ingesting research findings from {target_file.name} ...")
         res = ingest_file(store=store, file_path=target_file, dry_run=args.dry_run, upsert=args.upsert)
-        
+
         if args.dry_run:
             print("\n[DRY RUN PREVIEW]")
             print(f"  Recognized Hypotheses: {res.get('hypotheses_count', 0)}")
@@ -437,10 +438,10 @@ def main():
         config = EpiresProjectConfig.load(root)
         store = EpiresStore(db_path=str(root / config.paths.db_path))
         import_path = Path(args.file).resolve()
-        
+
         bundle = json.loads(import_path.read_text(encoding="utf-8"))
         res = import_graph_bundle(store=store, bundle=bundle, upsert=args.upsert, dry_run=args.dry_run)
-        
+
         if args.dry_run:
             print(f"[DRY RUN] Would import {res['hypotheses_count']} hypotheses and {res['evidence_count']} evidence records.")
         else:

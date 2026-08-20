@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 from fastapi.testclient import TestClient
 
-from epires_core.models import HypothesisNode, HypothesisStatus
+from epires_core.models import HypothesisNode
 from epires_core.store import EpiresStore
 from server.app import create_app
 from server.mcp_server import create_mcp_server
@@ -161,11 +161,11 @@ def test_mcp_server_tools():
         query = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_query_graph")
         res1 = json.loads(query(h_id="H-TEST-MCP"))
         assert res1["hypothesis"]["status"] == "FALSIFIED"
-        
+
         ev_id = res1["evidence"][0]["id"]
         retract_msg = retract(evidence_id=ev_id, reason="Correction of benchmark error")
         assert "successfully retracted" in retract_msg
-        
+
         res2 = json.loads(query(h_id="H-TEST-MCP"))
         assert res2["hypothesis"]["status"] == "PROPOSED"
         assert res2["hypothesis"]["current_evidence_level"] == "E0"

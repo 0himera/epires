@@ -1,7 +1,6 @@
 """Canonical Schemas and Ingestion Script Generator for Epires."""
 
 from __future__ import annotations
-import json
 from typing import Any, Dict
 
 

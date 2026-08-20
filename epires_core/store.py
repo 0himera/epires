@@ -207,7 +207,7 @@ class EpiresStore:
             for pid in h.parent_ids
         ]
         evidence_claims = self.get_evidence_for_hypothesis(h.id)
-        
+
         # Build VSA Hypervector
         vec = self.encoder.encode_hypothesis(h, relations=relations, evidence_claims=evidence_claims)
         vec_bytes = vec.tobytes()
@@ -863,7 +863,7 @@ class EpiresStore:
             if all(dim in ent_map for dim in gq.dimensions):
                 combo = tuple(ent_map[dim] for dim in gq.dimensions)
                 hypothesized_combinations[combo] = hypothesized_combinations.get(combo, 0) + 1
-                
+
                 # An entity combination is considered empirically tested if it has evidence/experiments
                 empirical_weight = ev_counts.get(h.id, 0) + exp_counts.get(h.id, 0)
                 if empirical_weight > 0 or h.status in {HypothesisStatus.CONFIRMED, HypothesisStatus.FALSIFIED}:
@@ -941,7 +941,7 @@ class EpiresStore:
             return "```mermaid\ngraph TD\n  Empty[No Hypotheses Registered]\n```"
 
         lines = ["```mermaid", "graph TD"]
-        
+
         # Color classes
         lines.append("  classDef confirmed fill:#2ea043,stroke:#1b4b27,color:#fff;")
         lines.append("  classDef falsified fill:#da3633,stroke:#8e1519,color:#fff;")

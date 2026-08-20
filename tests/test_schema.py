@@ -1,8 +1,5 @@
 """Tests for Schema and Migration Script Generator."""
 
-import json
-import tempfile
-from pathlib import Path
 
 from epires_core.schema import generate_migration_script_template, get_canonical_schema
 

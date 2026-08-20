@@ -69,7 +69,7 @@ class AutoTracer:
         h_col = f"`{h_tag}`" if h_tag else "—"
         clean_summary = summary.replace("|", "/")
         row = f"| {now} | **{agent_role}** | `{action}` | {h_col} | `{commit}` | {clean_summary} |\n"
-        
+
         with open(self.trace_md_path, "a", encoding="utf-8") as f:
             f.write(row)
 

@@ -33,6 +33,16 @@ from .store import EpiresStore
 from .tracer import AutoTracer
 
 __all__ = [
+    "EpiresProjectConfig",
+    "ProjectPaths",
+    "find_project_root",
+    "detect_project_profile",
+    "setup_cursor",
+    "setup_claude_code",
+    "setup_opencode",
+    "setup_codex",
+    "setup_antigravity",
+    "setup_all",
     "BipolarVSA",
     "EvidenceLevel",
     "SourceConfidence",

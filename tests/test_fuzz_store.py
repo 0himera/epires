@@ -8,9 +8,7 @@ from epires_core.models import (
     Entity,
     EvidenceClaim,
     EvidenceLevel,
-    GapQuery,
     HypothesisNode,
-    HypothesisStatus,
     SearchQuery,
     SourceConfidence,
 )

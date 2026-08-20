@@ -6,19 +6,15 @@ import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from .models import (
     Entity,
     EvidenceClaim,
     EvidenceLevel,
-    ExperimentNode,
     HypothesisNode,
     HypothesisStatus,
-    RelationEdge,
-    RelationType,
     SourceConfidence,
-    TraceEntry,
 )
 from .store import EpiresStore
 
@@ -142,7 +138,7 @@ def parse_markdown_findings(content: str) -> Tuple[List[HypothesisNode], List[Ev
             if is_result_bullet or is_rejected or is_promoted:
                 metric_val_m = re.search(r"(?:RMSLE|Loss|Score|delta|weights)?\s*(?:[:=–—]\s*|\s+)([-+]?\d*\.\d+(?:[eE][-+]?\d+)?)", clean_body)
                 metric_val = float(metric_val_m.group(1)) if metric_val_m else None
-                
+
                 evidence_list.append(EvidenceClaim(
                     id=f"ev_{h_id}_{idx + 1}",
                     hypothesis_id=h_id,
@@ -246,7 +242,7 @@ def parse_markdown_findings(content: str) -> Tuple[List[HypothesisNode], List[Ev
             claim_text = ev_m.group("claim").strip()
             metric_val_m = re.search(r"(?:=\s*|:\s*)([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)", claim_text)
             metric_val = float(metric_val_m.group(1)) if metric_val_m else None
-            
+
             is_falsified = status == HypothesisStatus.FALSIFIED or bool(re.search(r"fail|falsif", claim_text, re.IGNORECASE))
             ev_claim = EvidenceClaim(
                 id=f"ev_{h_id}_{ev_idx + 1}",

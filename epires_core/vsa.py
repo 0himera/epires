@@ -36,7 +36,7 @@ class BipolarVSA:
             vec = rng.choice([-1, 1], size=self.dim).astype(np.int8)
             self._codebook[key] = vec
             return vec
-        
+
         rng = np.random.RandomState(self._seed) if self._seed is not None else np.random
         return rng.choice([-1, 1], size=self.dim).astype(np.int8)
 

@@ -1,7 +1,6 @@
 """Tests for Bipolar Vector Symbolic Architecture (VSA)."""
 
 import numpy as np
-import pytest
 from epires_core.vsa import BipolarVSA
 
 
@@ -29,10 +28,10 @@ def test_vsa_bind_reversibility():
     filler = vsa.generate_vector("VAL:LightGBM")
 
     bound = vsa.bind(role, filler)
-    
+
     # Bounded in {-1, 1}
     assert set(np.unique(bound)).issubset({-1, 1})
-    
+
     # Binding is orthogonal to operands
     assert abs(vsa.similarity(bound, role)) < 0.05
     assert abs(vsa.similarity(bound, filler)) < 0.05

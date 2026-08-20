@@ -14,7 +14,6 @@ from pydantic import BaseModel
 
 from epires_core.config import EpiresProjectConfig, find_project_root
 from epires_core.models import (
-    Entity,
     EvidenceClaim,
     ExperimentNode,
     GapQuery,
@@ -484,15 +483,15 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
         art_dir = get_artifacts_dir()
         if not art_dir or not art_dir.exists():
             raise HTTPException(status_code=404, detail="Artifacts directory not found.")
-        
+
         target = (art_dir / artifact_path).resolve()
         # Security: verify path does not escape the artifacts directory
         if not str(target).startswith(str(art_dir.resolve())) or not target.is_relative_to(art_dir.resolve()):
             raise HTTPException(status_code=403, detail="Access denied: path escapes artifacts directory.")
-        
+
         if not target.exists() or not target.is_file():
             raise HTTPException(status_code=404, detail="Artifact not found.")
-            
+
         return FileResponse(target)
 
     # -------------------------------------------------------------------------

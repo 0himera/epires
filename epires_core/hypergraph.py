@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import List, Sequence
 import numpy as np
 
-from .models import HypothesisNode, ExperimentNode, EvidenceClaim, RelationEdge, Entity
+from .models import HypothesisNode, EvidenceClaim, RelationEdge, Entity
 from .vsa import BipolarVSA
 
 
@@ -23,7 +23,7 @@ class HypergraphEncoder:
         v_src = self.vsa.get_or_create_vector(f"NODE:{edge.source_id}")
         v_rel = self.vsa.get_or_create_vector(f"REL:{edge.relation_type.value}")
         v_tgt = self.vsa.get_or_create_vector(f"NODE:{edge.target_id}")
-        
+
         # Permute target to encode directionality
         v_tgt_perm = self.vsa.permute(v_tgt, shifts=1)
         return self.vsa.bind(self.vsa.bind(v_src, v_rel), v_tgt_perm)
