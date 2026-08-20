@@ -188,7 +188,7 @@ $$
 3. **Bundle ($\oplus$)**: Мажоритарное голосование для упаковки множества сущностей в один вектор:
 
 $$
-\mathbf{v}_{\text{hyperedge}} = \operatorname{sign}\left(\sum_{i=1}^M \mathbf{v}_i\right)
+\mathbf{v}_{\text{hyperedge}} = \mathrm{sign}\left(\sum_{i=1}^M \mathbf{v}_i\right)
 $$
 
 #### Gap Analysis (Поиск белых пятен)

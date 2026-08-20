@@ -189,7 +189,7 @@ $$
 3. **Bundle ($\oplus$)**: Majority voting bundling multiple entities and relations into a single composite representation:
 
 $$
-\mathbf{v}_{\text{hyperedge}} = \operatorname{sign}\left(\sum_{i=1}^M \mathbf{v}_i\right)
+\mathbf{v}_{\text{hyperedge}} = \mathrm{sign}\left(\sum_{i=1}^M \mathbf{v}_i\right)
 $$
 
 #### Automated Gap Discovery
