@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from epires_core.config import EpiresProjectConfig
 from epires_core.models import (
     EvidenceClaim,
     GapQuery,
@@ -62,6 +63,12 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
         if index_file.exists():
             return FileResponse(index_file)
         return HTMLResponse("<h1>Epires Research Engine API is running.</h1>")
+
+    @app.get("/config")
+    def get_project_config() -> Dict[str, Any]:
+        """Returns dynamic project profile, domain, and metric settings from .epires/config.json."""
+        conf = EpiresProjectConfig.load()
+        return conf.model_dump()
 
     @app.get("/health")
     def health_check() -> Dict[str, Any]:
