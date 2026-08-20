@@ -266,16 +266,15 @@ class EpiresStore:
 
         h = self.get_hypothesis(ev.hypothesis_id)
         if h:
+            # Evidence promotion is monotonic (records the highest rigor level reached)
+            if ev.evidence_level.value > h.current_evidence_level.value:
+                h.current_evidence_level = ev.evidence_level
+
             if ev.falsification_triggered:
                 h.status = HypothesisStatus.FALSIFIED
                 self.register_hypothesis(h)
                 blocked_children = self._cascade_falsification(ev.hypothesis_id)
             else:
-                # Evidence promotion is monotonic. A late-arriving E1/E2 claim
-                # must not downgrade a hypothesis already promoted by E3+.
-                if ev.evidence_level.value > h.current_evidence_level.value:
-                    h.current_evidence_level = ev.evidence_level
-
                 # Non-falsifying observations cannot reopen an invalidated or
                 # dependency-blocked hypothesis.
                 if h.status in {HypothesisStatus.FALSIFIED, HypothesisStatus.BLOCKED}:

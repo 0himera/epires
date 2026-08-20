@@ -188,8 +188,10 @@ def test_cascading_falsification_dag(temp_store: EpiresStore):
     )
     _, blocked = temp_store.log_evidence(falsifying_claim)
 
-    # Verify H1 is FALSIFIED
-    assert temp_store.get_hypothesis("H1").status == HypothesisStatus.FALSIFIED
+    # Verify H1 is FALSIFIED and promoted to E3 (evidence rigor level reached)
+    h1_after = temp_store.get_hypothesis("H1")
+    assert h1_after.status == HypothesisStatus.FALSIFIED
+    assert h1_after.current_evidence_level == EvidenceLevel.E3
     
     # Verify H2 and H3 are automatically BLOCKED
     assert "H2" in blocked
