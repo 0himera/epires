@@ -105,9 +105,11 @@ When delegating work to a coder or runner subagent, enforce the **Strict Contrac
 * Verify that `docs/agent-trace.md` has recorded all milestones.
 * Ensure a clean Git working tree.
 
-### Step 8: Bulk Ingestion & Graph Portability
-* When joining an existing repository with historical hypotheses, ingest them in one command:
-  `epires ingest findings.md --dry-run` followed by `epires ingest findings.md --upsert`
-  or via MCP `epires_bulk_import(hypotheses_json=...)`.
-* Export and preserve reproducible research graphs for CI/Git via `epires export --out graph.json` or `epires_export_graph`.
-* Check system health and MCP tools readiness anytime with `epires doctor`.
+### Step 8: Bulk Ingestion, Custom Migration & Graph Portability
+* **Standard Files**: Ingest standard markdown/JSON files via `epires ingest findings.md --dry-run` and `epires ingest findings.md --upsert` (or MCP `epires_bulk_import`).
+* **Custom Project Notes / Unstructured Knowledge**:
+  1. Call `epires_get_schema` (or CLI `epires schema`) to inspect the strict JSON schema and enum values.
+  2. Generate a custom migration template via `epires ingest --template scripts/migrate_findings.py`.
+  3. Tailor the 20-line parser script to the repository's specific notes format and execute `python scripts/migrate_findings.py`.
+* **Export & Portability**: Export and preserve reproducible research graphs for CI/Git via `epires export --out graph.json` or `epires_export_graph`.
+* **Diagnostics**: Check system health and verify MCP tools readiness anytime with `epires doctor`.

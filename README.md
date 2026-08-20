@@ -311,8 +311,14 @@ epires init [--dir <path>] [--force]
 # Diagnostic doctor: verifies MCP tools, SQLite integrity, and agent configuration
 epires doctor
 
+# Output canonical JSON Schema and Python SDK migration snippet
+epires schema [--format json|python]
+
 # Bulk ingest historical hypotheses from Markdown, JSON, or JSONL
-epires ingest findings.md [--dry-run] [--upsert]
+epires ingest [findings.md] [--dry-run] [--upsert]
+
+# Generate a custom migration script template for proprietary notes formats
+epires ingest --template scripts/migrate_findings.py
 
 # Export research graph to portable JSON bundle with SHA256 checksum (for Git/CI)
 epires export [--out research-graph.json] [--format json|jsonl]
@@ -340,10 +346,11 @@ epires dag
 
 ## 6. Model Context Protocol (MCP) Specification
 
-Epires exposes 15 deterministic MCP tools for AI agents:
+Epires exposes 16 deterministic MCP tools for AI agents:
 
 | MCP Tool | Description |
 | :--- | :--- |
+| `epires_get_schema` | Returns canonical JSON schema, supported enum values, and migration template |
 | `epires_register_hypothesis` | Registers a hypothesis with a priori proof and falsification criteria |
 | `epires_log_evidence` | Logs empirical evidence, metrics, CI95, and cascades falsification |
 | `epires_retract_evidence` | Retracts erroneous evidence, recalculates evidence level, and cascades unblocking |
@@ -368,7 +375,7 @@ The engine is verified using **property-based fuzz testing** powered by `hypothe
 
 ```bash
 pytest -v
-============================== 34 passed in 3.93s ==============================
+============================== 36 passed in 3.94s ==============================
 ```
 
 ### Verified Mathematical Invariants:

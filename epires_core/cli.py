@@ -289,12 +289,17 @@ def main():
     # Doctor
     subparsers.add_parser("doctor", help="Run comprehensive diagnostic checks on MCP, SQLite, and configuration")
 
+    # Schema
+    schema_parser = subparsers.add_parser("schema", help="Output canonical JSON Schema and Python SDK migration snippet")
+    schema_parser.add_argument("--format", choices=["json", "python"], default="json", help="Output format (default: json)")
+
     # Ingest
     ingest_parser = subparsers.add_parser("ingest", help="Bulk import hypotheses & evidence from Markdown, JSON, or JSONL")
     ingest_parser.add_argument("file", nargs="?", default=None, help="Path to findings.md, hypotheses.json, or experiments.jsonl (auto-detected if omitted)")
     ingest_parser.add_argument("--dry-run", action="store_true", help="Preview extracted records without modifying database")
     ingest_parser.add_argument("--upsert", action="store_true", default=True, help="Update existing hypotheses if present (default: True)")
     ingest_parser.add_argument("--no-upsert", action="store_false", dest="upsert", help="Do not overwrite existing hypotheses")
+    ingest_parser.add_argument("--template", nargs="?", const="scripts/migrate_findings.py", default=None, help="Generate a customized Python migration script template (default: scripts/migrate_findings.py)")
 
     # Export
     export_parser = subparsers.add_parser("export", help="Export research graph to portable JSON bundle with SHA256 checksum")
@@ -328,11 +333,30 @@ def main():
         ok = print_doctor_report(checks)
         sys.exit(0 if ok else 1)
 
+    elif args.command == "schema":
+        from .schema import get_canonical_schema
+        schema_data = get_canonical_schema()
+        if args.format == "python":
+            print(schema_data["python_quickstart"].strip())
+        else:
+            print(json.dumps(schema_data, indent=2, ensure_ascii=False))
+
     elif args.command == "ingest":
         from .importer import ingest_file
+        from .schema import generate_migration_script_template
         root = find_project_root()
         config = EpiresProjectConfig.load(root)
         store = EpiresStore(db_path=str(root / config.paths.db_path))
+
+        if args.template:
+            template_path = root / args.template
+            template_path.parent.mkdir(parents=True, exist_ok=True)
+            source_candidate = args.file or "docs/findings-and-hypotheses.md"
+            template_code = generate_migration_script_template(source_file=source_candidate)
+            template_path.write_text(template_code, encoding="utf-8")
+            print(f"[+] Created custom migration template: {template_path.relative_to(root)}")
+            print(f"    Edit {template_path.name} to match your repo notes and run: python {template_path.relative_to(root)}")
+            return
 
         if not args.file:
             candidates = [

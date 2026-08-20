@@ -19,7 +19,7 @@ def test_doctor_diagnostics():
         # MCP check must pass
         mcp_check = next(c for c in checks if c.name == "MCP Server & Tool Registry")
         assert mcp_check.passed is True
-        assert len(mcp_check.details.get("tools", [])) == 15
+        assert len(mcp_check.details.get("tools", [])) == 16
 
         # Report printer
         all_ok = print_doctor_report(checks)

@@ -111,8 +111,9 @@ def test_mcp_server_tools():
         mcp = create_mcp_server(db_path=db_path, trace_md=trace_path)
         assert mcp.name == "epires"
 
-        # Test tool manager has all 15 tools
+        # Test tool manager has all 16 tools
         tool_names = [tool.name for tool in mcp._tool_manager.list_tools()]
+        assert "epires_get_schema" in tool_names
         assert "epires_register_hypothesis" in tool_names
         assert "epires_log_evidence" in tool_names
         assert "epires_retract_evidence" in tool_names
@@ -128,6 +129,11 @@ def test_mcp_server_tools():
         assert "epires_parallel_extract" in tool_names
         assert "epires_record_trace" in tool_names
         assert "epires_system_status" in tool_names
+
+        # Test schema retrieval
+        get_schema = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_get_schema")
+        schema_dict = json.loads(get_schema())
+        assert schema_dict["title"] == "Epires Canonical Research Graph Schema"
 
         # Test retracting via MCP
         log_ev = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_log_evidence")

@@ -106,6 +106,7 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
         tools = mcp._tool_manager.list_tools()
         tool_names = [t.name for t in tools]
         expected_tools = [
+            "epires_get_schema",
             "epires_register_hypothesis",
             "epires_log_evidence",
             "epires_retract_evidence",

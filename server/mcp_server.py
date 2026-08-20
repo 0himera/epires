@@ -1,6 +1,7 @@
 """FastMCP Server for Epires Research Harness.
 
-Exposes 15 deterministic tools for LLM agents:
+Exposes 16 deterministic tools for LLM agents:
+- epires_get_schema (Canonical data format & python migration template)
 - epires_register_hypothesis
 - epires_log_evidence (Collision-proof millisecond + SHA256 ID)
 - epires_retract_evidence (Recalculates status, demotes level, and cascades unblocking)
@@ -38,6 +39,7 @@ from epires_core.models import (
     SearchQuery,
     SourceConfidence,
 )
+from epires_core.schema import get_canonical_schema
 from epires_core.store import EpiresStore
 from epires_core.tracer import AutoTracer
 from tools.web_search import ParallelWebSearcher, get_parallel_api_key
@@ -59,13 +61,18 @@ def create_mcp_server(
         p_key = get_parallel_api_key()
         hypotheses = store.list_hypotheses()
         return json.dumps({
-            "version": "0.2.0",
+            "version": "0.2.4",
             "db_path": str(db_path),
             "total_hypotheses": len(hypotheses),
             "parallel_auth": bool(p_key),
-            "tools_count": 15,
+            "tools_count": 16,
             "status": "ready"
         }, indent=2)
+
+    @mcp.tool()
+    def epires_get_schema() -> str:
+        """Returns the canonical JSON schema, supported enum values, and Python SDK quickstart for migrating custom/legacy project findings."""
+        return json.dumps(get_canonical_schema(), indent=2)
 
     @mcp.tool()
     def epires_register_hypothesis(
