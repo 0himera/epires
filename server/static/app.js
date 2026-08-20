@@ -54,11 +54,11 @@
     wsConnected: false
   };
 
-  // Dimensions for Organic Voronoi Pebble Facets (Generous Inner Typography Margin)
-  const NODE_WIDTH = 276;
-  const NODE_HEIGHT = 104;
-  const GAP_X = 54;
-  const GAP_Y = 96;
+  // Dimensions for Sleek Expressive Voronoi Pebble Facets
+  const NODE_WIDTH = 280;
+  const NODE_HEIGHT = 86;
+  const GAP_X = 48;
+  const GAP_Y = 88;
 
   // DOM Elements
   const dom = {
@@ -194,9 +194,9 @@
   // --------------------------------------------------------------------------
   const textMeasureCanvas = document.createElement('canvas');
   const textMeasureCtx = textMeasureCanvas.getContext('2d');
-  textMeasureCtx.font = '500 11.5px Inter, -apple-system, sans-serif';
+  textMeasureCtx.font = '500 11px Inter, -apple-system, sans-serif';
 
-  function formatBalancedTitleSVG(text, maxWidth = 216, startX = 28, startY = 50, maxLines = 2) {
+  function formatBalancedTitleSVG(text, maxWidth = 232, startX = 24, startY = 41, maxLines = 2) {
     const words = text.split(/\s+/);
     const lines = [];
     let curLine = '';
@@ -224,15 +224,15 @@
     }
 
     return lines.map((l, idx) => {
-      const y = startY + idx * 15;
-      return `<text x="${startX}" y="${y}" fill="var(--ink-primary)" font-family="Inter, -apple-system, sans-serif" font-size="11.5" font-weight="500">${escapeSvgText(l)}</text>`;
+      const y = startY + idx * 14;
+      return `<text x="${startX}" y="${y}" fill="var(--ink-primary)" font-family="Inter, -apple-system, sans-serif" font-size="11" font-weight="500">${escapeSvgText(l)}</text>`;
     }).join('');
   }
 
   // --------------------------------------------------------------------------
   // Mathematical Smooth Filleted Polygon Path Generator (Continuous Curvature)
   // --------------------------------------------------------------------------
-  function createFilletedPolygonPath(rawPoints, radius = 16) {
+  function createFilletedPolygonPath(rawPoints, radius = 15) {
     const n = rawPoints.length;
     if (n < 3) return '';
 
@@ -272,7 +272,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Procedural Organic Asymmetric Voronoi Pebble Geometry (Zero Fixed Templates)
+  // Procedural Organic Asymmetric Voronoi Pebble Geometry (Expressive Morphology)
   // --------------------------------------------------------------------------
   function createDeterministicPRNG(seedStr) {
     let h = 2166136261 >>> 0;
@@ -287,29 +287,29 @@
     };
   }
 
-  function getVoronoiPebbleGeometry(id, w = 276, h = 104) {
+  function getVoronoiPebbleGeometry(id, w = 280, h = 86) {
     const rand = createDeterministicPRNG(id);
-    // 8 asymmetrically perturbed boundary vertices with strict safety clearance
+    // 8 expressive asymmetric boundary vertices creating distinctive Voronoi morphology
     const points = [
       // 1. Top-left shoulder
-      [10 + rand() * 8, 0 + rand() * 3],
-      // 2. Top-center crest (asymmetric organic slant)
-      [w * 0.46 + (rand() - 0.5) * 28, 0 + rand() * 3],
+      [14 + rand() * 16, 0 + rand() * 6],
+      // 2. Top crest / scallop
+      [w * 0.45 + (rand() - 0.5) * 44, 0 + rand() * 5],
       // 3. Top-right shoulder
-      [w - (10 + rand() * 8), 0 + rand() * 3],
+      [w - (14 + rand() * 18), 0 + rand() * 6],
       // 4. Right flank apex
-      [w - rand() * 3, h * 0.48 + (rand() - 0.5) * 16],
+      [w - rand() * 6, h * 0.48 + (rand() - 0.5) * 20],
       // 5. Bottom-right corner
-      [w - (10 + rand() * 8), h - (rand() * 3)],
-      // 6. Bottom-center dip
-      [w * 0.54 + (rand() - 0.5) * 28, h - (rand() * 3)],
+      [w - (14 + rand() * 18), h - rand() * 6],
+      // 6. Bottom waist / dip
+      [w * 0.54 + (rand() - 0.5) * 44, h - rand() * 5],
       // 7. Bottom-left corner
-      [10 + rand() * 8, h - (rand() * 3)],
+      [14 + rand() * 16, h - rand() * 6],
       // 8. Left flank apex
-      [0 + rand() * 3, h * 0.52 + (rand() - 0.5) * 16]
+      [0 + rand() * 6, h * 0.52 + (rand() - 0.5) * 20]
     ];
 
-    return createFilletedPolygonPath(points, 14);
+    return createFilletedPolygonPath(points, 15);
   }
 
   // --------------------------------------------------------------------------
@@ -1107,19 +1107,32 @@
   }
 
   function dagRelations() {
-    const relations = state.relations.map(normalizeRelation).filter(Boolean);
-    if (relations.length) return relations;
-    // Legacy snapshots may only expose parent_ids. Keep the same visual
-    // convention as before while treating these as typed DEPENDS_ON edges.
-    const fallback = [];
-    state.hypotheses.forEach(hypothesis => {
-      (hypothesis.parent_ids || []).forEach(parentId => fallback.push({
-        source_id: String(hypothesis.id),
-        target_id: String(parentId),
-        relation_type: 'DEPENDS_ON'
-      }));
+    const relationSet = new Set();
+    const result = [];
+
+    function addRel(src, tgt, type) {
+      if (!src || !tgt) return;
+      const key = `${src}->${tgt}:${type}`;
+      if (!relationSet.has(key)) {
+        relationSet.add(key);
+        result.push({ source_id: String(src), target_id: String(tgt), relation_type: type });
+      }
+    }
+
+    // 1. Explicit relations from relations table
+    (state.relations || []).forEach(rel => {
+      const norm = normalizeRelation(rel);
+      if (norm) addRel(norm.source_id, norm.target_id, norm.relation_type);
     });
-    return fallback;
+
+    // 2. Parent-child dependencies from hypotheses
+    (state.hypotheses || []).forEach(hypothesis => {
+      (hypothesis.parent_ids || []).forEach(parentId => {
+        addRel(hypothesis.id, parentId, 'DEPENDS_ON');
+      });
+    });
+
+    return result;
   }
 
   function dagEdgeEndpoints(relation) {
@@ -1256,7 +1269,7 @@
       gNode.dataset.id = node.id;
 
       const pebblePath = getVoronoiPebbleGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
-      const titleLinesSVG = formatBalancedTitleSVG(node.title, 216, 28, 50, 2);
+      const titleLinesSVG = formatBalancedTitleSVG(node.title, 232, 24, 41, 2);
       const currentLevel = node.current_evidence_level || 'E0';
       const targetLevel = node.target_evidence_level || 'E3';
 
@@ -1264,12 +1277,12 @@
 
       gNode.innerHTML = `
         <path class="node-plate" d="${pebblePath}" />
-        <text class="node-id" x="28" y="27">${escapeSvgText(node.id)}</text>
-        <text class="node-level" x="${NODE_WIDTH - 28}" y="27" text-anchor="end">${escapeSvgText(currentLevel)} / ${escapeSvgText(targetLevel)}</text>
+        <text class="node-id" x="24" y="23">${escapeSvgText(node.id)}</text>
+        <text class="node-level" x="${NODE_WIDTH - 24}" y="23" text-anchor="end">${escapeSvgText(currentLevel)} / ${escapeSvgText(targetLevel)}</text>
         ${titleLinesSVG}
-        <g class="node-status-cluster" transform="translate(28, 86)">
+        <g class="node-status-cluster" transform="translate(24, 72)">
           <text class="node-status-dot" x="0" y="0">●</text>
-          <text class="node-status-text" x="9" y="0">${escapeSvgText(statusRaw)}</text>
+          <text class="node-status-text" x="8" y="0">${escapeSvgText(statusRaw)}</text>
         </g>
       `;
 
@@ -1302,11 +1315,11 @@
 
         gGhost.innerHTML = `
           <path class="node-plate" d="${pebblePath}" />
-          <text class="node-id" x="28" y="27">⚡ WHITE SPOT GAP</text>
-          <text class="node-ghost-title" x="28" y="52">${escapeSvgText(gapTitle)}</text>
-          <g class="node-status-cluster" transform="translate(28, 86)">
+          <text class="node-id" x="24" y="23">⚡ WHITE SPOT GAP</text>
+          <text class="node-ghost-title" x="24" y="44">${escapeSvgText(gapTitle)}</text>
+          <g class="node-status-cluster" transform="translate(24, 72)">
             <text class="node-status-dot" x="0" y="0">○</text>
-            <text class="node-status-text" x="9" y="0">untested</text>
+            <text class="node-status-text" x="8" y="0">untested</text>
           </g>
         `;
         gViewport.appendChild(gGhost);
