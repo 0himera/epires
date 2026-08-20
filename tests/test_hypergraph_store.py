@@ -251,3 +251,52 @@ def test_gap_analysis(temp_store: EpiresStore):
     # Should identify untested combinations: (CatBoost, Wavelets) and (LightGBM, Lags)
     untested = [g["combination"] for g in gaps if g["status"] == "UNTESTED"]
     assert {"Model": "CatBoost", "Feature": "Wavelets"} in untested or {"Model": "LightGBM", "Feature": "Lags"} in untested
+
+
+def test_retract_evidence_and_cascade_unblock(temp_store: EpiresStore):
+    # Setup H1 -> H2 -> H3
+    h1 = HypothesisNode(id="H100", title="Root mechanism", a_priori_mechanism="math", falsification_criteria="loss > 1.0")
+    h2 = HypothesisNode(id="H101", title="Child 1", a_priori_mechanism="math", falsification_criteria="loss > 1.0", parent_ids=["H100"])
+    h3 = HypothesisNode(id="H102", title="Child 2", a_priori_mechanism="math", falsification_criteria="loss > 1.0", parent_ids=["H101"])
+    temp_store.register_hypothesis(h1)
+    temp_store.register_hypothesis(h2)
+    temp_store.register_hypothesis(h3)
+
+    # Log an initial positive E2 observation for H100
+    ev_ok = EvidenceClaim(id="ev_ok", hypothesis_id="H100", evidence_level=EvidenceLevel.E2, source_confidence=SourceConfidence.V, claim="Passed local smoke test")
+    temp_store.log_evidence(ev_ok)
+    assert temp_store.get_hypothesis("H100").status == HypothesisStatus.IN_PROGRESS
+    assert temp_store.get_hypothesis("H100").current_evidence_level == EvidenceLevel.E2
+
+    # Log an erroneous falsifying E4 evidence for H100 (e.g. data leak / bug in test)
+    ev_bug = EvidenceClaim(
+        id="ev_bug",
+        hypothesis_id="H100",
+        evidence_level=EvidenceLevel.E4,
+        source_confidence=SourceConfidence.V,
+        claim="Data leak caused false regression",
+        falsification_triggered=True
+    )
+    _, blocked = temp_store.log_evidence(ev_bug)
+    assert temp_store.get_hypothesis("H100").status == HypothesisStatus.FALSIFIED
+    assert temp_store.get_hypothesis("H100").current_evidence_level == EvidenceLevel.E4
+    assert temp_store.get_hypothesis("H101").status == HypothesisStatus.BLOCKED
+    assert temp_store.get_hypothesis("H102").status == HypothesisStatus.BLOCKED
+    assert "H101" in blocked and "H102" in blocked
+
+    # Now RETRACT the erroneous ev_bug!
+    retracted, unblocked = temp_store.retract_evidence("ev_bug", reason="Bug discovered in validation pipeline split")
+    assert retracted is not None
+    assert retracted.id == "ev_bug"
+
+    # Verify H100 is no longer FALSIFIED, and its level demotes back to E2 (the remaining valid claim)
+    h100_after = temp_store.get_hypothesis("H100")
+    assert h100_after.status == HypothesisStatus.IN_PROGRESS
+    assert h100_after.current_evidence_level == EvidenceLevel.E2
+
+    # Verify H101 and H102 are automatically UNBLOCKED back to PROPOSED
+    assert "H101" in unblocked
+    assert "H102" in unblocked
+    assert temp_store.get_hypothesis("H101").status == HypothesisStatus.PROPOSED
+    assert temp_store.get_hypothesis("H102").status == HypothesisStatus.PROPOSED
+

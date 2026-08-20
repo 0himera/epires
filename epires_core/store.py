@@ -120,16 +120,14 @@ class EpiresStore:
     # -------------------------------------------------------------------------
     # Hypotheses
     # -------------------------------------------------------------------------
-    def register_hypothesis(self, h: HypothesisNode) -> HypothesisNode:
+    def register_hypothesis(self, h: HypothesisNode, allow_status_override: bool = False) -> HypothesisNode:
         now = self._now()
         existing = self.get_hypothesis(h.id)
         h.created_at = h.created_at or (existing.created_at if existing else now)
         h.updated_at = now
 
-        # Re-registration is an edit to the hypothesis declaration, not a new
-        # observation.  Do not let a stale caller erase progress already
-        # recorded in the evidence ledger, or reopen terminal outcomes.
-        if existing:
+        if existing and not allow_status_override:
+            # Preserve terminal/authoritative statuses against accidental overwrite
             if existing.current_evidence_level.value > h.current_evidence_level.value:
                 h.current_evidence_level = existing.current_evidence_level
             if existing.status == HypothesisStatus.FALSIFIED:
@@ -342,6 +340,146 @@ class EpiresStore:
                 details={"blocked_hypotheses": blocked}
             ))
         return blocked
+
+    def get_evidence(self, evidence_id: str) -> Optional[EvidenceClaim]:
+        """Fetch a single evidence record by ID."""
+        with self._get_connection() as conn:
+            row = conn.execute("SELECT * FROM evidence WHERE id = ?", (evidence_id,)).fetchone()
+            return self._row_to_evidence(row) if row else None
+
+    def retract_evidence(
+        self,
+        evidence_id: str,
+        reason: str,
+        agent_role: str = "Lead-PI"
+    ) -> Tuple[Optional[EvidenceClaim], List[str]]:
+        """Retracts an erroneous evidence record, recalculates the parent hypothesis's evidence level
+
+        and status, and cascades unblocking to downstream child hypotheses if all their parents are valid.
+        """
+        now = self._now()
+        target_ev = self.get_evidence(evidence_id)
+        if not target_ev:
+            return None, []
+
+        hypothesis_id = target_ev.hypothesis_id
+        unblocked_children: List[str] = []
+
+        with self._get_connection() as conn:
+            conn.execute("DELETE FROM evidence WHERE id = ?", (evidence_id,))
+
+        h = self.get_hypothesis(hypothesis_id)
+        if h:
+            remaining_evidence = self.get_evidence_for_hypothesis(hypothesis_id)
+
+            # Recalculate maximum evidence level from remaining records
+            if remaining_evidence:
+                max_lvl = max(ev.evidence_level.value for ev in remaining_evidence)
+                h.current_evidence_level = EvidenceLevel(max_lvl)
+            else:
+                h.current_evidence_level = EvidenceLevel.E0
+
+            was_falsified = (h.status == HypothesisStatus.FALSIFIED)
+            has_remaining_falsification = any(ev.falsification_triggered for ev in remaining_evidence)
+
+            if has_remaining_falsification:
+                h.status = HypothesisStatus.FALSIFIED
+            else:
+                # Not falsified anymore! Restore status based on remaining evidence
+                if len(remaining_evidence) == 0:
+                    h.status = HypothesisStatus.PROPOSED
+                elif h.current_evidence_level.value >= h.target_evidence_level.value:
+                    h.status = HypothesisStatus.CONFIRMED
+                else:
+                    h.status = HypothesisStatus.IN_PROGRESS
+
+            self.register_hypothesis(h, allow_status_override=True)
+
+            # If hypothesis was falsified and is now un-falsified, unblock downstream children
+            if was_falsified and not has_remaining_falsification:
+                unblocked_children = self._cascade_unblock(hypothesis_id)
+
+        self.log_trace(TraceEntry(
+            timestamp=now,
+            action="RETRACT_EVIDENCE",
+            agent_role=agent_role,
+            h_tag=hypothesis_id or "",
+            summary=f"Retracted evidence [{evidence_id}] for {hypothesis_id}: {reason}"
+                    + (f" -> UNBLOCKED {len(unblocked_children)} child hypotheses: {', '.join(unblocked_children)}" if unblocked_children else ""),
+            details={"evidence_id": evidence_id, "reason": reason, "unblocked": unblocked_children}
+        ))
+
+        return target_ev, unblocked_children
+
+    def _cascade_unblock(self, unblocked_h_id: str) -> List[str]:
+        """Finds all child hypotheses that were BLOCKED by unblocked_h_id, checks if all their
+
+        parents are now valid, and if so restores their status and cascades to their descendants.
+        """
+        unblocked: List[str] = []
+        with self._get_connection() as conn:
+            # Remove BLOCKS relations originating from this unblocked parent
+            conn.execute(
+                "DELETE FROM relations WHERE source_id = ? AND relation_type = ?",
+                (unblocked_h_id, RelationType.BLOCKS.value)
+            )
+
+            # Query all downstream candidates that depend on unblocked_h_id
+            cursor = conn.execute("""
+            WITH RECURSIVE downstream AS (
+                SELECT source_id AS child_id FROM relations
+                WHERE target_id = ? AND relation_type = 'DEPENDS_ON'
+                UNION
+                SELECT r.source_id FROM relations r
+                JOIN downstream d ON r.target_id = d.child_id
+                WHERE r.relation_type = 'DEPENDS_ON'
+            )
+            SELECT DISTINCT child_id FROM downstream;
+            """, (unblocked_h_id,))
+            candidates = [r["child_id"] for r in cursor.fetchall()]
+
+        # Process candidates
+        for child_id in candidates:
+            child = self.get_hypothesis(child_id)
+            if not child or child.status != HypothesisStatus.BLOCKED:
+                continue
+
+            # Check if ANY parent of child_id is currently FALSIFIED or BLOCKED
+            parent_ids = child.parent_ids
+            has_blocked_parent = False
+            for p_id in parent_ids:
+                parent = self.get_hypothesis(p_id)
+                if parent and parent.status in {HypothesisStatus.FALSIFIED, HypothesisStatus.BLOCKED}:
+                    has_blocked_parent = True
+                    break
+
+            if not has_blocked_parent:
+                # All parents are healthy! Restore child status based on its own evidence
+                child_ev = self.get_evidence_for_hypothesis(child_id)
+                has_own_falsification = any(ev.falsification_triggered for ev in child_ev)
+                if has_own_falsification:
+                    child.status = HypothesisStatus.FALSIFIED
+                elif len(child_ev) == 0:
+                    child.status = HypothesisStatus.PROPOSED
+                elif child.current_evidence_level.value >= child.target_evidence_level.value:
+                    child.status = HypothesisStatus.CONFIRMED
+                else:
+                    child.status = HypothesisStatus.IN_PROGRESS
+
+                self.register_hypothesis(child, allow_status_override=True)
+                unblocked.append(child_id)
+
+        if unblocked:
+            self.log_trace(TraceEntry(
+                timestamp=self._now(),
+                action="CASCADING_UNBLOCK",
+                agent_role="System-DAG",
+                h_tag=unblocked_h_id,
+                summary=f"Unfalsification of {unblocked_h_id} cascaded to unblock dependent hypotheses: {', '.join(unblocked)}",
+                details={"unblocked_hypotheses": unblocked}
+            ))
+
+        return unblocked
 
     def get_evidence_for_hypothesis(self, h_id: str) -> List[EvidenceClaim]:
         with self._get_connection() as conn:

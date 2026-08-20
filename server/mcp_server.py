@@ -1,8 +1,9 @@
 """FastMCP Server for Epires Research Harness.
 
-Exposes 9 deterministic tools for LLM agents:
+Exposes 11 deterministic tools for LLM agents:
 - epires_register_hypothesis
 - epires_log_evidence (Collision-proof millisecond + SHA256 ID)
+- epires_retract_evidence (Recalculates status, demotes level, and cascades unblocking)
 - epires_query_graph
 - epires_find_gaps
 - epires_associative_search
@@ -54,11 +55,11 @@ def create_mcp_server(
         p_key = get_parallel_api_key()
         hypotheses = store.list_hypotheses()
         return json.dumps({
-            "version": "0.1.0",
+            "version": "0.1.1",
             "db_path": str(db_path),
             "total_hypotheses": len(hypotheses),
             "parallel_auth": bool(p_key),
-            "tools_count": 9,
+            "tools_count": 11,
             "status": "ready"
         }, indent=2)
 
@@ -144,6 +145,24 @@ def create_mcp_server(
             msg += f"\n[ALERT] Falsification triggered! Marked {hypothesis_id} as FALSIFIED."
             if blocked_children:
                 msg += f"\n[DAG CASCADE] Automatically BLOCKED downstream dependent hypotheses: {', '.join(blocked_children)}"
+        return msg
+
+    @mcp.tool()
+    def epires_retract_evidence(
+        evidence_id: str,
+        reason: str,
+        agent_role: str = "Lead-PI"
+    ) -> str:
+        """Retract or delete an erroneous evidence claim, recalculating the hypothesis status and evidence level, and unblocking dependent DAG child nodes if all their parents are valid."""
+        retracted_ev, unblocked = store.retract_evidence(evidence_id=evidence_id, reason=reason, agent_role=agent_role)
+        if not retracted_ev:
+            return f"Evidence '{evidence_id}' not found."
+        h = store.get_hypothesis(retracted_ev.hypothesis_id)
+        msg = f"Evidence [{evidence_id}] for {retracted_ev.hypothesis_id} successfully retracted. Reason: {reason}."
+        if h:
+            msg += f"\nHypothesis {h.id} status is now {h.status.value} (current level: {h.current_evidence_level.value})."
+        if unblocked:
+            msg += f"\n[DAG CASCADE] Automatically UNBLOCKED downstream hypotheses: {', '.join(unblocked)}"
         return msg
 
     @mcp.tool()

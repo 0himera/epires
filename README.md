@@ -328,12 +328,13 @@ epires dag
 
 ## 6. Model Context Protocol (MCP) Specification
 
-Epires exposes 10 deterministic MCP tools for AI agents:
+Epires exposes 11 deterministic MCP tools for AI agents:
 
 | MCP Tool | Description |
 | :--- | :--- |
 | `epires_register_hypothesis` | Registers a hypothesis with a priori proof and falsification criteria |
 | `epires_log_evidence` | Logs empirical evidence, metrics, CI95, and cascades falsification |
+| `epires_retract_evidence` | Retracts erroneous evidence, recalculates evidence level, and cascades unblocking |
 | `epires_query_graph` | Queries hypotheses by ID or status (CONFIRMED, FALSIFIED, BLOCKED) |
 | `epires_find_gaps` | Discovers untested combinations and research white spots in VSA hypergraph |
 | `epires_associative_search` | Sub-millisecond VSA cosine similarity search across the research graph |
@@ -351,12 +352,13 @@ The engine is verified using **property-based fuzz testing** powered by `hypothe
 
 ```bash
 pytest -v
-============================== 29 passed in 3.53s ==============================
+============================== 30 passed in 3.66s ==============================
 ```
 
 ### Verified Mathematical Invariants:
 * **VSA Invertibility**: $\text{bind}(\text{bind}(\mathbf{a}, \mathbf{b}), \mathbf{b}) \equiv \mathbf{a}$ across arbitrary hypervectors.
 * **DAG Cascading Invariant**: Falsifying any node in a random DAG strictly blocks **all and only** its transitive descendants (verified against BFS ground truth).
+* **Retraction & Unblock Invariant**: Retracting a falsifying claim strictly unblocks all descendants whose remaining parents are valid.
 * **Storage Resilience**: Complete tolerance to arbitrary Unicode payloads, extreme floats ($\pm 10^8$), and empty tags.
 
 ---

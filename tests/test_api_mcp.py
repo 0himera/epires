@@ -111,10 +111,11 @@ def test_mcp_server_tools():
         mcp = create_mcp_server(db_path=db_path, trace_md=trace_path)
         assert mcp.name == "epires"
 
-        # Test tool manager has all 10 tools
+        # Test tool manager has all 11 tools
         tool_names = [tool.name for tool in mcp._tool_manager.list_tools()]
         assert "epires_register_hypothesis" in tool_names
         assert "epires_log_evidence" in tool_names
+        assert "epires_retract_evidence" in tool_names
         assert "epires_query_graph" in tool_names
         assert "epires_find_gaps" in tool_names
         assert "epires_associative_search" in tool_names
@@ -123,6 +124,25 @@ def test_mcp_server_tools():
         assert "epires_parallel_extract" in tool_names
         assert "epires_record_trace" in tool_names
         assert "epires_system_status" in tool_names
+
+        # Test retracting via MCP
+        log_ev = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_log_evidence")
+        register = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_register_hypothesis")
+        retract = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_retract_evidence")
+        
+        register(id="H-TEST-MCP", title="MCP test", a_priori_mechanism="math", falsification_criteria="loss > 1")
+        log_ev(hypothesis_id="H-TEST-MCP", claim="Erroneous fail", evidence_level="E3", falsification_triggered=True)
+        query = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_query_graph")
+        res1 = json.loads(query(h_id="H-TEST-MCP"))
+        assert res1["hypothesis"]["status"] == "FALSIFIED"
+        
+        ev_id = res1["evidence"][0]["id"]
+        retract_msg = retract(evidence_id=ev_id, reason="Correction of benchmark error")
+        assert "successfully retracted" in retract_msg
+        
+        res2 = json.loads(query(h_id="H-TEST-MCP"))
+        assert res2["hypothesis"]["status"] == "PROPOSED"
+        assert res2["hypothesis"]["current_evidence_level"] == "E0"
 
 
 def test_mcp_entity_pairs_are_persisted_and_validated():

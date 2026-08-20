@@ -98,6 +98,7 @@ When delegating work to a coder or runner subagent, enforce the **Strict Contrac
 ### Step 6: Epistemic Update & Cascading Invalidation
 * Call `epires_log_evidence(...)` with verified metrics, confidence tag, and artifact hash.
 * If falsification criteria are met, set `falsification_triggered=True`. The VSA DAG will automatically **BLOCK** all downstream dependent hypotheses.
+* **Retraction & Error Correction**: If a bug or data leak is subsequently discovered in an experiment or benchmark, call `epires_retract_evidence(evidence_id, reason)`. The harness will recalculate the true evidence level and automatically **UNBLOCK** downstream children whose parent dependencies are restored to validity.
 
 ### Step 7: Export & Commit
 * Review the Mermaid graph via `epires_export_mermaid_dag`.

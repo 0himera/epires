@@ -529,6 +529,35 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
             "blocked_children": blocked_children
         }
 
+    @app.get("/evidence/{evidence_id}")
+    def get_evidence_detail(evidence_id: str) -> EvidenceClaim:
+        ev = store.get_evidence(evidence_id)
+        if not ev:
+            raise HTTPException(status_code=404, detail=f"Evidence {evidence_id} not found")
+        return ev
+
+    @app.delete("/evidence/{evidence_id}")
+    @app.post("/evidence/{evidence_id}/retract")
+    def retract_evidence(
+        evidence_id: str,
+        reason: str = Query(default="Retracted erroneous evidence claim"),
+        agent_role: str = Query(default="Lead-PI")
+    ) -> Dict[str, Any]:
+        retracted_ev, unblocked_children = store.retract_evidence(
+            evidence_id=evidence_id,
+            reason=reason,
+            agent_role=agent_role
+        )
+        if not retracted_ev:
+            raise HTTPException(status_code=404, detail=f"Evidence {evidence_id} not found")
+        h = store.get_hypothesis(retracted_ev.hypothesis_id)
+        return {
+            "retracted_evidence": retracted_ev,
+            "hypothesis": h,
+            "unblocked_children": unblocked_children,
+            "reason": reason
+        }
+
     # -------------------------------------------------------------------------
     # VSA Search & Gap Analysis
     # -------------------------------------------------------------------------
