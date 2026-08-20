@@ -1,6 +1,6 @@
 # Epires — Epistemic Auto-Research Harness
 
-> 🇷🇺 Русская версия доступна в [README_RU.md](README_RU.md).
+> версия на русском доступна в [README_RU.md](README_RU.md).
 
 <div align="center">
 
