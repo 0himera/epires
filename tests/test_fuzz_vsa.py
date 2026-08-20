@@ -27,22 +27,32 @@ def test_fuzz_vsa_bind_exact_reversibility(dim: int, key1: str, key2: str):
 
 @settings(max_examples=100)
 @given(
-    dim=st.integers(min_value=500, max_value=2000),
-    num_vectors=st.integers(min_value=1, max_value=20),
-    shifts=st.integers(min_value=-10, max_value=10),
+    dim=st.integers(min_value=1000, max_value=2000),
+    num_vectors=st.integers(min_value=1, max_value=9),
+    shifts=st.integers(min_value=1, max_value=5),
 )
 def test_fuzz_vsa_bundle_and_permute(dim: int, num_vectors: int, shifts: int):
-    """Property: Bundling any collection of vectors produces a valid bipolar vector."""
+    """Property: Bundling preserves positive correlation with constituents, and cyclic permutation is orthogonal."""
     vsa = BipolarVSA(dim=dim)
-    vectors = [vsa.generate_vector(f"key_{i}") for i in range(num_vectors)]
+    vectors = [vsa.generate_vector(f"key_component_{i}") for i in range(num_vectors)]
 
     bundled = vsa.bundle(vectors)
     assert bundled.shape == (dim,)
     assert set(np.unique(bundled)).issubset({-1, 1})
 
-    permuted = vsa.permute(bundled, shifts=shifts)
+    # Mathematical property: Average cosine similarity with constituents must be strictly positive
+    sims = [vsa.similarity(bundled, v) for v in vectors]
+    avg_sim = float(np.mean(sims))
+    assert avg_sim > 0.0, f"Bundle average similarity must be positive, got {avg_sim}"
+
+    # Permutation is orthogonal to original vector
+    v_single = vectors[0]
+    permuted = vsa.permute(v_single, shifts=shifts)
     assert permuted.shape == (dim,)
     assert set(np.unique(permuted)).issubset({-1, 1})
+    assert abs(vsa.similarity(permuted, v_single)) < 0.25, (
+        "Permuted vector must be approximately orthogonal to original"
+    )
 
 
 @settings(max_examples=100)

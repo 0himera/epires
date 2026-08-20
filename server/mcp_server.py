@@ -1,24 +1,26 @@
 """FastMCP Server for Epires Research Harness.
 
-Exposes 18 deterministic tools for LLM agents:
+Exposes 20 deterministic tools for LLM agents:
 - epires_get_schema (Canonical data format & python migration template)
-- epires_register_hypothesis
+- epires_register_hypothesis (Popperian criteria & DAG cycle detection)
 - epires_register_experiment (Explicit reproducibility metadata & execution parameters)
-- epires_list_experiments
-- epires_log_evidence (Collision-proof millisecond + SHA256 ID)
+- epires_list_experiments (Historical experiment provenance)
+- epires_log_evidence (Collision-proof millisecond + SHA256 ID, E4 CI check, append-only)
 - epires_retract_evidence (Recalculates status, demotes level, and cascades unblocking)
 - epires_update_hypothesis (Explicit status update, target level, tags, fields)
-- epires_bulk_import (Fast batch transaction ingestion)
+- epires_add_relation (Explicit semantic relations: SUPERSEDES, CONFLICTS_WITH, REFINES, BLOCKS, GATED_BY)
+- epires_list_relations (Query graph relation edges)
+- epires_bulk_import (Fast batch transaction ingestion for all 5 entity types)
 - epires_export_graph (Portable JSON bundle with SHA256 checksum)
-- epires_import_graph (Reproducible graph restoration)
+- epires_import_graph (Reproducible full graph restoration)
 - epires_query_graph
-- epires_find_gaps
-- epires_associative_search
-- epires_export_mermaid_dag
-- epires_parallel_web_search
-- epires_parallel_extract (Guaranteed JSON serialization)
-- epires_record_trace (Accepts both dict and JSON-string)
-- epires_system_status
+- epires_find_gaps (Empirical gap analysis across dimensions)
+- epires_associative_search (Hybrid SQLite FTS5 + VSA cosine similarity search)
+- epires_export_mermaid_dag (Visual graph diagram with all relation types)
+- epires_parallel_web_search (Multi-query literature search via parallel-web)
+- epires_parallel_extract (Guaranteed JSON markdown extraction from URLs)
+- epires_record_trace (Real-time operational audit trail)
+- epires_system_status (Harness version, database status, and tools inventory)
 """
 
 from __future__ import annotations

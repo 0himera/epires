@@ -29,25 +29,30 @@ def test_fuzz_store_arbitrary_hypothesis_and_evidence(
 ):
     with tempfile.TemporaryDirectory() as tmpdir:
         db_path = Path(tmpdir) / "fuzz_store.db"
-        store = EpiresStore(db_path=db_path, vsa_dim=1000)
+        store = EpiresStore(db_path=db_path, vsa_dim=2000)
 
+        unique_tag = f"tag_{abs(hash(h_id))}"
         h = HypothesisNode(
             id=h_id,
             title=title,
             a_priori_mechanism=mechanism,
             falsification_criteria=falsification,
-            entities=[Entity(type="TestType", value="TestVal")],
-            tags=["fuzz", "test"],
+            entities=[Entity(type="TestType", value="UniqueEntityVal")],
+            tags=[unique_tag, "fuzz"],
         )
         store.register_hypothesis(h)
 
+        # 1. Strict persistence and exact field matching
         fetched = store.get_hypothesis(h_id)
         assert fetched is not None
         assert fetched.id == h_id
         assert fetched.title == title
+        assert fetched.a_priori_mechanism == mechanism
+        assert fetched.falsification_criteria == falsification
 
+        claim_id = f"ev_{abs(hash(h_id))}"
         claim = EvidenceClaim(
-            id=f"ev_{hash(h_id)}",
+            id=claim_id,
             hypothesis_id=h_id,
             evidence_level=EvidenceLevel.E2,
             source_confidence=SourceConfidence.V,
@@ -59,6 +64,22 @@ def test_fuzz_store_arbitrary_hypothesis_and_evidence(
         )
         store.log_evidence(claim)
 
-        # Search should not crash
-        results = store.search(SearchQuery(query="TestVal", limit=5))
-        assert isinstance(results, list)
+        # 2. Strict evidence retrieval & metric precision
+        ev_list = store.get_evidence_for_hypothesis(h_id)
+        assert len(ev_list) == 1
+        assert ev_list[0].id == claim_id
+        assert abs(ev_list[0].metric_value - metric_val) < 1e-4
+        assert abs(ev_list[0].delta_vs_baseline - delta_val) < 1e-4
+
+        # 3. Strict semantic & entity retrieval: target hypothesis must be found at Rank 1
+        results = store.search(
+            SearchQuery(
+                query=unique_tag,
+                entities=[Entity(type="TestType", value="UniqueEntityVal")],
+                limit=5,
+            )
+        )
+        assert len(results) >= 1
+        top_node, score = results[0]
+        assert top_node.id == h_id
+        assert score > 0.0
