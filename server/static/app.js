@@ -1,6 +1,6 @@
 /**
  * EPIRES HYPERGRAPH ENGINE // CLIENT CONTROLLER
- * Archival Paper Theme with Procedural Filleted Voronoi Pebble Facets & Organic Isogrid Layout
+ * Archival Paper Theme with Pretext Balanced Typography & Organic Voronoi Pebble Geometry
  */
 
 (function () {
@@ -27,10 +27,10 @@
   };
 
   // Dimensions for Organic Voronoi Pebble Facets
-  const NODE_WIDTH = 260;
-  const NODE_HEIGHT = 92;
-  const GAP_X = 52;
-  const GAP_Y = 90;
+  const NODE_WIDTH = 270;
+  const NODE_HEIGHT = 100;
+  const GAP_X = 54;
+  const GAP_Y = 96;
 
   // DOM Elements
   const dom = {
@@ -75,6 +75,47 @@
   };
 
   // --------------------------------------------------------------------------
+  // Pretext Measurement Canvas for Intelligent Balanced Multi-Line Layout
+  // --------------------------------------------------------------------------
+  const textMeasureCanvas = document.createElement('canvas');
+  const textMeasureCtx = textMeasureCanvas.getContext('2d');
+  textMeasureCtx.font = '500 12px Inter, -apple-system, sans-serif';
+
+  function formatBalancedTitleSVG(text, maxWidth = 220, startX = 24, startY = 46, maxLines = 2) {
+    const words = text.split(/\s+/);
+    const lines = [];
+    let curLine = '';
+
+    for (let i = 0; i < words.length; i++) {
+      const test = curLine ? `${curLine} ${words[i]}` : words[i];
+      const width = textMeasureCtx.measureText(test).width;
+      if (width > maxWidth && curLine) {
+        lines.push(curLine);
+        curLine = words[i];
+        if (lines.length >= maxLines - 1) {
+          // Add remainder
+          let remainder = words.slice(i).join(' ');
+          while (textMeasureCtx.measureText(remainder + '…').width > maxWidth && remainder.length > 5) {
+            remainder = remainder.substring(0, remainder.lastIndexOf(' '));
+          }
+          curLine = remainder ? `${remainder}…` : `${words[i]}…`;
+          break;
+        }
+      } else {
+        curLine = test;
+      }
+    }
+    if (curLine && lines.length < maxLines) {
+      lines.push(curLine);
+    }
+
+    return lines.map((l, idx) => {
+      const y = startY + idx * 16;
+      return `<text x="${startX}" y="${y}" fill="var(--ink-primary)" font-family="Inter" font-size="12" font-weight="500">${l}</text>`;
+    }).join('');
+  }
+
+  // --------------------------------------------------------------------------
   // Mathematical Smooth Filleted Polygon Path Generator (Continuous Curvature)
   // --------------------------------------------------------------------------
   function createFilletedPolygonPath(rawPoints, radius = 16) {
@@ -117,54 +158,40 @@
   }
 
   // --------------------------------------------------------------------------
-  // Procedural Organic Voronoi Pebble Geometry (6 Interlocking Facet Profiles)
+  // Procedural Organic Voronoi Pebble Geometry (6 Clean Facet Profiles)
   // --------------------------------------------------------------------------
-  function getVoronoiPebbleGeometry(id, w = 260, h = 92) {
+  function getVoronoiPebbleGeometry(id, w = 270, h = 100) {
     let hash = 0;
     for (let i = 0; i < id.length; i++) {
       hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
     }
     const variant = hash % 6;
 
-    let rawOuter, rawInner;
+    let rawOuter;
 
     switch (variant) {
       case 0: // Smooth Pebble Hexagon
         rawOuter = [[28, 0], [w - 28, 0], [w, h * 0.48], [w - 24, h], [24, h], [0, h * 0.52]];
-        rawInner = [[30, 4], [w - 30, 4], [w - 4, h * 0.48], [w - 26, h - 4], [26, h - 4], [4, h * 0.52]];
         break;
-
       case 1: // Organic Facet with Asymmetric Shoulder
         rawOuter = [[18, 0], [w - 36, 0], [w, h * 0.38], [w - 18, h], [32, h], [0, h * 0.65]];
-        rawInner = [[22, 4], [w - 38, 4], [w - 4, h * 0.38], [w - 20, h - 4], [34, h - 4], [4, h * 0.65]];
         break;
-
       case 2: // Elongated Voronoi Capsule-Diamond
         rawOuter = [[34, 0], [w - 18, 0], [w, h * 0.6], [w - 32, h], [16, h], [0, h * 0.4]];
-        rawInner = [[36, 4], [w - 20, 4], [w - 4, h * 0.6], [w - 34, h - 4], [18, h - 4], [4, h * 0.4]];
         break;
-
       case 3: // Slanted Crystallographic Pebble
         rawOuter = [[30, 0], [w, 0], [w - 16, h * 0.5], [w - 30, h], [0, h], [16, h * 0.5]];
-        rawInner = [[32, 4], [w - 4, 4], [w - 18, h * 0.5], [w - 32, h - 4], [4, h - 4], [18, h * 0.5]];
         break;
-
       case 4: // Soft Rounded Pentagonal Lobe
         rawOuter = [[20, 0], [w - 20, 0], [w, h * 0.55], [w - 26, h], [12, h], [0, h * 0.45]];
-        rawInner = [[22, 4], [w - 22, 4], [w - 4, h * 0.55], [w - 28, h - 4], [14, h - 4], [4, h * 0.45]];
         break;
-
       case 5: // Curved Isogrid Facet
       default:
         rawOuter = [[14, 0], [w - 30, 0], [w, h * 0.45], [w - 16, h], [24, h], [0, h * 0.55]];
-        rawInner = [[16, 4], [w - 32, 4], [w - 4, h * 0.45], [w - 18, h - 4], [26, h - 4], [4, h * 0.55]];
         break;
     }
 
-    return {
-      pathOuter: createFilletedPolygonPath(rawOuter, 16),
-      pathInner: createFilletedPolygonPath(rawInner, 12)
-    };
+    return createFilletedPolygonPath(rawOuter, 16);
   }
 
   // --------------------------------------------------------------------------
@@ -195,7 +222,7 @@
         data[i] = val;
         data[i + 1] = val;
         data[i + 2] = val;
-        data[i + 3] = 45; // Subtle tactile alpha
+        data[i + 3] = 45;
       }
 
       ctx.putImageData(imgData, 0, 0);
@@ -358,7 +385,6 @@
 
     layers.forEach((layerNodes, layerIdx) => {
       const totalWidth = layerNodes.length * NODE_WIDTH + (layerNodes.length - 1) * GAP_X;
-      // Stagger alternating rows slightly for interlocking crystallographic isogrid effect
       const staggerX = (layerIdx % 2 === 1) ? 28 : 0;
       const startX = Math.max(40, 560 - totalWidth / 2) + staggerX;
 
@@ -406,7 +432,7 @@
     gViewport.setAttribute('id', 'dag-viewport');
     gViewport.setAttribute('transform', `translate(${state.transform.x}, ${state.transform.y}) scale(${state.transform.scale})`);
 
-    // 1. Edges Layer
+    // 1. Edges Layer (Rendered strictly UNDER nodes)
     const gEdges = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     gEdges.setAttribute('id', 'dag-edges-layer');
     gViewport.appendChild(gEdges);
@@ -449,32 +475,30 @@
       gNode.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
       gNode.dataset.id = node.id;
 
-      const truncatedTitle = node.title.length > 34 ? node.title.substring(0, 32) + '…' : node.title;
-
       let statusColor = 'var(--ink-secondary)';
       if (isFalsified) statusColor = 'var(--pastel-falsified-ink)';
       if (isConfirmed) statusColor = 'var(--pastel-confirmed-ink)';
       if (node.status === 'IN_PROGRESS') statusColor = 'var(--pastel-in-progress-ink)';
 
-      // Generate unique filleted Voronoi pebble path
-      const geom = getVoronoiPebbleGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
+      // Generate clean filleted Voronoi pebble path
+      const pebblePath = getVoronoiPebbleGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
+
+      // Balanced Pretext-formatted multiline title
+      const titleLinesSVG = formatBalancedTitleSVG(node.title, 220, 24, 48, 2);
 
       gNode.innerHTML = `
         <!-- Outer Filleted Voronoi Pebble Plate -->
-        <path class="node-plate" d="${geom.pathOuter}" />
-
-        <!-- Inner Crystallographic Contour -->
-        <path class="node-inset" d="${geom.pathInner}" />
+        <path class="node-plate" d="${pebblePath}" />
 
         <!-- Header: ID + Level -->
         <text x="24" y="26" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="13">${node.id}</text>
         <text x="${NODE_WIDTH - 24}" y="26" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="10" font-weight="600" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
 
-        <!-- Clean Title -->
-        <text x="24" y="53" fill="var(--ink-primary)" font-family="Inter" font-size="12.5" font-weight="500">${truncatedTitle}</text>
+        <!-- Balanced Multiline Title -->
+        ${titleLinesSVG}
 
         <!-- Status Tag -->
-        <text x="24" y="75" fill="${statusColor}" font-family="IBM Plex Mono" font-size="10" font-weight="700">[ ${node.status} ]</text>
+        <text x="24" y="84" fill="${statusColor}" font-family="IBM Plex Mono" font-size="9.5" font-weight="700">[ ${node.status} ]</text>
       `;
 
       // Drag listener

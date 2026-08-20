@@ -35,9 +35,9 @@
   --pastel-in-progress-border: rgba(245, 158, 11, 0.35);
 
   --svg-node-bg: #ffffff;
-  --svg-node-stroke: rgba(0, 0, 0, 0.16);
+  --svg-node-stroke: rgba(0, 0, 0, 0.14);
   --svg-node-hover-stroke: #121316;
-  --svg-edge-stroke: rgba(0, 0, 0, 0.2);
+  --svg-edge-stroke: rgba(0, 0, 0, 0.16);
   --svg-edge-highlight: #121316;
 
   --font-mono: "IBM Plex Mono", "SF Mono", monospace;
@@ -75,9 +75,9 @@
   --pastel-in-progress-border: rgba(245, 158, 11, 0.4);
 
   --svg-node-bg: #151821;
-  --svg-node-stroke: rgba(255, 255, 255, 0.16);
+  --svg-node-stroke: rgba(255, 255, 255, 0.14);
   --svg-node-hover-stroke: #ffffff;
-  --svg-edge-stroke: rgba(255, 255, 255, 0.2);
+  --svg-edge-stroke: rgba(255, 255, 255, 0.16);
   --svg-edge-highlight: #ffffff;
 }
 
@@ -796,7 +796,7 @@ body.editorial-body {
 }
 
 /* --------------------------------------------------------------------------
-   7. SVG Voronoi & Isogrid Facet Nodes (Crystallographic Geometry)
+   7. SVG Topological Morphic Nodes (Clean Voronoi Pebble Geometry)
    -------------------------------------------------------------------------- */
 .dag-node-group {
   cursor: grab;
@@ -812,12 +812,6 @@ body.editorial-body {
   stroke: var(--svg-node-stroke);
   stroke-width: 1px;
   transition: stroke 0.15s ease, filter 0.15s ease, fill 0.15s ease;
-}
-
-.dag-node-group .node-inset {
-  fill: none;
-  stroke: var(--rule-hairline);
-  stroke-width: 1px;
 }
 
 .dag-node-group.falsified .node-plate {
