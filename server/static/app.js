@@ -1,6 +1,6 @@
 /**
  * EPIRES HYPERGRAPH ENGINE // CLIENT CONTROLLER
- * Monotone Swiss Editorial Paper Theme with Interactive Vector Dragging & 3D Dither Sphere Radar
+ * Minimalist Archival Paper Theme with Topological Morphic Cards & Tactile Noise Shader
  */
 
 (function () {
@@ -16,40 +16,36 @@
     activeFilter: 'ALL',
     activeTab: 'inspector',
     theme: localStorage.getItem('epires_theme') || 'paper',
-    transform: { x: 50, y: 50, scale: 0.88 },
+    transform: { x: 40, y: 40, scale: 0.88 },
     isDraggingCanvas: false,
     dragStart: { x: 0, y: 0 },
-    nodePositions: new Map(), // Stores { id: { x, y, width, height } }
+    nodePositions: new Map(), // { id: { x, y, width, height } }
     draggingNode: null,
     dragNodeStart: { mouseX: 0, mouseY: 0, nodeX: 0, nodeY: 0 },
     hasMovedNode: false,
-    pollingInterval: null,
-    sphereAngle: { x: 0.4, y: 0.6 }
+    pollingInterval: null
   };
 
-  const NODE_WIDTH = 240;
-  const NODE_HEIGHT = 84;
-  const GAP_X = 60;
-  const GAP_Y = 100;
+  const NODE_WIDTH = 230;
+  const NODE_HEIGHT = 80;
+  const GAP_X = 64;
+  const GAP_Y = 96;
 
   // DOM Elements
   const dom = {
     svg: document.getElementById('dag-svg'),
     canvasContainer: document.getElementById('canvas-container'),
-    caliperCoords: document.getElementById('caliper-coords'),
-    sphereCanvas: document.getElementById('dither-sphere-canvas'),
+    noiseCanvas: document.getElementById('noise-canvas'),
     projectName: document.getElementById('project-name'),
     projectMetric: document.getElementById('project-metric'),
     hdrProjectDomain: document.getElementById('hdr-project-domain'),
     hdrTaskDesc: document.getElementById('hdr-task-desc'),
-    vsaCapacityText: document.getElementById('vsa-capacity-text'),
     btnThemeToggle: document.getElementById('btn-theme-toggle'),
     themeLabel: document.getElementById('theme-label'),
     kpiTotal: document.getElementById('kpi-total'),
     kpiConfirmed: document.getElementById('kpi-confirmed'),
     kpiInProgress: document.getElementById('kpi-in-progress'),
     kpiFalsified: document.getElementById('kpi-falsified'),
-    kpiFalsificationRate: document.getElementById('kpi-falsification-rate'),
     evidenceSpectrum: document.getElementById('evidence-spectrum'),
     btnRefresh: document.getElementById('btn-refresh'),
     btnZoomIn: document.getElementById('btn-zoom-in'),
@@ -57,7 +53,7 @@
     btnZoomReset: document.getElementById('btn-zoom-reset'),
     tabButtons: document.querySelectorAll('.m-tab'),
     tabContents: document.querySelectorAll('.tab-pane'),
-    filterButtons: document.querySelectorAll('.f-btn'),
+    filterButtons: document.querySelectorAll('.f-pill'),
     inspectorEmpty: document.getElementById('inspector-empty'),
     inspectorBody: document.getElementById('inspector-body'),
     insId: document.getElementById('ins-id'),
@@ -69,14 +65,49 @@
     insParents: document.getElementById('ins-parents'),
     insEvidenceCount: document.getElementById('ins-evidence-count'),
     insEvidenceList: document.getElementById('ins-evidence-list'),
-    insCause: document.getElementById('ins-cause'),
-    insCondition: document.getElementById('ins-condition'),
-    insResult: document.getElementById('ins-result'),
     tracesStreamContainer: document.getElementById('traces-stream-container'),
     tracesCountText: document.getElementById('traces-count-text'),
     tracesSearch: document.getElementById('traces-search'),
     gapsMatrixContainer: document.getElementById('gaps-matrix-container')
   };
+
+  // --------------------------------------------------------------------------
+  // Full-Screen Procedural Paper Grain & Noise Shader
+  // --------------------------------------------------------------------------
+  function initNoiseShader() {
+    const canvas = dom.noiseCanvas;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      generateNoise();
+    }
+
+    function generateNoise() {
+      const w = canvas.width;
+      const h = canvas.height;
+      if (w === 0 || h === 0) return;
+
+      const imgData = ctx.createImageData(w, h);
+      const data = imgData.data;
+      const len = data.length;
+
+      for (let i = 0; i < len; i += 4) {
+        const val = (Math.random() * 255) | 0;
+        data[i] = val;     // R
+        data[i + 1] = val; // G
+        data[i + 2] = val; // B
+        data[i + 3] = 45;  // Alpha opacity
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+  }
 
   // --------------------------------------------------------------------------
   // Theme Management (Paper / Noir)
@@ -93,67 +124,6 @@
   function toggleTheme() {
     const nextTheme = state.theme === 'paper' ? 'noir' : 'paper';
     applyTheme(nextTheme);
-  }
-
-  // --------------------------------------------------------------------------
-  // 3D Dither Sphere Radar Renderer (Canvas)
-  // --------------------------------------------------------------------------
-  function initDitherSphere() {
-    const canvas = dom.sphereCanvas;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const radius = 22;
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-
-    function renderSphere() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const isDark = document.documentElement.getAttribute('data-theme') === 'noir';
-      ctx.fillStyle = isDark ? '#ecebe6' : '#111216';
-
-      state.sphereAngle.x += 0.008;
-      state.sphereAngle.y += 0.005;
-
-      const numRings = 7;
-      const pointsPerRing = 16;
-
-      for (let i = 0; i < numRings; i++) {
-        const phi = (Math.PI * (i + 1)) / (numRings + 1) - Math.PI / 2;
-        const ringRadius = radius * Math.cos(phi);
-        const y0 = radius * Math.sin(phi);
-
-        for (let j = 0; j < pointsPerRing; j++) {
-          const theta = (2 * Math.PI * j) / pointsPerRing;
-          let x = ringRadius * Math.cos(theta);
-          let y = y0;
-          let z = ringRadius * Math.sin(theta);
-
-          // Rotate Y
-          const cosY = Math.cos(state.sphereAngle.x);
-          const sinY = Math.sin(state.sphereAngle.x);
-          const x1 = x * cosY - z * sinY;
-          const z1 = x * sinY + z * cosY;
-
-          // Rotate X
-          const cosX = Math.cos(state.sphereAngle.y);
-          const sinX = Math.sin(state.sphereAngle.y);
-          const y2 = y * cosX - z1 * sinX;
-          const z2 = y * sinX + z1 * cosX;
-
-          // Orthographic projection + Dither dot size
-          if (z2 > -5) {
-            const screenX = cx + x1;
-            const screenY = cy + y2;
-            const size = z2 > 5 ? 1.4 : 0.8;
-            ctx.fillRect(screenX, screenY, size, size);
-          }
-        }
-      }
-
-      requestAnimationFrame(renderSphere);
-    }
-
-    renderSphere();
   }
 
   // --------------------------------------------------------------------------
@@ -177,8 +147,8 @@
       state.traces = tracesRes || [];
       state.gaps = gapsRes || [];
 
-      bindConfigToMasthead();
-      updateProgramMetrics();
+      bindConfigToHeader();
+      updateKPISummary();
       renderDAG();
       renderTraces();
       renderGaps();
@@ -191,7 +161,7 @@
     }
   }
 
-  function bindConfigToMasthead() {
+  function bindConfigToHeader() {
     const conf = state.config;
     if (dom.projectName && conf.project_name) {
       dom.projectName.textContent = conf.project_name;
@@ -209,9 +179,9 @@
   }
 
   // --------------------------------------------------------------------------
-  // Program Metric Ribbon Update
+  // KPI Summary Strip
   // --------------------------------------------------------------------------
-  function updateProgramMetrics() {
+  function updateKPISummary() {
     const total = state.hypotheses.length;
     const confirmed = state.hypotheses.filter(h => h.status === 'CONFIRMED').length;
     const inProg = state.hypotheses.filter(h => h.status === 'IN_PROGRESS' || h.status === 'PROPOSED').length;
@@ -222,12 +192,7 @@
     dom.kpiInProgress.textContent = String(inProg).padStart(2, '0');
     dom.kpiFalsified.textContent = String(falsified).padStart(2, '0');
 
-    const falsRate = total > 0 ? ((falsified / total) * 100).toFixed(1) + '%' : '0.0%';
-    dom.kpiFalsificationRate.textContent = `${falsRate} Refutation Rate`;
-
-    dom.vsaCapacityText.textContent = `C=${total} / 500 (SNR boundary)`;
-
-    // Evidence Maturity Ladder E0..E5
+    // Evidence Maturity Spectrum
     const levels = { E0: 0, E1: 0, E2: 0, E3: 0, E4: 0, E5: 0 };
     state.hypotheses.forEach(h => {
       const lvl = h.current_evidence_level || 'E0';
@@ -236,13 +201,13 @@
 
     dom.evidenceSpectrum.innerHTML = Object.keys(levels).map(lvl => {
       const count = levels[lvl];
-      const cls = count > 0 ? 'spectrum-cell active' : 'spectrum-cell';
-      return `<div class="${cls}"><span>${lvl}</span><br><b>${count}</b></div>`;
+      const cls = count > 0 ? 's-pill active' : 's-pill';
+      return `<span class="${cls}">${lvl} ${count}</span>`;
     }).join('');
   }
 
   // --------------------------------------------------------------------------
-  // Topological DAG Layout Algorithm
+  // Topological Morphic DAG Layout
   // --------------------------------------------------------------------------
   function initializeLayoutIfEmpty(nodes) {
     const nodeMap = new Map();
@@ -275,7 +240,7 @@
 
     layers.forEach((layerNodes, layerIdx) => {
       const totalWidth = layerNodes.length * NODE_WIDTH + (layerNodes.length - 1) * GAP_X;
-      const startX = Math.max(50, 600 - totalWidth / 2);
+      const startX = Math.max(50, 560 - totalWidth / 2);
 
       layerNodes.forEach((node, nodeIdx) => {
         if (!state.nodePositions.has(node.id)) {
@@ -291,7 +256,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // SVG Vector DAG Rendering with Interactive Drag Support
+  // SVG Morphic DAG Rendering & Node Dragging
   // --------------------------------------------------------------------------
   function renderDAG() {
     const svg = dom.svg;
@@ -321,12 +286,11 @@
     gViewport.setAttribute('id', 'dag-viewport');
     gViewport.setAttribute('transform', `translate(${state.transform.x}, ${state.transform.y}) scale(${state.transform.scale})`);
 
-    // 1. Group for edges
+    // 1. Edges Layer
     const gEdges = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     gEdges.setAttribute('id', 'dag-edges-layer');
     gViewport.appendChild(gEdges);
 
-    // 2. Draw Edges
     filteredNodes.forEach(node => {
       const targetPos = state.nodePositions.get(node.id);
       if (!targetPos) return;
@@ -350,43 +314,45 @@
       });
     });
 
-    // 3. Draw Nodes (Draggable Groups)
+    // 2. Morphic Rounded Facet Nodes
     filteredNodes.forEach(node => {
       const pos = state.nodePositions.get(node.id);
       if (!pos) return;
 
       const isSelected = state.selectedHypothesisId === node.id;
+      const isFalsified = node.status === 'FALSIFIED';
+      const isConfirmed = node.status === 'CONFIRMED';
+
       const gNode = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      gNode.setAttribute('class', `dag-node-group ${isSelected ? 'selected' : ''}`);
+      gNode.setAttribute('class', `dag-node-group ${isSelected ? 'selected' : ''} ${isFalsified ? 'falsified' : ''} ${isConfirmed ? 'confirmed' : ''}`);
       gNode.setAttribute('id', `node-group-${node.id}`);
       gNode.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
       gNode.dataset.id = node.id;
 
-      const truncatedTitle = node.title.length > 32 ? node.title.substring(0, 30) + '…' : node.title;
+      const truncatedTitle = node.title.length > 30 ? node.title.substring(0, 28) + '…' : node.title;
+
+      // Soft pastel color overrides
+      let statusColor = 'var(--ink-muted)';
+      if (isFalsified) statusColor = 'var(--pastel-falsified-ink)';
+      if (isConfirmed) statusColor = 'var(--pastel-confirmed-ink)';
+      if (node.status === 'IN_PROGRESS') statusColor = 'var(--pastel-in-progress-ink)';
 
       gNode.innerHTML = `
-        <!-- Main Card Plate with Edge Filter -->
-        <rect class="node-plate" width="${NODE_WIDTH}" height="${NODE_HEIGHT}" rx="2" ry="2" />
+        <!-- Morphic Rounded Card Surface -->
+        <rect class="node-plate" width="${NODE_WIDTH}" height="${NODE_HEIGHT}" rx="14" ry="14" />
 
-        <!-- Corner Hatch Accent -->
-        <polygon points="0,0 12,0 0,12" fill="var(--ink-primary)" opacity="0.8" />
+        <!-- Header: ID + Level -->
+        <text x="16" y="24" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="12">${node.id}</text>
+        <text x="${NODE_WIDTH - 16}" y="24" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="9" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
 
-        <!-- Header Row: ID + Level -->
-        <text x="14" y="20" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="12" letter-spacing="0.04em">${node.id}</text>
-        <text x="${NODE_WIDTH - 12}" y="20" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="9" font-weight="600" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
+        <!-- Clean Title -->
+        <text x="16" y="46" fill="var(--ink-primary)" font-family="Inter" font-size="11.5" font-weight="500">${truncatedTitle}</text>
 
-        <!-- Divider Line -->
-        <line x1="12" y1="28" x2="${NODE_WIDTH - 12}" y2="28" stroke="var(--rule-crisp)" stroke-width="1" />
-
-        <!-- Title -->
-        <text x="12" y="46" fill="var(--ink-primary)" font-family="Inter" font-size="11" font-weight="500">${truncatedTitle}</text>
-
-        <!-- Status Tag -->
-        <text x="12" y="70" fill="var(--ink-secondary)" font-family="IBM Plex Mono" font-size="9" font-weight="700">[ ${node.status} ]</text>
-        <text x="${NODE_WIDTH - 12}" y="70" fill="var(--ink-faint)" font-family="IBM Plex Mono" font-size="8" text-anchor="end">|| | ||</text>
+        <!-- Pastel Status Pill -->
+        <text x="16" y="66" fill="${statusColor}" font-family="IBM Plex Mono" font-size="9" font-weight="700">${node.status}</text>
       `;
 
-      // Node Drag Listeners
+      // Drag listener
       gNode.addEventListener('mousedown', (e) => {
         e.stopPropagation();
         startDraggingNode(node.id, e);
@@ -399,7 +365,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Vector Node Dragging & Real-time Edge Updates
+  // Drag & Drop Vector Controller
   // --------------------------------------------------------------------------
   function startDraggingNode(nodeId, e) {
     state.draggingNode = nodeId;
@@ -431,13 +397,11 @@
     pos.x = state.dragNodeStart.nodeX + dx;
     pos.y = state.dragNodeStart.nodeY + dy;
 
-    // Update node translation
     const gNode = document.getElementById(`node-group-${state.draggingNode}`);
     if (gNode) {
       gNode.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
     }
 
-    // Update all connected edges in real-time
     recalculateConnectedEdges(state.draggingNode);
   }
 
@@ -453,7 +417,6 @@
 
   function recalculateConnectedEdges(nodeId) {
     state.hypotheses.forEach(h => {
-      // 1. Edges where this node is the target (h is target, parents are source)
       if (h.id === nodeId) {
         (h.parent_ids || []).forEach(pId => {
           const edge = document.getElementById(`edge-${pId}-${nodeId}`);
@@ -465,7 +428,6 @@
         });
       }
 
-      // 2. Edges where this node is the parent (pId is this node, h is target)
       if ((h.parent_ids || []).includes(nodeId)) {
         const edge = document.getElementById(`edge-${nodeId}-${h.id}`);
         const srcPos = state.nodePositions.get(nodeId);
@@ -514,49 +476,44 @@
 
     dom.insId.textContent = node.id;
     dom.insStatus.textContent = node.status;
-    dom.insStatus.className = `spec-state ink-stamp ${node.status}`;
+    dom.insStatus.className = `spec-badge ${node.status}`;
     dom.insLevel.textContent = `LEVEL ${node.current_evidence_level || 'E0'}`;
     dom.insTitle.textContent = node.title;
     dom.insMechanism.textContent = node.a_priori_mechanism || 'No mathematical mechanism registered.';
     dom.insFalsification.textContent = node.falsification_criteria || 'No Popperian boundary registered.';
 
-    // Cybernetic Flow Step Extraction
-    dom.insCause.textContent = node.entity_types && node.entity_types.length > 0 ? node.entity_types.join(', ') : 'VSA Superposition';
-    dom.insCondition.textContent = node.falsification_criteria.length > 24 ? node.falsification_criteria.substring(0, 22) + '…' : 'Refutation Gate';
-    dom.insResult.textContent = node.status === 'FALSIFIED' ? 'Refuted / Pruned' : 'Active State';
-
-    // Antecedents
+    // Dependencies
     if (node.parent_ids && node.parent_ids.length > 0) {
       dom.insParents.innerHTML = node.parent_ids.map(p =>
-        `<span class="dep-card" onclick="window.selectHypothesis('${p}')">↑ ${p}</span>`
+        `<span class="dep-node-pill" onclick="window.selectHypothesis('${p}')">↑ ${p}</span>`
       ).join('');
     } else {
-      dom.insParents.innerHTML = '<span class="ink-muted">Root Hypothesis (No Antecedents)</span>';
+      dom.insParents.innerHTML = '<span class="ink-muted">Root Hypothesis</span>';
     }
 
-    // Evidence Claims
+    // Evidence
     try {
       const res = await fetch(`/hypotheses/${id}`).then(r => r.json());
       const evidence = res.evidence || [];
       dom.insEvidenceCount.textContent = evidence.length;
 
       if (evidence.length === 0) {
-        dom.insEvidenceList.innerHTML = '<div class="empty-entry">No empirical passes recorded. Level: E0 (A Priori).</div>';
+        dom.insEvidenceList.innerHTML = '<div class="empty-evidence">No empirical tests registered yet.</div>';
       } else {
         dom.insEvidenceList.innerHTML = evidence.map(ev => `
-          <div class="evidence-row">
-            <div class="ev-top">
-              <span class="ev-tag">[${ev.evidence_level}, ${ev.source_confidence}] // ${ev.metric_name || 'EMPID'}</span>
-              <span class="ev-status ${ev.falsification_triggered ? 'refuted' : ''}">
-                ${ev.falsification_triggered ? 'REFUTATION TRIGGERED' : 'EMPIRICAL PASS'}
+          <div class="evidence-card">
+            <div class="ev-header">
+              <span class="ev-source">[${ev.evidence_level}] ${ev.metric_name || 'EMP'}</span>
+              <span class="ev-status-text ${ev.falsification_triggered ? 'refuted' : ''}">
+                ${ev.falsification_triggered ? 'REFUTED' : 'PASS'}
               </span>
             </div>
-            <div class="ev-claim-text">${ev.claim}</div>
+            <div class="ev-claim-body">${ev.claim}</div>
           </div>
         `).join('');
       }
     } catch (err) {
-      dom.insEvidenceList.innerHTML = '<div class="empty-entry">Error loading evidence ledger.</div>';
+      dom.insEvidenceList.innerHTML = '<div class="empty-evidence">Error loading evidence.</div>';
     }
   }
 
@@ -574,23 +531,22 @@
              (t.h_tag && t.h_tag.toLowerCase().includes(filter));
     });
 
-    dom.tracesCountText.textContent = `${state.traces.length} ENTRIES`;
+    dom.tracesCountText.textContent = `${state.traces.length} entries`;
 
     if (filtered.length === 0) {
-      container.innerHTML = '<div class="empty-entry">No entries matching search query.</div>';
+      container.innerHTML = '<div class="empty-evidence">No matching traces.</div>';
       return;
     }
 
     container.innerHTML = filtered.map(t => {
       const timeStr = t.timestamp ? t.timestamp.split('T')[1]?.substring(0, 8) || t.timestamp : '';
       return `
-        <div class="trace-row-item">
-          <div class="trace-row-meta">
-            <span class="trace-row-action">${t.action} // ${t.agent_role || 'Lead-PI'}</span>
-            <span class="trace-row-time">${timeStr}</span>
+        <div class="trace-card">
+          <div class="tr-head">
+            <span class="tr-action">${t.action} // ${t.agent_role || 'Lead-PI'}</span>
+            <span class="tr-time">${timeStr}</span>
           </div>
-          <div class="trace-row-summary">${t.summary}</div>
-          ${t.h_tag ? `<div class="trace-row-htag">TARGET: ${t.h_tag}</div>` : ''}
+          <div class="tr-summary">${t.summary}</div>
         </div>
       `;
     }).join('');
@@ -603,17 +559,17 @@
     const container = dom.gapsMatrixContainer;
     if (state.gaps.length === 0) {
       container.innerHTML = `
-        <div class="empty-entry">
-          White spot scan clear: active dimensions covered by baseline hypotheses.
+        <div class="empty-evidence">
+          No white spot gaps detected. All primary dimensions covered.
         </div>
       `;
       return;
     }
 
     container.innerHTML = state.gaps.map(g => `
-      <div class="gap-specimen-card">
-        <div class="gap-code">${JSON.stringify(g.combination || g)}</div>
-        <span class="gap-status-pill">0 EXPERIMENTS</span>
+      <div class="gap-pill-item">
+        <span class="gap-lbl-text">${JSON.stringify(g.combination || g)}</span>
+        <span class="gap-tag">UNTESTED</span>
       </div>
     `).join('');
   }
@@ -632,24 +588,13 @@
   }
 
   // --------------------------------------------------------------------------
-  // Viewport Pan, Zoom & Caliper Coordinate Tracking
+  // Pan & Zoom
   // --------------------------------------------------------------------------
   function setupPanZoom() {
     const container = dom.canvasContainer;
 
-    container.addEventListener('mousemove', (e) => {
-      const rect = container.getBoundingClientRect();
-      const rawX = (e.clientX - rect.left - state.transform.x) / state.transform.scale;
-      const rawY = (e.clientY - rect.top - state.transform.y) / state.transform.scale;
-      if (dom.caliperCoords) {
-        dom.caliperCoords.textContent = `X: ${Math.round(rawX)} | Y: ${Math.round(rawY)}`;
-      }
-    });
-
     container.addEventListener('mousedown', (e) => {
-      // Only pan canvas if clicked directly on background (not a node)
       if (e.target.closest('.dag-node-group')) return;
-
       state.isDraggingCanvas = true;
       state.dragStart = { x: e.clientX - state.transform.x, y: e.clientY - state.transform.y };
     });
@@ -683,8 +628,8 @@
     });
 
     dom.btnZoomReset.addEventListener('click', () => {
-      state.nodePositions.clear(); // Recalculate clean topological layout
-      state.transform = { x: 50, y: 50, scale: 0.88 };
+      state.nodePositions.clear();
+      state.transform = { x: 40, y: 40, scale: 0.88 };
       renderDAG();
       updateTransform();
     });
@@ -702,8 +647,8 @@
   // --------------------------------------------------------------------------
   function init() {
     applyTheme(state.theme);
+    initNoiseShader();
     setupPanZoom();
-    initDitherSphere();
 
     dom.btnThemeToggle.addEventListener('click', toggleTheme);
 
