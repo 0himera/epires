@@ -41,18 +41,58 @@ The Lead-PI NEVER WRITES implementation code. Coding is strictly delegated to su
 """
 
 
+import re
+import shutil
+
+def _clean_jsonc_and_load(text: str) -> Dict[str, Any]:
+    """Strips JSONC single-line/block comments and trailing commas before parsing."""
+    # Strip block comments /* ... */
+    clean = re.sub(r"/\*[\s\S]*?\*/", "", text)
+    # Strip single line comments // ...
+    clean = re.sub(r"//.*", "", clean)
+    # Strip trailing commas before closing braces/brackets
+    clean = re.sub(r",\s*([\}\]])", r"\1", clean)
+    return json.loads(clean)
+
+
 def _merge_json(file_path: Path, mutator_fn) -> None:
-    """Safely updates or creates a JSON configuration file preserving other fields."""
+    """Safely updates or creates a JSON configuration file preserving other fields and protecting against data loss."""
     file_path.parent.mkdir(parents=True, exist_ok=True)
     data: Dict[str, Any] = {}
     if file_path.exists():
+        raw_text = file_path.read_text(encoding="utf-8")
         try:
-            data = json.loads(file_path.read_text(encoding="utf-8"))
+            data = _clean_jsonc_and_load(raw_text)
         except Exception:
+            # Backup original file before falling back
+            bak_path = file_path.with_suffix(file_path.suffix + ".bak")
+            try:
+                shutil.copy2(file_path, bak_path)
+            except Exception:
+                pass
             data = {}
 
     mutator_fn(data)
     file_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def _merge_toml_codex(file_path: Path, project_root: Path) -> None:
+    """Merges or creates .codex/config.toml for modern OpenAI Codex."""
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    existing_content = ""
+    if file_path.exists():
+        existing_content = file_path.read_text(encoding="utf-8")
+
+    epires_toml_block = f"""
+[mcp_servers.epires]
+command = "epires"
+args = ["mcp"]
+cwd = "{project_root}"
+""".strip()
+
+    if "[mcp_servers.epires]" not in existing_content:
+        new_content = (existing_content.strip() + "\n\n" + epires_toml_block).strip() + "\n"
+        file_path.write_text(new_content, encoding="utf-8")
 
 
 def setup_cursor(project_dir: str | Path = ".") -> List[Path]:
@@ -163,11 +203,16 @@ def setup_opencode(project_dir: str | Path = ".") -> List[Path]:
 
 
 def setup_codex(project_dir: str | Path = ".") -> List[Path]:
-    """Configures OpenAI Codex in .codex/mcp.json and instructions."""
+    """Configures OpenAI Codex in .codex/config.toml, .codex/mcp.json, and instructions."""
     root = Path(project_dir).resolve()
     configured = []
 
-    # 1. .codex/mcp.json
+    # 1. Modern .codex/config.toml
+    toml_file = root / ".codex" / "config.toml"
+    _merge_toml_codex(toml_file, root)
+    configured.append(toml_file)
+
+    # 2. Legacy fallback .codex/mcp.json
     mcp_file = root / ".codex" / "mcp.json"
     def update_codex_mcp(d: Dict[str, Any]):
         if "mcpServers" not in d or not isinstance(d["mcpServers"], dict):
@@ -180,7 +225,7 @@ def setup_codex(project_dir: str | Path = ".") -> List[Path]:
     _merge_json(mcp_file, update_codex_mcp)
     configured.append(mcp_file)
 
-    # 2. .codex/instructions.md
+    # 3. .codex/instructions.md
     instr_file = root / ".codex" / "instructions.md"
     instr_file.parent.mkdir(parents=True, exist_ok=True)
     instr_file.write_text(get_skill_content(), encoding="utf-8")

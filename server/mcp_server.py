@@ -1,8 +1,10 @@
 """FastMCP Server for Epires Research Harness.
 
-Exposes 16 deterministic tools for LLM agents:
+Exposes 18 deterministic tools for LLM agents:
 - epires_get_schema (Canonical data format & python migration template)
 - epires_register_hypothesis
+- epires_register_experiment (Explicit reproducibility metadata & execution parameters)
+- epires_list_experiments
 - epires_log_evidence (Collision-proof millisecond + SHA256 ID)
 - epires_retract_evidence (Recalculates status, demotes level, and cascades unblocking)
 - epires_update_hypothesis (Explicit status update, target level, tags, fields)
@@ -61,11 +63,11 @@ def create_mcp_server(
         p_key = get_parallel_api_key()
         hypotheses = store.list_hypotheses()
         return json.dumps({
-            "version": "0.2.4",
+            "version": "0.3.0",
             "db_path": str(db_path),
             "total_hypotheses": len(hypotheses),
             "parallel_auth": bool(p_key),
-            "tools_count": 16,
+            "tools_count": 18,
             "status": "ready"
         }, indent=2)
 
@@ -109,6 +111,55 @@ def create_mcp_server(
         )
         saved = store.register_hypothesis(node)
         return f"Successfully registered hypothesis '{saved.id}': {saved.title} (Level: {saved.current_evidence_level.value})"
+
+    @mcp.tool()
+    def epires_register_experiment(
+        hypothesis_id: str,
+        name: str,
+        script_path: str,
+        parameters: Optional[Union[Dict[str, Any], str]] = None,
+        metrics: Optional[Union[Dict[str, float], str]] = None,
+        commit_hash: Optional[str] = None,
+        artifact_paths: Optional[List[str]] = None,
+    ) -> str:
+        """Register a concrete computational experiment linked to a hypothesis for auditability and reproducibility."""
+        params_dict: Dict[str, Any] = {}
+        if isinstance(parameters, dict):
+            params_dict = parameters
+        elif isinstance(parameters, str):
+            try:
+                params_dict = json.loads(parameters)
+            except Exception:
+                params_dict = {"raw": parameters}
+
+        metrics_dict: Dict[str, float] = {}
+        if isinstance(metrics, dict):
+            metrics_dict = metrics
+        elif isinstance(metrics, str):
+            try:
+                metrics_dict = json.loads(metrics)
+            except Exception:
+                pass
+
+        exp_id = f"exp_{hypothesis_id}_{int(time.time()*1000)}"
+        exp_node = ExperimentNode(
+            id=exp_id,
+            hypothesis_id=hypothesis_id,
+            name=name,
+            script_path=script_path,
+            commit_hash=commit_hash,
+            parameters=params_dict,
+            metrics=metrics_dict,
+            artifact_paths=artifact_paths or [],
+        )
+        saved = store.register_experiment(exp_node)
+        return f"Successfully registered experiment '{saved.id}' for hypothesis {hypothesis_id}: {saved.name}"
+
+    @mcp.tool()
+    def epires_list_experiments(hypothesis_id: Optional[str] = None) -> str:
+        """List registered experiments, optionally filtered by target hypothesis ID."""
+        experiments = store.list_experiments(hypothesis_id=hypothesis_id)
+        return json.dumps([e.model_dump() for e in experiments], indent=2)
 
     @mcp.tool()
     def epires_log_evidence(

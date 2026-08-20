@@ -12,9 +12,11 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from epires_core.config import EpiresProjectConfig
+from epires_core.config import EpiresProjectConfig, find_project_root
 from epires_core.models import (
+    Entity,
     EvidenceClaim,
+    ExperimentNode,
     GapQuery,
     HypothesisNode,
     HypothesisStatus,
@@ -329,23 +331,17 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     def get_artifacts_dir() -> Optional[Path]:
         conf = EpiresProjectConfig.load()
         art_dir_setting = conf.paths.artifacts_dir if conf and conf.paths and conf.paths.artifacts_dir else "artifacts"
-        db_p = Path(db_path).resolve()
-        db_parent = db_p.parent
-        project_root = db_parent.parent if db_parent.name == ".epires" else db_parent
+        project_root = find_project_root()
 
         candidates = [
             project_root / art_dir_setting,
             project_root / "artifacts",
-            Path(art_dir_setting),
-            Path("artifacts"),
-            Path(".epires/artifacts"),
-            Path("../artifacts"),
-            Path("../socomputing/artifacts"),
+            project_root / ".epires" / "artifacts",
         ]
         for cand in candidates:
             if cand and cand.exists() and cand.is_dir():
                 return cand.resolve()
-        return None
+        return (project_root / art_dir_setting).resolve()
 
     @app.get("/atlas/provenance")
     def atlas_provenance() -> Dict[str, Any]:
@@ -484,23 +480,28 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
 
     @app.get("/artifacts/{artifact_path:path}")
     def get_artifact_content(artifact_path: str) -> Any:
-        """Serve artifact file content directly."""
+        """Serve artifact file content directly with strict path traversal sandboxing."""
         art_dir = get_artifacts_dir()
-        if art_dir:
-            target = (art_dir / artifact_path).resolve()
-            if target.exists() and target.is_file():
-                return FileResponse(target)
-        target = Path(artifact_path).resolve()
-        if target.exists() and target.is_file():
-            return FileResponse(target)
-        raise HTTPException(status_code=404, detail="Artifact not found")
+        if not art_dir or not art_dir.exists():
+            raise HTTPException(status_code=404, detail="Artifacts directory not found.")
+        
+        target = (art_dir / artifact_path).resolve()
+        # Security: verify path does not escape the artifacts directory
+        if not str(target).startswith(str(art_dir.resolve())) or not target.is_relative_to(art_dir.resolve()):
+            raise HTTPException(status_code=403, detail="Access denied: path escapes artifacts directory.")
+        
+        if not target.exists() or not target.is_file():
+            raise HTTPException(status_code=404, detail="Artifact not found.")
+            
+        return FileResponse(target)
 
     # -------------------------------------------------------------------------
     # Hypotheses Endpoints
     # -------------------------------------------------------------------------
     @app.post("/hypotheses", response_model=HypothesisNode)
-    def register_hypothesis(h: HypothesisNode) -> HypothesisNode:
+    async def register_hypothesis(h: HypothesisNode) -> HypothesisNode:
         saved = store.register_hypothesis(h)
+        await ws_hub.broadcast({"event": "HYPOTHESIS_UPDATED", "hypothesis_id": saved.id, "status": saved.status.value})
         return saved
 
     @app.get("/hypotheses", response_model=List[HypothesisNode])
@@ -513,17 +514,39 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
         if not h:
             raise HTTPException(status_code=404, detail=f"Hypothesis {h_id} not found")
         evidence = store.get_evidence_for_hypothesis(h_id)
+        experiments = store.list_experiments(hypothesis_id=h_id)
         return {
             "hypothesis": h,
-            "evidence": evidence
+            "evidence": evidence,
+            "experiments": experiments,
         }
+
+    # -------------------------------------------------------------------------
+    # Experiments Registry
+    # -------------------------------------------------------------------------
+    @app.post("/experiments", response_model=ExperimentNode)
+    async def register_experiment(exp: ExperimentNode) -> ExperimentNode:
+        saved = store.register_experiment(exp)
+        await ws_hub.broadcast({"event": "EXPERIMENT_REGISTERED", "experiment_id": saved.id, "hypothesis_id": saved.hypothesis_id})
+        return saved
+
+    @app.get("/experiments", response_model=List[ExperimentNode])
+    def list_experiments(hypothesis_id: Optional[str] = None) -> List[ExperimentNode]:
+        return store.list_experiments(hypothesis_id=hypothesis_id)
 
     # -------------------------------------------------------------------------
     # Evidence & Falsification
     # -------------------------------------------------------------------------
     @app.post("/evidence")
-    def log_evidence(ev: EvidenceClaim) -> Dict[str, Any]:
+    async def log_evidence(ev: EvidenceClaim) -> Dict[str, Any]:
         saved_ev, blocked_children = store.log_evidence(ev)
+        await ws_hub.broadcast({
+            "event": "EVIDENCE_LOGGED",
+            "evidence_id": saved_ev.id,
+            "hypothesis_id": saved_ev.hypothesis_id,
+            "falsification_triggered": saved_ev.falsification_triggered,
+            "blocked_children": blocked_children
+        })
         return {
             "evidence": saved_ev,
             "blocked_children": blocked_children
@@ -538,7 +561,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
 
     @app.delete("/evidence/{evidence_id}")
     @app.post("/evidence/{evidence_id}/retract")
-    def retract_evidence(
+    async def retract_evidence(
         evidence_id: str,
         reason: str = Query(default="Retracted erroneous evidence claim"),
         agent_role: str = Query(default="Lead-PI")
@@ -551,6 +574,12 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
         if not retracted_ev:
             raise HTTPException(status_code=404, detail=f"Evidence {evidence_id} not found")
         h = store.get_hypothesis(retracted_ev.hypothesis_id)
+        await ws_hub.broadcast({
+            "event": "EVIDENCE_RETRACTED",
+            "evidence_id": evidence_id,
+            "hypothesis_id": retracted_ev.hypothesis_id,
+            "unblocked_children": unblocked_children
+        })
         return {
             "retracted_evidence": retracted_ev,
             "hypothesis": h,

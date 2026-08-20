@@ -5,6 +5,8 @@ import tempfile
 from pathlib import Path
 from fastapi.testclient import TestClient
 
+from epires_core.models import HypothesisNode, HypothesisStatus
+from epires_core.store import EpiresStore
 from server.app import create_app
 from server.mcp_server import create_mcp_server
 
@@ -111,10 +113,12 @@ def test_mcp_server_tools():
         mcp = create_mcp_server(db_path=db_path, trace_md=trace_path)
         assert mcp.name == "epires"
 
-        # Test tool manager has all 16 tools
+        # Test tool manager has all 18 tools
         tool_names = [tool.name for tool in mcp._tool_manager.list_tools()]
         assert "epires_get_schema" in tool_names
         assert "epires_register_hypothesis" in tool_names
+        assert "epires_register_experiment" in tool_names
+        assert "epires_list_experiments" in tool_names
         assert "epires_log_evidence" in tool_names
         assert "epires_retract_evidence" in tool_names
         assert "epires_update_hypothesis" in tool_names
@@ -135,15 +139,24 @@ def test_mcp_server_tools():
         schema_dict = json.loads(get_schema())
         assert schema_dict["title"] == "Epires Canonical Research Graph Schema"
 
-        # Test retracting via MCP
+        # Test tools setup
         log_ev = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_log_evidence")
         register = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_register_hypothesis")
         retract = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_retract_evidence")
         update_h = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_update_hypothesis")
         bulk_imp = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_bulk_import")
         export_g = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_export_graph")
-        
+        reg_exp = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_register_experiment")
+        list_exp = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_list_experiments")
+
+        # 1. Register hypothesis first
         register(id="H-TEST-MCP", title="MCP test", a_priori_mechanism="math", falsification_criteria="loss > 1")
+
+        # 2. Register experiment linked to hypothesis
+        exp_res = reg_exp(hypothesis_id="H-TEST-MCP", name="Smoke run", script_path="train.py", metrics={"rmsle": 1.23})
+        assert "Successfully registered experiment" in exp_res
+        exps_json = list_exp(hypothesis_id="H-TEST-MCP")
+        assert "Smoke run" in exps_json
         log_ev(hypothesis_id="H-TEST-MCP", claim="Erroneous fail", evidence_level="E3", falsification_triggered=True)
         query = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_query_graph")
         res1 = json.loads(query(h_id="H-TEST-MCP"))
@@ -215,3 +228,50 @@ def test_mcp_entity_pairs_are_persisted_and_validated():
             assert "same number" in str(exc)
         else:
             raise AssertionError("MCP accepted entity lists of different lengths")
+
+
+def test_dag_cycle_prevention():
+    """Verify that circular dependencies (A -> B -> A) are strictly blocked."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_path = str(Path(tmpdir) / "test.db")
+        store = EpiresStore(db_path=db_path)
+
+        # 1. Register H1
+        store.register_hypothesis(HypothesisNode(
+            id="H1", title="Hypo 1", a_priori_mechanism="m1", falsification_criteria="f1", parent_ids=[]
+        ))
+
+        # 2. Register H2 depending on H1
+        store.register_hypothesis(HypothesisNode(
+            id="H2", title="Hypo 2", a_priori_mechanism="m2", falsification_criteria="f2", parent_ids=["H1"]
+        ))
+
+        # 3. Attempting to make H1 depend on H2 must raise ValueError (Cycle!)
+        try:
+            store.register_hypothesis(HypothesisNode(
+                id="H1", title="Hypo 1 updated", a_priori_mechanism="m1", falsification_criteria="f1", parent_ids=["H2"]
+            ))
+            raise AssertionError("Store allowed directed cycle in DAG!")
+        except ValueError as exc:
+            assert "cycle detected" in str(exc).lower()
+
+        # 4. Self-dependency must also be blocked
+        try:
+            store.register_hypothesis(HypothesisNode(
+                id="H3", title="Hypo 3", a_priori_mechanism="m3", falsification_criteria="f3", parent_ids=["H3"]
+            ))
+            raise AssertionError("Store allowed self-dependency cycle in DAG!")
+        except ValueError as exc:
+            assert "cycle detected" in str(exc).lower()
+
+
+def test_artifact_security_sandbox():
+    """Verify path traversal attacks are blocked on /artifacts/{path}."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        app = create_app(db_path=str(Path(tmpdir) / "test.db"))
+        client = TestClient(app)
+
+        # Directory escape attempt
+        resp = client.get("/artifacts/../../etc/passwd")
+        assert resp.status_code in [403, 404]
+

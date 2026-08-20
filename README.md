@@ -346,12 +346,14 @@ epires dag
 
 ## 6. Model Context Protocol (MCP) Specification
 
-Epires exposes 16 deterministic MCP tools for AI agents:
+Epires exposes 18 deterministic MCP tools for AI agents:
 
 | MCP Tool | Description |
 | :--- | :--- |
 | `epires_get_schema` | Returns canonical JSON schema, supported enum values, and migration template |
-| `epires_register_hypothesis` | Registers a hypothesis with a priori proof and falsification criteria |
+| `epires_register_hypothesis` | Registers a hypothesis with a priori proof and falsification criteria (with DAG cycle detection) |
+| `epires_register_experiment` | Registers reproducible experiment runs with parameters, metrics, script path, and git commit |
+| `epires_list_experiments` | Lists recorded experiments with metrics and artifacts |
 | `epires_log_evidence` | Logs empirical evidence, metrics, CI95, and cascades falsification |
 | `epires_retract_evidence` | Retracts erroneous evidence, recalculates evidence level, and cascades unblocking |
 | `epires_update_hypothesis` | Explicitly updates hypothesis status (REFINED, PAUSED), target level, tags, or text |
@@ -360,7 +362,7 @@ Epires exposes 16 deterministic MCP tools for AI agents:
 | `epires_import_graph` | Reproducibly imports research graph bundle from JSON |
 | `epires_query_graph` | Queries hypotheses by ID or status (CONFIRMED, FALSIFIED, BLOCKED) |
 | `epires_find_gaps` | Discovers untested combinations and research white spots in VSA hypergraph |
-| `epires_associative_search` | Sub-millisecond VSA cosine similarity search across the research graph |
+| `epires_associative_search` | Hybrid full-text (SQLite FTS5) + VSA cosine similarity search across research memory |
 | `epires_parallel_web_search`| Multi-query parallel literature/web search via SDK `parallel-web 1.3.0` |
 | `epires_parallel_extract` | Structured full text/markdown extraction from specific URLs |
 | `epires_export_mermaid_dag` | Exports knowledge graph DAG into Mermaid Markdown |
@@ -375,7 +377,7 @@ The engine is verified using **property-based fuzz testing** powered by `hypothe
 
 ```bash
 pytest -v
-============================== 36 passed in 3.94s ==============================
+============================== 38 passed in 4.08s ==============================
 ```
 
 ### Verified Mathematical Invariants:

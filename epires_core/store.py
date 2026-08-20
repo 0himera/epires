@@ -108,6 +108,14 @@ class EpiresStore:
                 details_json TEXT NOT NULL
             );
 
+            CREATE VIRTUAL TABLE IF NOT EXISTS hypotheses_fts USING fts5(
+                id UNINDEXED,
+                title,
+                a_priori_mechanism,
+                falsification_criteria,
+                tags
+            );
+
             CREATE INDEX IF NOT EXISTS idx_hypotheses_status ON hypotheses(status);
             CREATE INDEX IF NOT EXISTS idx_relations_target ON relations(target_id);
             CREATE INDEX IF NOT EXISTS idx_evidence_h_id ON evidence(hypothesis_id);
@@ -116,6 +124,41 @@ class EpiresStore:
 
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()
+
+    def _check_dag_cycle(self, node_id: str, proposed_parents: List[str]) -> None:
+        """Verifies that adding proposed_parents as dependencies to node_id does not form a directed cycle."""
+        if not proposed_parents:
+            return
+
+        with self._get_connection() as conn:
+            rows = conn.execute(
+                "SELECT source_id, target_id FROM relations WHERE relation_type = ?",
+                (RelationType.DEPENDS_ON.value,)
+            ).fetchall()
+
+        adj: Dict[str, List[str]] = {}
+        for r in rows:
+            src, tgt = r["source_id"], r["target_id"]
+            if src != node_id:  # replace existing parent edges for this node
+                adj.setdefault(src, []).append(tgt)
+
+        for parent in proposed_parents:
+            if parent == node_id:
+                raise ValueError(f"Self-dependency cycle detected: hypothesis '{node_id}' cannot depend on itself.")
+
+            # BFS from parent to see if it can reach node_id
+            visited = set()
+            queue = [parent]
+            while queue:
+                curr = queue.pop(0)
+                if curr == node_id:
+                    raise ValueError(
+                        f"DAG cycle detected: hypothesis '{node_id}' cannot depend on '{parent}' "
+                        f"because '{parent}' already transitively depends on '{node_id}'."
+                    )
+                if curr not in visited:
+                    visited.add(curr)
+                    queue.extend(adj.get(curr, []))
 
     # -------------------------------------------------------------------------
     # Hypotheses
@@ -126,6 +169,9 @@ class EpiresStore:
         allow_status_override: bool = False,
         emit_trace: bool = True
     ) -> HypothesisNode:
+        # Check DAG cycle safety
+        self._check_dag_cycle(h.id, h.parent_ids)
+
         now = self._now()
         existing = self.get_hypothesis(h.id)
         h.created_at = h.created_at or (existing.created_at if existing else now)
@@ -138,8 +184,6 @@ class EpiresStore:
             if existing.status == HypothesisStatus.FALSIFIED:
                 h.status = existing.status
             elif h.status == HypothesisStatus.FALSIFIED:
-                # A falsifying observation is the one terminal transition that
-                # may supersede any non-falsified state.
                 pass
             elif existing.status in {HypothesisStatus.BLOCKED, HypothesisStatus.REFINED}:
                 h.status = existing.status
@@ -188,6 +232,16 @@ class EpiresStore:
                 json.dumps(h.parent_ids), json.dumps([e.model_dump() for e in h.entities]),
                 json.dumps(h.tags), vec_bytes, h.created_at, h.updated_at
             ))
+
+            # Sync FTS5 index
+            try:
+                conn.execute("DELETE FROM hypotheses_fts WHERE id = ?", (h.id,))
+                conn.execute("""
+                INSERT INTO hypotheses_fts (id, title, a_priori_mechanism, falsification_criteria, tags)
+                VALUES (?, ?, ?, ?, ?)
+                """, (h.id, h.title, h.a_priori_mechanism, h.falsification_criteria, " ".join(h.tags)))
+            except Exception:
+                pass
 
             # Sync relations
             conn.execute(
@@ -637,6 +691,42 @@ class EpiresStore:
                 for row in rows
             ]
 
+    def register_experiment(self, exp: ExperimentNode, emit_trace: bool = True) -> ExperimentNode:
+        """Registers a reproducible computational experiment associated with a hypothesis."""
+        now = self._now()
+        exp.created_at = exp.created_at or now
+
+        with self._get_connection() as conn:
+            conn.execute("""
+            INSERT INTO experiments (
+                id, hypothesis_id, name, script_path, commit_hash,
+                parameters_json, metrics_json, artifact_paths_json, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                name=excluded.name,
+                script_path=excluded.script_path,
+                commit_hash=excluded.commit_hash,
+                parameters_json=excluded.parameters_json,
+                metrics_json=excluded.metrics_json,
+                artifact_paths_json=excluded.artifact_paths_json
+            """, (
+                exp.id, exp.hypothesis_id, exp.name, exp.script_path, exp.commit_hash,
+                json.dumps(exp.parameters), json.dumps(exp.metrics),
+                json.dumps(exp.artifact_paths), exp.created_at
+            ))
+
+        if emit_trace:
+            self.log_trace(TraceEntry(
+                timestamp=now,
+                action="REGISTER_EXPERIMENT",
+                agent_role="Lead-PI",
+                h_tag=exp.hypothesis_id,
+                summary=f"Registered experiment {exp.id} for {exp.hypothesis_id}: {exp.name}",
+                details={"script": exp.script_path, "metrics": exp.metrics, "commit": exp.commit_hash}
+            ))
+
+        return exp
+
     def list_experiments(self, hypothesis_id: Optional[str] = None) -> List[ExperimentNode]:
         """List experiment records, tolerating legacy rows with missing JSON values."""
         with self._get_connection() as conn:
@@ -666,8 +756,6 @@ class EpiresStore:
                     commit_hash=row["commit_hash"],
                     parameters=decode(row["parameters_json"], {}, dict),
                     metrics=decode(row["metrics_json"], {}, dict),
-                    # The original schema has no evidence_ids column. Keep this
-                    # explicit instead of inventing links from artifact paths.
                     evidence_ids=[],
                     artifact_paths=decode(row["artifact_paths_json"], [], list),
                     created_at=row["created_at"],
@@ -676,10 +764,10 @@ class EpiresStore:
             ]
 
     # -------------------------------------------------------------------------
-    # VSA Associative Search & Gap Discovery
+    # Hybrid FTS5 + VSA Associative Search & Gap Discovery
     # -------------------------------------------------------------------------
     def search(self, sq: SearchQuery) -> List[Tuple[HypothesisNode, float]]:
-        """Performs sub-millisecond VSA cosine similarity search across all hypotheses."""
+        """Performs hybrid full-text (SQLite FTS5) and VSA cosine similarity search."""
         with self._get_connection() as conn:
             rows = conn.execute("SELECT * FROM hypotheses WHERE vector_blob IS NOT NULL").fetchall()
             if not rows:
@@ -689,7 +777,24 @@ class EpiresStore:
             vectors = [np.frombuffer(r["vector_blob"], dtype=np.int8) for r in rows]
             matrix = np.stack(vectors, axis=0)
 
-        # Build query hypervector
+        # 1. Full-text search via SQLite FTS5
+        fts_matches: Dict[str, float] = {}
+        if sq.query and sq.query.strip():
+            with self._get_connection() as conn:
+                try:
+                    words = [w for w in sq.query.replace('"', " ").replace("'", " ").split() if len(w) >= 2]
+                    if words:
+                        match_query = " OR ".join([f'"{w}"*' for w in words])
+                        fts_rows = conn.execute(
+                            "SELECT id, rank FROM hypotheses_fts WHERE hypotheses_fts MATCH ? ORDER BY rank LIMIT 50",
+                            (match_query,)
+                        ).fetchall()
+                        for r in fts_rows:
+                            fts_matches[r["id"]] = max(0.5, 1.0 / (1.0 + abs(float(r["rank"]))))
+                except Exception:
+                    pass
+
+        # 2. VSA query hypervector
         terms = sq.query.split() if sq.query else []
         q_vec = self.encoder.encode_query(
             text_terms=terms,
@@ -698,11 +803,17 @@ class EpiresStore:
         )
 
         sims = self.vsa.batch_similarity(q_vec, matrix)
-        scored = list(zip(ids, sims))
-        scored.sort(key=lambda x: x[1], reverse=True)
+
+        # 3. Hybrid fusion
+        combined_scores: List[Tuple[str, float]] = []
+        for h_id, vsa_sim in zip(ids, sims):
+            score = float(vsa_sim) + fts_matches.get(h_id, 0.0)
+            combined_scores.append((h_id, score))
+
+        combined_scores.sort(key=lambda x: x[1], reverse=True)
 
         results: List[Tuple[HypothesisNode, float]] = []
-        for h_id, score in scored[:sq.limit]:
+        for h_id, score in combined_scores[:sq.limit]:
             h = self.get_hypothesis(h_id)
             if h:
                 results.append((h, float(score)))

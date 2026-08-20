@@ -108,6 +108,8 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
         expected_tools = [
             "epires_get_schema",
             "epires_register_hypothesis",
+            "epires_register_experiment",
+            "epires_list_experiments",
             "epires_log_evidence",
             "epires_retract_evidence",
             "epires_update_hypothesis",
@@ -135,7 +137,9 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
     # 5. MCP Client Configs in Workspace
     c_clients = DoctorCheck("IDE & Agent MCP Configs", "Detects client configuration files")
     detected_clients: List[str] = []
-    if (root / ".codex" / "mcp.json").exists():
+    if (root / ".codex" / "config.toml").exists():
+        detected_clients.append("Codex (.codex/config.toml)")
+    elif (root / ".codex" / "mcp.json").exists():
         detected_clients.append("Codex (.codex/mcp.json)")
     if (root / ".cursor" / "mcp.json").exists():
         detected_clients.append("Cursor (.cursor/mcp.json)")

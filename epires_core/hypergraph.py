@@ -54,11 +54,15 @@ class HypergraphEncoder:
         for ent in hypothesis.entities:
             component_vectors.append(self.encode_entity(ent, role="attribute"))
 
-        # 4. Tags
+        # 4. Tags and Text Tokens
         for tag in hypothesis.tags:
+            t = tag.lower().strip()
+            if not t:
+                continue
+            v_tag = self.vsa.get_or_create_vector(f"TAG:{t}")
             v_tag_role = self.vsa.get_or_create_vector("ROLE:tag")
-            v_tag_val = self.vsa.get_or_create_vector(f"TAG:{tag}")
-            component_vectors.append(self.vsa.bind(v_tag_role, v_tag_val))
+            component_vectors.append(v_tag)
+            component_vectors.append(self.vsa.bind(v_tag_role, v_tag))
 
         # 5. Directed Relations (Parent-Child, Gating, Falsification)
         for rel in relations:
@@ -84,8 +88,14 @@ class HypergraphEncoder:
         """Encodes an associative search query vector for cosine similarity matching."""
         query_vectors: List[np.ndarray] = []
 
+        v_tag_role = self.vsa.get_or_create_vector("ROLE:tag")
         for term in text_terms:
-            query_vectors.append(self.vsa.get_or_create_vector(f"TAG:{term}"))
+            t = term.lower().strip()
+            if not t:
+                continue
+            v_term = self.vsa.get_or_create_vector(f"TAG:{t}")
+            query_vectors.append(v_term)
+            query_vectors.append(self.vsa.bind(v_tag_role, v_term))
 
         for ent in entities:
             query_vectors.append(self.encode_entity(ent, role="attribute"))
