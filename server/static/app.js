@@ -772,10 +772,10 @@
     }).sort((a, b) => {
       const aTime = Date.parse(a.timestamp);
       const bTime = Date.parse(b.timestamp);
-      if (Number.isFinite(aTime) && Number.isFinite(bTime)) return aTime - bTime;
-      if (Number.isFinite(aTime)) return -1;
-      if (Number.isFinite(bTime)) return 1;
-      return String(a.timestamp).localeCompare(String(b.timestamp));
+      if (Number.isFinite(aTime) && Number.isFinite(bTime)) return bTime - aTime;
+      if (Number.isFinite(bTime)) return -1;
+      if (Number.isFinite(aTime)) return 1;
+      return String(b.timestamp).localeCompare(String(a.timestamp));
     });
   }
 
@@ -806,7 +806,7 @@
     const timeline = makeElement('div', 'stratigraphy-rows');
     rows.forEach((row, index) => {
       const item = makeElement('article', 'stratigraphy-row');
-      const marker = makeElement('span', 'stratigraphy-index', String(index + 1).padStart(2, '0'));
+      const marker = makeElement('span', 'stratigraphy-index', String(rows.length - index).padStart(2, '0'));
       const meta = makeElement('div', 'stratigraphy-meta');
       meta.appendChild(makeElement('span', 'stratigraphy-agent', row.agent));
       meta.appendChild(makeElement('span', 'stratigraphy-time', displayValue(row.timestamp, 'TIME UNSET')));
