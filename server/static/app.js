@@ -203,7 +203,7 @@
   // --------------------------------------------------------------------------
   const textMeasureCanvas = document.createElement('canvas');
   const textMeasureCtx = textMeasureCanvas.getContext('2d');
-  textMeasureCtx.font = '500 11.5px Geist, -apple-system, sans-serif';
+  textMeasureCtx.font = '500 11.5px "Alliance No.2", Geist, -apple-system, sans-serif';
 
   function formatBalancedTitleSVG(text, maxWidth = 218, startX = 24, startY = 48, maxLines = 2) {
     const words = text.split(/\s+/);
@@ -234,7 +234,7 @@
 
     return lines.map((l, idx) => {
       const y = startY + idx * 15;
-      return `<text x="${startX}" y="${y}" fill="var(--ink-primary)" font-family="Geist, -apple-system, sans-serif" font-size="11.5" font-weight="500">${escapeSvgText(l)}</text>`;
+      return `<text x="${startX}" y="${y}" fill="var(--ink-primary)" font-family="'Alliance No.2', Geist, -apple-system, sans-serif" font-size="11.5" font-weight="500">${escapeSvgText(l)}</text>`;
     }).join('');
   }
 

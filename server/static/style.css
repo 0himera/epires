@@ -3,6 +3,18 @@
    Fluid Relative Typography & Units (rem, clamp, ch) for Universal Scaling
    ========================================================================== */
 
+@font-face {
+  font-family: 'Alliance No.2';
+  src: local('Alliance No.2'),
+       local('Alliance No. 2'),
+       local('Alliance_No.2_Regular'),
+       url('/static/fonts/AllianceNo2.woff2') format('woff2'),
+       url('/static/fonts/AllianceNo2.otf') format('opentype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* Paper Theme (Clean Architectural Paper with Pastel Powder-Blue Plates) */
   --bg-app: #edf3f8;
@@ -51,7 +63,7 @@
   --svg-edge-highlight: #121316;
 
   --font-mono: "Geist Mono", "IBM Plex Mono", "SF Mono", monospace;
-  --font-sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  --font-sans: "Alliance No.2", "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
 }
 
 [data-theme="noir"] {
