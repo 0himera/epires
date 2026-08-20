@@ -1039,10 +1039,10 @@
     const inProg = state.hypotheses.filter(h => h.status === 'IN_PROGRESS').length;
     const falsified = state.hypotheses.filter(h => h.status === 'FALSIFIED').length;
 
-    dom.kpiTotal.textContent = String(total).padStart(2, '0');
-    dom.kpiConfirmed.textContent = String(confirmed).padStart(2, '0');
-    dom.kpiInProgress.textContent = String(inProg).padStart(2, '0');
-    dom.kpiFalsified.textContent = String(falsified).padStart(2, '0');
+    dom.kpiTotal.textContent = String(total);
+    dom.kpiConfirmed.textContent = String(confirmed);
+    dom.kpiInProgress.textContent = String(inProg);
+    dom.kpiFalsified.textContent = String(falsified);
 
     // Update active filter underline
     dom.kpiCells.forEach(cell => {

@@ -43,18 +43,18 @@
   --paper-grid: rgba(37, 44, 47, 0.055);
   --focus-ring: #536a76;
 
-  /* Pastel Semantic Accents */
-  --pastel-falsified-ink: #dc2626;
-  --pastel-falsified-bg: rgba(239, 68, 68, 0.07);
-  --pastel-falsified-border: rgba(239, 68, 68, 0.4);
+  /* Harmonious Archival Semantic Inks */
+  --pastel-falsified-ink: #a83832;
+  --pastel-falsified-bg: rgba(168, 56, 50, 0.08);
+  --pastel-falsified-border: rgba(168, 56, 50, 0.35);
 
-  --pastel-confirmed-ink: #059669;
-  --pastel-confirmed-bg: rgba(16, 185, 129, 0.07);
-  --pastel-confirmed-border: rgba(16, 185, 129, 0.4);
+  --pastel-confirmed-ink: #1b6348;
+  --pastel-confirmed-bg: rgba(27, 99, 72, 0.08);
+  --pastel-confirmed-border: rgba(27, 99, 72, 0.35);
 
-  --pastel-in-progress-ink: #d97706;
-  --pastel-in-progress-bg: rgba(245, 158, 11, 0.07);
-  --pastel-in-progress-border: rgba(245, 158, 11, 0.4);
+  --pastel-in-progress-ink: #9e6015;
+  --pastel-in-progress-bg: rgba(158, 96, 21, 0.08);
+  --pastel-in-progress-border: rgba(158, 96, 21, 0.35);
 
   --svg-node-bg: #ffffff;
   --svg-node-stroke: rgba(0, 0, 0, 0.16);
@@ -91,17 +91,17 @@
   --paper-grid: rgba(255, 255, 255, 0.055);
   --focus-ring: #c6d9d9;
 
-  --pastel-falsified-ink: #f87171;
-  --pastel-falsified-bg: rgba(239, 68, 68, 0.14);
-  --pastel-falsified-border: rgba(239, 68, 68, 0.45);
+  --pastel-falsified-ink: #e06c64;
+  --pastel-falsified-bg: rgba(224, 108, 100, 0.14);
+  --pastel-falsified-border: rgba(224, 108, 100, 0.4);
 
-  --pastel-confirmed-ink: #34d399;
-  --pastel-confirmed-bg: rgba(52, 211, 153, 0.14);
-  --pastel-confirmed-border: rgba(52, 211, 153, 0.45);
+  --pastel-confirmed-ink: #4eae7e;
+  --pastel-confirmed-bg: rgba(78, 174, 126, 0.14);
+  --pastel-confirmed-border: rgba(78, 174, 126, 0.4);
 
-  --pastel-in-progress-ink: #fbbf24;
-  --pastel-in-progress-bg: rgba(245, 158, 11, 0.14);
-  --pastel-in-progress-border: rgba(245, 158, 11, 0.45);
+  --pastel-in-progress-ink: #dfa14a;
+  --pastel-in-progress-bg: rgba(223, 161, 74, 0.14);
+  --pastel-in-progress-border: rgba(223, 161, 74, 0.4);
 
   --svg-node-bg: #141720;
   --svg-node-stroke: rgba(255, 255, 255, 0.18);
@@ -425,21 +425,22 @@ body.editorial-body {
 
 .kpi-lbl {
   font-family: var(--font-mono);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   color: var(--ink-muted);
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.15rem;
   white-space: nowrap;
 }
 
 .kpi-num {
-  font-family: var(--font-mono);
-  font-size: clamp(1.25rem, 1.3vw + 0.35rem, 1.8rem);
-  font-weight: 700;
+  font-family: var(--font-sans);
+  font-size: clamp(1.35rem, 1.4vw + 0.35rem, 1.95rem);
+  font-weight: 600;
   color: var(--ink-primary);
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
 }
 
 .falsified-num { color: var(--pastel-falsified-ink); }
