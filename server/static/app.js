@@ -54,11 +54,11 @@
     wsConnected: false
   };
 
-  // Dimensions for Natural Smooth Organic River Pebble Cards
-  const NODE_WIDTH = 276;
-  const NODE_HEIGHT = 96;
-  const GAP_X = 48;
-  const GAP_Y = 88;
+  // Dimensions for Organic Voronoi Pebble Facets
+  const NODE_WIDTH = 270;
+  const NODE_HEIGHT = 100;
+  const GAP_X = 52;
+  const GAP_Y = 92;
 
   // DOM Elements
   const dom = {
@@ -196,7 +196,7 @@
   const textMeasureCtx = textMeasureCanvas.getContext('2d');
   textMeasureCtx.font = '500 11.5px Inter, -apple-system, sans-serif';
 
-  function formatBalancedTitleSVG(text, maxWidth = 222, startX = 24, startY = 48, maxLines = 2) {
+  function formatBalancedTitleSVG(text, maxWidth = 218, startX = 24, startY = 48, maxLines = 2) {
     const words = text.split(/\s+/);
     const lines = [];
     let curLine = '';
@@ -230,28 +230,41 @@
   }
 
   // --------------------------------------------------------------------------
-  // Mathematical Smooth Closed Catmull-Rom Cubic Spline (100% Continuous Curvature)
+  // Mathematical Smooth Filleted Polygon Path Generator (16px Filleted Corners)
   // --------------------------------------------------------------------------
-  function createSmoothClosedSplinePath(pts, tension = 0.55) {
-    const n = pts.length;
+  function createFilletedPolygonPath(rawPoints, radius = 16) {
+    const n = rawPoints.length;
     if (n < 3) return '';
 
-    let path = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)} `;
-
+    let path = '';
     for (let i = 0; i < n; i++) {
-      const p0 = pts[(i - 1 + n) % n];
-      const p1 = pts[i];
-      const p2 = pts[(i + 1) % n];
-      const p3 = pts[(i + 2) % n];
+      const prev = rawPoints[(i - 1 + n) % n];
+      const curr = rawPoints[i];
+      const next = rawPoints[(i + 1) % n];
 
-      // Catmull-Rom tangents transformed to Cubic Bézier control points
-      const cp1x = p1[0] + ((p2[0] - p0[0]) * tension) / 3;
-      const cp1y = p1[1] + ((p2[1] - p0[1]) * tension) / 3;
+      const dx1 = prev[0] - curr[0];
+      const dy1 = prev[1] - curr[1];
+      const len1 = Math.hypot(dx1, dy1) || 1;
 
-      const cp2x = p2[0] - ((p3[0] - p1[0]) * tension) / 3;
-      const cp2y = p2[1] - ((p3[1] - p1[1]) * tension) / 3;
+      const dx2 = next[0] - curr[0];
+      const dy2 = next[1] - curr[1];
+      const len2 = Math.hypot(dx2, dy2) || 1;
 
-      path += `C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)} `;
+      const r = Math.min(radius, len1 / 2.3, len2 / 2.3);
+
+      const startX = curr[0] + (dx1 / len1) * r;
+      const startY = curr[1] + (dy1 / len1) * r;
+
+      const endX = curr[0] + (dx2 / len2) * r;
+      const endY = curr[1] + (dy2 / len2) * r;
+
+      if (i === 0) {
+        path += `M ${startX.toFixed(1)} ${startY.toFixed(1)} `;
+      } else {
+        path += `L ${startX.toFixed(1)} ${startY.toFixed(1)} `;
+      }
+
+      path += `Q ${curr[0].toFixed(1)} ${curr[1].toFixed(1)} ${endX.toFixed(1)} ${endY.toFixed(1)} `;
     }
 
     path += 'Z';
@@ -259,95 +272,40 @@
   }
 
   // --------------------------------------------------------------------------
-  // Procedural Natural River Pebble Morphologies (Silky Smooth Organic Contours)
+  // Polyhedral Voronoi Organic Geometry (6 Distinct Faceted Morphologies)
   // --------------------------------------------------------------------------
-  function createDeterministicPRNG(seedStr) {
-    let h = 2166136261 >>> 0;
-    const s = String(seedStr || 'specimen');
-    for (let i = 0; i < s.length; i++) {
-      h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  function getVoronoiPebbleGeometry(id, w = 270, h = 100) {
+    let hash = 0;
+    const str = String(id || '');
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
     }
-    return function() {
-      h += h << 13; h ^= h >>> 7;
-      h += h << 3;  h ^= h >>> 17;
-      return (h >>> 0) / 4294967296;
-    };
-  }
+    const variant = hash % 6;
 
-  function getVoronoiPebbleGeometry(id, w = 276, h = 96) {
-    const rand = createDeterministicPRNG(id);
-    const variant = Math.floor(rand() * 5); // 5 distinct natural river pebble types
-
-    let pts;
+    let rawOuter;
     switch (variant) {
-      case 0: // 1. Asymmetric Oval River Stone (Broader left shoulder, smooth tapered right flank)
-        pts = [
-          [16 + rand() * 8, 2 + rand() * 3],
-          [w * 0.46 + (rand() - 0.5) * 24, 0 + rand() * 2],
-          [w - (20 + rand() * 8), 4 + rand() * 3],
-          [w - (2 + rand() * 3), h * 0.46 + (rand() - 0.5) * 12],
-          [w - (18 + rand() * 8), h - (3 + rand() * 3)],
-          [w * 0.54 + (rand() - 0.5) * 24, h - (0 + rand() * 2)],
-          [14 + rand() * 8, h - (3 + rand() * 3)],
-          [2 + rand() * 3, h * 0.52 + (rand() - 0.5) * 12]
-        ];
+      case 0: // Smooth Pebble Hexagon (Pointed lateral apexes)
+        rawOuter = [[28, 0], [w - 28, 0], [w, h * 0.48], [w - 24, h], [24, h], [0, h * 0.52]];
         break;
-
-      case 1: // 2. Flowing Water-Worn Pebble (Gentle top arch, subtle kidney curve)
-        pts = [
-          [18 + rand() * 8, 4 + rand() * 3],
-          [w * 0.5 + (rand() - 0.5) * 20, 0 + rand() * 2],
-          [w - (14 + rand() * 8), 2 + rand() * 3],
-          [w - (1 + rand() * 3), h * 0.54 + (rand() - 0.5) * 12],
-          [w - (22 + rand() * 8), h - (2 + rand() * 3)],
-          [w * 0.44 + (rand() - 0.5) * 24, h - (4 + rand() * 3)],
-          [18 + rand() * 8, h - (2 + rand() * 3)],
-          [3 + rand() * 3, h * 0.44 + (rand() - 0.5) * 12]
-        ];
+      case 1: // Organic Facet with Asymmetric Shoulder (Slanted top-right & bottom-left)
+        rawOuter = [[18, 0], [w - 36, 0], [w, h * 0.38], [w - 18, h], [32, h], [0, h * 0.65]];
         break;
-
-      case 2: // 3. Polished Slate Cobble (Subtly slanted crest, sweeping side lobes)
-        pts = [
-          [22 + rand() * 8, 2 + rand() * 3],
-          [w * 0.58 + (rand() - 0.5) * 24, 0 + rand() * 2],
-          [w - (12 + rand() * 8), 5 + rand() * 3],
-          [w - (2 + rand() * 3), h * 0.42 + (rand() - 0.5) * 12],
-          [w - (14 + rand() * 8), h - (4 + rand() * 3)],
-          [w * 0.48 + (rand() - 0.5) * 24, h - (1 + rand() * 2)],
-          [22 + rand() * 8, h - (2 + rand() * 3)],
-          [1 + rand() * 3, h * 0.58 + (rand() - 0.5) * 12]
-        ];
+      case 2: // Pointed Lateral Capsule-Diamond
+        rawOuter = [[34, 0], [w - 18, 0], [w, h * 0.6], [w - 32, h], [16, h], [0, h * 0.4]];
         break;
-
-      case 3: // 4. Soft Organic Pillow Stone (Gentle double-curved crest and base)
-        pts = [
-          [14 + rand() * 8, 3 + rand() * 3],
-          [w * 0.42 + (rand() - 0.5) * 20, 0 + rand() * 2],
-          [w - (16 + rand() * 8), 1 + rand() * 3],
-          [w - (1 + rand() * 3), h * 0.5 + (rand() - 0.5) * 10],
-          [w - (16 + rand() * 8), h - (2 + rand() * 3)],
-          [w * 0.56 + (rand() - 0.5) * 20, h - (0 + rand() * 2)],
-          [14 + rand() * 8, h - (2 + rand() * 3)],
-          [2 + rand() * 3, h * 0.48 + (rand() - 0.5) * 10]
-        ];
+      case 3: // Slanted Crystallographic Parallelogram Pebble
+        rawOuter = [[30, 0], [w, 0], [w - 16, h * 0.5], [w - 30, h], [0, h], [16, h * 0.5]];
         break;
-
-      case 4: // 5. Zen Garden Rock (Broad calm base, naturally asymmetric domed top)
+      case 4: // Soft Rounded Pentagonal Lobe
+        rawOuter = [[20, 0], [w - 20, 0], [w, h * 0.55], [w - 26, h], [12, h], [0, h * 0.45]];
+        break;
+      case 5: // Curved Isogrid Facet
       default:
-        pts = [
-          [20 + rand() * 8, 1 + rand() * 3],
-          [w * 0.45 + (rand() - 0.5) * 24, 0 + rand() * 2],
-          [w - (22 + rand() * 8), 3 + rand() * 3],
-          [w - (2 + rand() * 3), h * 0.55 + (rand() - 0.5) * 12],
-          [w - (12 + rand() * 8), h - (1 + rand() * 2)],
-          [w * 0.52 + (rand() - 0.5) * 20, h - (3 + rand() * 2)],
-          [12 + rand() * 8, h - (1 + rand() * 2)],
-          [1 + rand() * 3, h * 0.45 + (rand() - 0.5) * 12]
-        ];
+        rawOuter = [[14, 0], [w - 30, 0], [w, h * 0.45], [w - 16, h], [24, h], [0, h * 0.55]];
         break;
     }
 
-    return createSmoothClosedSplinePath(pts, 0.55);
+    return createFilletedPolygonPath(rawOuter, 16);
   }
 
   // --------------------------------------------------------------------------
@@ -1307,7 +1265,7 @@
       gNode.dataset.id = node.id;
 
       const pebblePath = getVoronoiPebbleGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
-      const titleLinesSVG = formatBalancedTitleSVG(node.title, 224, 24, 45, 2);
+      const titleLinesSVG = formatBalancedTitleSVG(node.title, 218, 24, 46, 2);
       const currentLevel = node.current_evidence_level || 'E0';
       const targetLevel = node.target_evidence_level || 'E3';
 
@@ -1318,7 +1276,7 @@
         <text class="node-id" x="24" y="24">${escapeSvgText(node.id)}</text>
         <text class="node-level" x="${NODE_WIDTH - 24}" y="24" text-anchor="end">${escapeSvgText(currentLevel)} / ${escapeSvgText(targetLevel)}</text>
         ${titleLinesSVG}
-        <g class="node-status-cluster" transform="translate(24, 80)">
+        <g class="node-status-cluster" transform="translate(24, 82)">
           <text class="node-status-dot" x="0" y="0">●</text>
           <text class="node-status-text" x="8" y="0">${escapeSvgText(statusRaw)}</text>
         </g>
@@ -1355,7 +1313,7 @@
           <path class="node-plate" d="${pebblePath}" />
           <text class="node-id" x="24" y="24">⚡ WHITE SPOT GAP</text>
           <text class="node-ghost-title" x="24" y="46">${escapeSvgText(gapTitle)}</text>
-          <g class="node-status-cluster" transform="translate(24, 80)">
+          <g class="node-status-cluster" transform="translate(24, 82)">
             <text class="node-status-dot" x="0" y="0">○</text>
             <text class="node-status-text" x="8" y="0">untested</text>
           </g>
