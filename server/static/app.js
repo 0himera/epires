@@ -1,10 +1,20 @@
 /**
  * EPIRES HYPERGRAPH ENGINE // CLIENT CONTROLLER
- * Archival Paper Theme with Pretext Balanced Typography & Organic Voronoi Pebble Geometry
+ * Archival Paper Theme with Pretext Balanced Typography, 3-Zone Architecture, and Popperian Evidence Ladder
  */
 
 (function () {
   'use strict';
+
+  // Popperian Evidence Maturity Hierarchy Definitions
+  const MATURITY_CRITERIA = {
+    E0: 'E0: A Priori Theoretical Formulation (No Empirical Proof)',
+    E1: 'E1: Single Empirical Benchmark / Trace Verified',
+    E2: 'E2: Parameter Sensitivity Sweep Confirmed',
+    E3: 'E3: Cross-Domain Empirical Replication Passed',
+    E4: 'E4: Adversarial Stress-Tested Boundary',
+    E5: 'E5: Mathematical Law / Invariant Formulation'
+  };
 
   // Application State
   const state = {
@@ -14,6 +24,8 @@
     gaps: [],
     selectedHypothesisId: null,
     activeFilter: 'ALL',
+    activeLevelFilter: null,
+    showGhosts: false,
     activeTab: 'inspector',
     theme: localStorage.getItem('epires_theme') || 'paper',
     transform: { x: 60, y: 50, scale: 0.95 },
@@ -23,7 +35,8 @@
     draggingNode: null,
     dragNodeStart: { mouseX: 0, mouseY: 0, nodeX: 0, nodeY: 0 },
     hasMovedNode: false,
-    pollingInterval: null
+    lastSyncTime: null,
+    searchSelectedIndex: 0
   };
 
   // Dimensions for Organic Voronoi Pebble Facets
@@ -39,23 +52,32 @@
     noiseCanvas: document.getElementById('noise-canvas'),
     projectName: document.getElementById('project-name'),
     projectMetric: document.getElementById('project-metric'),
-    sepMetric: document.getElementById('sep-metric'),
     hdrTaskDesc: document.getElementById('hdr-task-desc'),
-    sepTask: document.getElementById('sep-task'),
+    dotTask: document.getElementById('dot-task'),
     hdrProjectDomain: document.getElementById('hdr-project-domain'),
+    passObjective: document.getElementById('pass-objective'),
+    passRegime: document.getElementById('pass-regime'),
     btnThemeToggle: document.getElementById('btn-theme-toggle'),
     themeLabel: document.getElementById('theme-label'),
+    btnRefresh: document.getElementById('btn-refresh'),
+    syncStatusDot: document.getElementById('sync-status-dot'),
+    syncStatusText: document.getElementById('sync-status-text'),
     kpiTotal: document.getElementById('kpi-total'),
     kpiConfirmed: document.getElementById('kpi-confirmed'),
     kpiInProgress: document.getElementById('kpi-in-progress'),
     kpiFalsified: document.getElementById('kpi-falsified'),
+    kpiCells: document.querySelectorAll('.kpi-cell[data-filter]'),
     evidenceSpectrum: document.getElementById('evidence-spectrum'),
-    btnRefresh: document.getElementById('btn-refresh'),
+    ladderActiveHint: document.getElementById('ladder-active-hint'),
     btnZoomIn: document.getElementById('btn-zoom-in'),
     btnZoomOut: document.getElementById('btn-zoom-out'),
     btnZoomReset: document.getElementById('btn-zoom-reset'),
+    zoomLevelText: document.getElementById('zoom-level-text'),
+    btnToggleGhosts: document.getElementById('btn-toggle-ghosts'),
     tabButtons: document.querySelectorAll('.m-tab'),
     tabContents: document.querySelectorAll('.tab-pane'),
+    tabBadgeTraces: document.getElementById('tab-badge-traces'),
+    tabBadgeGaps: document.getElementById('tab-badge-gaps'),
     filterButtons: document.querySelectorAll('.f-pill'),
     inspectorEmpty: document.getElementById('inspector-empty'),
     inspectorBody: document.getElementById('inspector-body'),
@@ -66,16 +88,23 @@
     insMechanism: document.getElementById('ins-mechanism'),
     insFalsification: document.getElementById('ins-falsification'),
     insParents: document.getElementById('ins-parents'),
-    insEvidenceCount: document.getElementById('ins-evidence-count'),
+    insLedgerCount: document.getElementById('ins-ledger-count'),
     insEvidenceList: document.getElementById('ins-evidence-list'),
+    btnCopyId: document.getElementById('btn-copy-id'),
+    btnFocusNode: document.getElementById('btn-focus-node'),
+    btnFilterTraces: document.getElementById('btn-filter-traces'),
     tracesStreamContainer: document.getElementById('traces-stream-container'),
     tracesCountText: document.getElementById('traces-count-text'),
     tracesSearch: document.getElementById('traces-search'),
-    gapsMatrixContainer: document.getElementById('gaps-matrix-container')
+    gapsMatrixContainer: document.getElementById('gaps-matrix-container'),
+    btnOpenSearch: document.getElementById('btn-open-search'),
+    searchModal: document.getElementById('search-modal'),
+    cmdKInput: document.getElementById('cmd-k-input'),
+    cmdKResults: document.getElementById('cmd-k-results')
   };
 
   // --------------------------------------------------------------------------
-  // Pretext Measurement Canvas for Intelligent Balanced Multi-Line Layout
+  // Pretext Measurement Canvas for Balanced Multi-Line Layout
   // --------------------------------------------------------------------------
   const textMeasureCanvas = document.createElement('canvas');
   const textMeasureCtx = textMeasureCanvas.getContext('2d');
@@ -93,7 +122,6 @@
         lines.push(curLine);
         curLine = words[i];
         if (lines.length >= maxLines - 1) {
-          // Add remainder
           let remainder = words.slice(i).join(' ');
           while (textMeasureCtx.measureText(remainder + '…').width > maxWidth && remainder.length > 5) {
             remainder = remainder.substring(0, remainder.lastIndexOf(' '));
@@ -168,7 +196,6 @@
     const variant = hash % 6;
 
     let rawOuter;
-
     switch (variant) {
       case 0: // Smooth Pebble Hexagon
         rawOuter = [[28, 0], [w - 28, 0], [w, h * 0.48], [w - 24, h], [24, h], [0, h * 0.52]];
@@ -250,10 +277,13 @@
   }
 
   // --------------------------------------------------------------------------
-  // Data Fetching & Dynamic Config Binding
+  // Data Fetching & Dynamic 3-Zone Header Binding
   // --------------------------------------------------------------------------
   async function fetchAllData() {
     try {
+      if (dom.syncStatusDot) dom.syncStatusDot.className = 'sync-dot spinning';
+      if (dom.syncStatusText) dom.syncStatusText.textContent = 'SYNCING';
+
       const [configRes, hypoRes, tracesRes, gapsRes] = await Promise.all([
         fetch('/config').then(r => r.json()).catch(() => ({})),
         fetch('/hypotheses').then(r => r.json()),
@@ -279,52 +309,70 @@
       if (state.selectedHypothesisId) {
         renderInspector(state.selectedHypothesisId);
       }
+
+      // Record sync time
+      const now = new Date();
+      state.lastSyncTime = now.toTimeString().substring(0, 5);
+      if (dom.syncStatusDot) dom.syncStatusDot.className = 'sync-dot';
+      if (dom.syncStatusText) dom.syncStatusText.textContent = `SYNCED ${state.lastSyncTime}`;
+
+      // Update badge counts on tabs
+      if (dom.tabBadgeTraces) dom.tabBadgeTraces.textContent = state.traces.length;
+      if (dom.tabBadgeGaps) dom.tabBadgeGaps.textContent = state.gaps.length;
     } catch (err) {
       console.error('Epires fetch error:', err);
+      if (dom.syncStatusText) dom.syncStatusText.textContent = 'SYNC ERR';
     }
   }
 
   function bindDynamicConfig() {
     const conf = state.config;
 
-    // 1. Domain Headline
+    // 1. Zone 1: Domain & Breadcrumbs
     if (dom.hdrProjectDomain) {
       dom.hdrProjectDomain.textContent = conf.domain || 'Autonomous Research & Hypothesis Governance';
     }
 
-    // 2. Project Name
     if (dom.projectName) {
       dom.projectName.textContent = conf.project_name || 'research_project';
     }
 
-    // 3. Primary Metric & Goal
     if (dom.projectMetric) {
       if (conf.primary_metric) {
         const goal = conf.metric_goal ? ` (${conf.metric_goal})` : '';
         dom.projectMetric.textContent = `${conf.primary_metric}${goal}`;
-        dom.projectMetric.style.display = 'inline';
-        if (dom.sepMetric) dom.sepMetric.style.display = 'inline';
       } else {
-        dom.projectMetric.style.display = 'none';
-        if (dom.sepMetric) dom.sepMetric.style.display = 'none';
+        dom.projectMetric.textContent = 'Metric Formulation';
       }
     }
 
-    // 4. Task Description
     if (dom.hdrTaskDesc) {
       if (conf.task_description) {
         dom.hdrTaskDesc.textContent = conf.task_description;
-        dom.hdrTaskDesc.style.display = 'inline';
-        if (dom.sepTask) dom.sepTask.style.display = 'inline';
+        if (dom.dotTask) dom.dotTask.style.display = 'inline';
       } else {
-        dom.hdrTaskDesc.style.display = 'none';
-        if (dom.sepTask) dom.sepTask.style.display = 'none';
+        dom.hdrTaskDesc.textContent = '';
+        if (dom.dotTask) dom.dotTask.style.display = 'none';
       }
+    }
+
+    // 2. Zone 2: Project Passport Capsule
+    if (dom.passObjective) {
+      const metricText = conf.primary_metric ? `${conf.metric_goal ? conf.metric_goal.toUpperCase() + ' ' : ''}${conf.primary_metric}` : 'HYPOTHESIS GOVERNANCE';
+      dom.passObjective.textContent = metricText;
+    }
+
+    if (dom.passRegime) {
+      const maxLvl = state.hypotheses.reduce((max, h) => {
+        const lvlNum = parseInt((h.current_evidence_level || 'E0').replace('E', ''), 10) || 0;
+        return Math.max(max, lvlNum);
+      }, 0);
+      dom.passRegime.textContent = `Empirical Validation (E${maxLvl} → E${maxLvl + 1})`;
     }
   }
 
   // --------------------------------------------------------------------------
-  // KPI Summary Strip
+  // KPI Summary Strip & Popperian Ladder
   // --------------------------------------------------------------------------
   function updateKPISummary() {
     const total = state.hypotheses.length;
@@ -337,7 +385,12 @@
     dom.kpiInProgress.textContent = String(inProg).padStart(2, '0');
     dom.kpiFalsified.textContent = String(falsified).padStart(2, '0');
 
-    // Evidence Maturity Spectrum
+    // Update active filter underline
+    dom.kpiCells.forEach(cell => {
+      cell.classList.toggle('active-filter', cell.dataset.filter === state.activeFilter);
+    });
+
+    // Popperian Evidence Maturity Spectrum
     const levels = { E0: 0, E1: 0, E2: 0, E3: 0, E4: 0, E5: 0 };
     state.hypotheses.forEach(h => {
       const lvl = h.current_evidence_level || 'E0';
@@ -346,9 +399,35 @@
 
     dom.evidenceSpectrum.innerHTML = Object.keys(levels).map(lvl => {
       const count = levels[lvl];
-      const cls = count > 0 ? 's-pill active' : 's-pill';
-      return `<span class="${cls}">${lvl} ${count}</span>`;
+      const isLevelActive = state.activeLevelFilter === lvl;
+      const isPopulated = count > 0;
+      const cls = `s-pill ${isLevelActive ? 'active' : ''} ${isPopulated ? 'populated' : ''}`;
+      return `<span class="${cls}" data-level="${lvl}" title="${MATURITY_CRITERIA[lvl]}">${lvl} ${count}</span>`;
     }).join('');
+
+    // Attach hover & click listeners to ladder pills
+    dom.evidenceSpectrum.querySelectorAll('.s-pill').forEach(pill => {
+      const lvl = pill.dataset.level;
+      pill.addEventListener('mouseenter', () => {
+        if (dom.ladderActiveHint) dom.ladderActiveHint.textContent = MATURITY_CRITERIA[lvl];
+      });
+      pill.addEventListener('mouseleave', () => {
+        if (dom.ladderActiveHint) {
+          dom.ladderActiveHint.textContent = state.activeLevelFilter
+            ? MATURITY_CRITERIA[state.activeLevelFilter]
+            : 'Hover to inspect Popperian criteria';
+        }
+      });
+      pill.addEventListener('click', () => {
+        if (state.activeLevelFilter === lvl) {
+          state.activeLevelFilter = null;
+        } else {
+          state.activeLevelFilter = lvl;
+        }
+        updateKPISummary();
+        renderDAG();
+      });
+    });
   }
 
   // --------------------------------------------------------------------------
@@ -386,13 +465,13 @@
     layers.forEach((layerNodes, layerIdx) => {
       const totalWidth = layerNodes.length * NODE_WIDTH + (layerNodes.length - 1) * GAP_X;
       const staggerX = (layerIdx % 2 === 1) ? 28 : 0;
-      const startX = Math.max(40, 560 - totalWidth / 2) + staggerX;
+      const startX = Math.max(60, 580 - totalWidth / 2) + staggerX;
 
       layerNodes.forEach((node, nodeIdx) => {
         if (!state.nodePositions.has(node.id)) {
           state.nodePositions.set(node.id, {
             x: startX + nodeIdx * (NODE_WIDTH + GAP_X),
-            y: 40 + layerIdx * (NODE_HEIGHT + GAP_Y),
+            y: 60 + layerIdx * (NODE_HEIGHT + GAP_Y),
             width: NODE_WIDTH,
             height: NODE_HEIGHT
           });
@@ -420,13 +499,24 @@
     `;
     svg.appendChild(defs);
 
-    const filteredNodes = state.activeFilter === 'ALL'
-      ? state.hypotheses
-      : state.hypotheses.filter(h => h.status === state.activeFilter);
+    let filteredNodes = state.hypotheses;
+    if (state.activeFilter !== 'ALL') {
+      filteredNodes = filteredNodes.filter(h => h.status === state.activeFilter);
+    }
+    if (state.activeLevelFilter) {
+      filteredNodes = filteredNodes.filter(h => (h.current_evidence_level || 'E0') === state.activeLevelFilter);
+    }
 
-    if (filteredNodes.length === 0) return;
+    if (filteredNodes.length === 0 && !state.showGhosts) {
+      svg.innerHTML = `
+        <text x="50%" y="50%" text-anchor="middle" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="14">
+          [ No specimens matching filter: ${state.activeFilter}${state.activeLevelFilter ? ' / ' + state.activeLevelFilter : ''} ]
+        </text>
+      `;
+      return;
+    }
 
-    initializeLayoutIfEmpty(filteredNodes);
+    initializeLayoutIfEmpty(state.hypotheses);
 
     const gViewport = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     gViewport.setAttribute('id', 'dag-viewport');
@@ -480,10 +570,7 @@
       if (isConfirmed) statusColor = 'var(--pastel-confirmed-ink)';
       if (node.status === 'IN_PROGRESS') statusColor = 'var(--pastel-in-progress-ink)';
 
-      // Generate clean filleted Voronoi pebble path
       const pebblePath = getVoronoiPebbleGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
-
-      // Balanced Pretext-formatted multiline title
       const titleLinesSVG = formatBalancedTitleSVG(node.title, 220, 24, 48, 2);
 
       gNode.innerHTML = `
@@ -501,7 +588,6 @@
         <text x="24" y="84" fill="${statusColor}" font-family="IBM Plex Mono" font-size="9.5" font-weight="700">[ ${node.status} ]</text>
       `;
 
-      // Drag listener
       gNode.addEventListener('mousedown', (e) => {
         e.stopPropagation();
         startDraggingNode(node.id, e);
@@ -509,6 +595,30 @@
 
       gViewport.appendChild(gNode);
     });
+
+    // 3. Optional White Spot Ghost Nodes
+    if (state.showGhosts) {
+      state.gaps.slice(0, 4).forEach((gap, idx) => {
+        const ghostId = `GHOST-${idx + 1}`;
+        const ghostX = 60 + idx * (NODE_WIDTH + GAP_X);
+        const ghostY = 380;
+
+        const gGhost = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        gGhost.setAttribute('class', 'dag-node-group ghost-node');
+        gGhost.setAttribute('transform', `translate(${ghostX}, ${ghostY})`);
+
+        const pebblePath = getVoronoiPebbleGeometry(ghostId, NODE_WIDTH, NODE_HEIGHT);
+        const gapTitle = JSON.stringify(gap.combination || gap).substring(0, 32);
+
+        gGhost.innerHTML = `
+          <path class="node-plate" d="${pebblePath}" />
+          <text x="24" y="26" fill="var(--pastel-in-progress-ink)" font-family="IBM Plex Mono" font-weight="700" font-size="11">⚡ WHITE SPOT GAP</text>
+          <text x="24" y="52" fill="var(--ink-secondary)" font-family="IBM Plex Mono" font-size="10">${gapTitle}</text>
+          <text x="24" y="82" fill="var(--pastel-in-progress-ink)" font-family="IBM Plex Mono" font-size="9.5" font-weight="700">[ UNTESTED COMBINATION ]</text>
+        `;
+        gViewport.appendChild(gGhost);
+      });
+    }
 
     svg.appendChild(gViewport);
   }
@@ -599,6 +709,57 @@
   }
 
   // --------------------------------------------------------------------------
+  // Auto-Fit Canvas with Safe Inset Bounds
+  // --------------------------------------------------------------------------
+  function autoFitCanvas() {
+    if (state.hypotheses.length === 0) return;
+
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    state.nodePositions.forEach(pos => {
+      minX = Math.min(minX, pos.x);
+      maxX = Math.max(maxX, pos.x + NODE_WIDTH);
+      minY = Math.min(minY, pos.y);
+      maxY = Math.max(maxY, pos.y + NODE_HEIGHT);
+    });
+
+    const containerW = dom.canvasContainer.clientWidth || 900;
+    const containerH = dom.canvasContainer.clientHeight || 600;
+
+    const contentW = maxX - minX + 120; // 60px padding on each side
+    const contentH = maxY - minY + 120;
+
+    const scaleX = containerW / contentW;
+    const scaleY = containerH / contentH;
+    const scale = Math.max(0.35, Math.min(1.15, Math.min(scaleX, scaleY)));
+
+    state.transform.scale = scale;
+    state.transform.x = (containerW - (maxX - minX) * scale) / 2 - minX * scale;
+    state.transform.y = Math.max(40, (containerH - (maxY - minY) * scale) / 2 - minY * scale);
+
+    updateTransform();
+    renderDAG();
+  }
+
+  // --------------------------------------------------------------------------
+  // Smooth Fly-To Node Navigation
+  // --------------------------------------------------------------------------
+  function flyToNode(id) {
+    const pos = state.nodePositions.get(id);
+    if (!pos) return;
+
+    const containerW = dom.canvasContainer.clientWidth || 900;
+    const containerH = dom.canvasContainer.clientHeight || 600;
+
+    const targetX = containerW / 2 - (pos.x + NODE_WIDTH / 2) * state.transform.scale;
+    const targetY = containerH / 2 - (pos.y + NODE_HEIGHT / 2) * state.transform.scale;
+
+    state.transform.x = targetX;
+    state.transform.y = targetY;
+    updateTransform();
+    selectHypothesis(id);
+  }
+
+  // --------------------------------------------------------------------------
   // Specimen Dossier (Inspector)
   // --------------------------------------------------------------------------
   async function selectHypothesis(id) {
@@ -634,35 +795,39 @@
     // Dependencies
     if (node.parent_ids && node.parent_ids.length > 0) {
       dom.insParents.innerHTML = node.parent_ids.map(p =>
-        `<span class="dep-node-pill" onclick="window.selectHypothesis('${p}')">↑ ${p}</span>`
+        `<span class="dep-node-pill" onclick="window.flyToNode('${p}')">↑ ${p}</span>`
       ).join('');
     } else {
-      dom.insParents.innerHTML = '<span class="ink-muted">Root Hypothesis</span>';
+      dom.insParents.innerHTML = '<span class="ink-muted">Root Hypothesis (A Priori Origin)</span>';
     }
 
     // Evidence
     try {
       const res = await fetch(`/hypotheses/${id}`).then(r => r.json());
       const evidence = res.evidence || [];
-      dom.insEvidenceCount.textContent = evidence.length;
+      dom.insLedgerCount.textContent = evidence.length;
 
       if (evidence.length === 0) {
         dom.insEvidenceList.innerHTML = '<div class="empty-evidence">No empirical tests registered yet. Level: E0 (A Priori).</div>';
       } else {
-        dom.insEvidenceList.innerHTML = evidence.map(ev => `
-          <div class="evidence-card">
-            <div class="ev-header">
-              <span class="ev-source">[${ev.evidence_level}] ${ev.metric_name || 'EMP'}</span>
-              <span class="ev-status-text ${ev.falsification_triggered ? 'refuted' : ''}">
-                ${ev.falsification_triggered ? 'REFUTED' : 'PASS'}
-              </span>
+        dom.insEvidenceList.innerHTML = evidence.map(ev => {
+          const isFail = ev.falsification_triggered;
+          const verdictClass = isFail ? 'fail' : 'pass';
+          const verdictText = isFail ? 'FAIL (REFUTED)' : 'PASS';
+          return `
+            <div class="ledger-item-card">
+              <div class="ledger-row-header">
+                <span class="ledger-level-tag">[${ev.evidence_level || 'E1'}]</span>
+                <span class="ledger-metric-name">${ev.metric_name || 'EMPIRICAL'}</span>
+                <span class="ledger-verdict-badge ${verdictClass}">${verdictText}</span>
+              </div>
+              <div class="ledger-claim-prose">${ev.claim}</div>
             </div>
-            <div class="ev-claim-body">${ev.claim}</div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
     } catch (err) {
-      dom.insEvidenceList.innerHTML = '<div class="empty-evidence">Error loading evidence.</div>';
+      dom.insEvidenceList.innerHTML = '<div class="empty-evidence">Error loading empirical ledger.</div>';
     }
   }
 
@@ -724,6 +889,54 @@
   }
 
   // --------------------------------------------------------------------------
+  // Command Palette / Search Modal (⌘K)
+  // --------------------------------------------------------------------------
+  function openSearchModal() {
+    dom.searchModal.style.display = 'flex';
+    dom.cmdKInput.value = '';
+    dom.cmdKInput.focus();
+    state.searchSelectedIndex = 0;
+    renderSearchResults('');
+  }
+
+  function closeSearchModal() {
+    dom.searchModal.style.display = 'none';
+  }
+
+  function renderSearchResults(query) {
+    const q = query.trim().toLowerCase();
+    const matches = state.hypotheses.filter(h => {
+      if (!q) return true;
+      return h.id.toLowerCase().includes(q) ||
+             h.title.toLowerCase().includes(q) ||
+             h.status.toLowerCase().includes(q);
+    });
+
+    if (matches.length === 0) {
+      dom.cmdKResults.innerHTML = '<div class="empty-evidence">No matching specimens.</div>';
+      return;
+    }
+
+    dom.cmdKResults.innerHTML = matches.map((m, idx) => `
+      <div class="cmd-k-result-item ${idx === state.searchSelectedIndex ? 'selected' : ''}" data-id="${m.id}">
+        <div class="cmd-k-item-left">
+          <span class="cmd-k-item-id">${m.id} · Level ${m.current_evidence_level || 'E0'}</span>
+          <span class="cmd-k-item-title">${m.title}</span>
+        </div>
+        <span class="cmd-k-item-badge spec-badge ${m.status}">${m.status}</span>
+      </div>
+    `).join('');
+
+    dom.cmdKResults.querySelectorAll('.cmd-k-result-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const id = item.dataset.id;
+        closeSearchModal();
+        flyToNode(id);
+      });
+    });
+  }
+
+  // --------------------------------------------------------------------------
   // Tab Switching
   // --------------------------------------------------------------------------
   function switchTab(tabName) {
@@ -776,18 +989,16 @@
       updateTransform();
     });
 
-    dom.btnZoomReset.addEventListener('click', () => {
-      state.nodePositions.clear();
-      state.transform = { x: 60, y: 50, scale: 0.95 };
-      renderDAG();
-      updateTransform();
-    });
+    dom.btnZoomReset.addEventListener('click', autoFitCanvas);
   }
 
   function updateTransform() {
     const g = document.getElementById('dag-viewport');
     if (g) {
       g.setAttribute('transform', `translate(${state.transform.x}, ${state.transform.y}) scale(${state.transform.scale})`);
+    }
+    if (dom.zoomLevelText) {
+      dom.zoomLevelText.textContent = `${Math.round(state.transform.scale * 100)}%`;
     }
   }
 
@@ -801,26 +1012,118 @@
 
     dom.btnThemeToggle.addEventListener('click', toggleTheme);
 
-    dom.tabButtons.forEach(btn => {
-      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-    });
-
-    dom.filterButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        dom.filterButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.activeFilter = btn.dataset.status;
+    // KPI Cell Click Filters
+    dom.kpiCells.forEach(cell => {
+      cell.addEventListener('click', () => {
+        state.activeFilter = cell.dataset.filter;
+        state.activeLevelFilter = null;
+        dom.filterButtons.forEach(b => {
+          b.classList.toggle('active', b.dataset.status === state.activeFilter);
+        });
+        updateKPISummary();
         renderDAG();
       });
     });
 
+    // Canvas Filter Buttons
+    dom.filterButtons.forEach(btn => {
+      if (btn.id === 'btn-toggle-ghosts') return;
+      btn.addEventListener('click', () => {
+        dom.filterButtons.forEach(b => {
+          if (b.id !== 'btn-toggle-ghosts') b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        state.activeFilter = btn.dataset.status;
+        state.activeLevelFilter = null;
+        updateKPISummary();
+        renderDAG();
+      });
+    });
+
+    // White Spot Ghost Toggle
+    if (dom.btnToggleGhosts) {
+      dom.btnToggleGhosts.addEventListener('click', () => {
+        state.showGhosts = !state.showGhosts;
+        dom.btnToggleGhosts.classList.toggle('active', state.showGhosts);
+        renderDAG();
+      });
+    }
+
+    // Tab buttons
+    dom.tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    // Dossier Actions
+    if (dom.btnCopyId) {
+      dom.btnCopyId.addEventListener('click', () => {
+        if (state.selectedHypothesisId) {
+          navigator.clipboard.writeText(state.selectedHypothesisId);
+          dom.btnCopyId.textContent = 'COPIED!';
+          setTimeout(() => { dom.btnCopyId.textContent = '📋 COPY ID'; }, 1500);
+        }
+      });
+    }
+
+    if (dom.btnFocusNode) {
+      dom.btnFocusNode.addEventListener('click', () => {
+        if (state.selectedHypothesisId) {
+          flyToNode(state.selectedHypothesisId);
+        }
+      });
+    }
+
+    if (dom.btnFilterTraces) {
+      dom.btnFilterTraces.addEventListener('click', () => {
+        if (state.selectedHypothesisId) {
+          switchTab('traces');
+          dom.tracesSearch.value = state.selectedHypothesisId;
+          renderTraces();
+        }
+      });
+    }
+
     dom.btnRefresh.addEventListener('click', fetchAllData);
     dom.tracesSearch.addEventListener('input', renderTraces);
 
-    window.selectHypothesis = selectHypothesis;
+    // Command Palette Events
+    if (dom.btnOpenSearch) {
+      dom.btnOpenSearch.addEventListener('click', openSearchModal);
+    }
+    if (dom.cmdKInput) {
+      dom.cmdKInput.addEventListener('input', (e) => {
+        state.searchSelectedIndex = 0;
+        renderSearchResults(e.target.value);
+      });
+    }
+    if (dom.searchModal) {
+      dom.searchModal.addEventListener('click', (e) => {
+        if (e.target === dom.searchModal) closeSearchModal();
+      });
+    }
 
-    fetchAllData();
-    state.pollingInterval = setInterval(fetchAllData, 2500);
+    // Global Keybindings (⌘K, Escape)
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        if (dom.searchModal.style.display === 'none' || !dom.searchModal.style.display) {
+          openSearchModal();
+        } else {
+          closeSearchModal();
+        }
+      } else if (e.key === 'Escape') {
+        closeSearchModal();
+      }
+    });
+
+    window.selectHypothesis = selectHypothesis;
+    window.flyToNode = flyToNode;
+
+    fetchAllData().then(() => {
+      autoFitCanvas();
+    });
+
+    setInterval(fetchAllData, 3000);
   }
 
   if (document.readyState === 'loading') {

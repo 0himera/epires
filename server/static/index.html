@@ -14,57 +14,83 @@
   <canvas id="noise-canvas" class="noise-overlay" aria-hidden="true"></canvas>
 
   <div class="print-container">
-    <!-- Top Editorial Header: Minimalist, Airy & 100% Dynamic -->
+    <!-- Top Editorial Header: 3-Zone Balanced Architecture -->
     <header class="print-header">
+      <!-- Zone 1 (Left): Project Title & Semantic Breadcrumbs -->
       <div class="header-left">
         <h1 class="editorial-headline" id="hdr-project-domain">
           <!-- Dynamically populated from config.domain -->
         </h1>
-        <div class="header-sub-meta">
-          <span class="meta-tag" id="project-name"></span>
-          <span class="meta-sep" id="sep-metric" style="display: none;">/</span>
-          <span class="meta-tag" id="project-metric"></span>
-          <span class="meta-sep" id="sep-task" style="display: none;">/</span>
+        <div class="header-sub-meta" id="header-crumbs-row">
+          <span class="meta-tag crumb-link" id="project-name">socomputing</span>
+          <span class="meta-dot">·</span>
+          <span class="meta-tag" id="project-metric">Recall@10 (maximize)</span>
+          <span class="meta-dot" id="dot-task" style="display: none;">·</span>
           <span class="meta-tag meta-desc" id="hdr-task-desc"></span>
         </div>
       </div>
 
+      <!-- Zone 2 (Center): Project Passport Capsule (Fills Composition Vacuum) -->
+      <div class="header-center-passport">
+        <div class="passport-card">
+          <div class="pass-row">
+            <span class="pass-lbl">OBJECTIVE</span>
+            <span class="pass-val" id="pass-objective">Maximize Recall@10 & Task Acc</span>
+          </div>
+          <div class="pass-row">
+            <span class="pass-lbl">REGIME</span>
+            <span class="pass-val pass-highlight" id="pass-regime">Empirical Validation (E0 → E1)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone 3 (Right): Status Cluster & Controls -->
       <div class="header-right">
+        <button class="cmd-k-btn" id="btn-open-search" title="Search Specimens (⌘K / Ctrl+K)">
+          <span class="cmd-k-hint">SEARCH</span>
+          <kbd class="kbd-pill">⌘K</kbd>
+        </button>
+
         <button class="theme-toggle-btn" id="btn-theme-toggle" title="Toggle Paper / Noir theme">
           <span id="theme-label">PAPER</span>
         </button>
-        <button class="editorial-action-btn" id="btn-refresh">
-          <span>SYNC</span>
+
+        <button class="sync-action-btn" id="btn-refresh" title="Sync live state from SQLite">
+          <span class="sync-dot" id="sync-status-dot"></span>
+          <span id="sync-status-text">SYNC LIVE</span>
         </button>
       </div>
     </header>
 
-    <!-- Minimalist Tabular KPI Ribbon -->
+    <!-- Minimalist Tabular KPI Ribbon (Strict 1-Line Labels & Interactive Filters) -->
     <section class="kpi-strip">
-      <div class="kpi-cell" data-filter="ALL">
+      <div class="kpi-cell active-filter" data-filter="ALL" id="kpi-cell-all" title="Filter: Show all specimens">
         <span class="kpi-lbl">TOTAL SPECIMENS</span>
         <span class="kpi-num" id="kpi-total">--</span>
       </div>
 
-      <div class="kpi-cell" data-filter="IN_PROGRESS">
+      <div class="kpi-cell" data-filter="IN_PROGRESS" id="kpi-cell-in-progress" title="Filter: Show in progress specimens">
         <span class="kpi-lbl">IN PROGRESS</span>
         <span class="kpi-num in-progress-num" id="kpi-in-progress">--</span>
       </div>
 
-      <div class="kpi-cell" data-filter="FALSIFIED">
-        <span class="kpi-lbl">FALSIFIED (REFUTED)</span>
+      <div class="kpi-cell" data-filter="FALSIFIED" id="kpi-cell-falsified" title="Filter: Show falsified / refuted specimens">
+        <span class="kpi-lbl">FALSIFIED</span>
         <span class="kpi-num falsified-num" id="kpi-falsified">--</span>
       </div>
 
-      <div class="kpi-cell" data-filter="CONFIRMED">
+      <div class="kpi-cell" data-filter="CONFIRMED" id="kpi-cell-confirmed" title="Filter: Show confirmed specimens">
         <span class="kpi-lbl">CONFIRMED</span>
         <span class="kpi-num confirmed-num" id="kpi-confirmed">--</span>
       </div>
 
       <div class="kpi-cell kpi-spectrum-cell">
-        <span class="kpi-lbl">EVIDENCE MATURITY LADDER</span>
+        <div class="ladder-header-row">
+          <span class="kpi-lbl">EVIDENCE MATURITY (POPPER LADDER)</span>
+          <span class="ladder-hint" id="ladder-active-hint">E0: A Priori</span>
+        </div>
         <div class="spectrum-pills" id="evidence-spectrum">
-          <!-- Dynamically populated from hypothesis levels -->
+          <!-- Dynamically populated from hypothesis levels with Popper tooltips -->
         </div>
       </div>
     </section>
@@ -79,11 +105,13 @@
             <button class="f-pill" data-status="IN_PROGRESS">IN PROGRESS</button>
             <button class="f-pill f-pill-falsified" data-status="FALSIFIED">FALSIFIED</button>
             <button class="f-pill f-pill-confirmed" data-status="CONFIRMED">CONFIRMED</button>
+            <button class="f-pill f-pill-ghost" id="btn-toggle-ghosts" data-status="GHOSTS" title="Toggle White Spot Ghost Nodes on Graph">WHITE SPOTS</button>
           </div>
 
           <div class="canvas-tools">
-            <button class="tool-btn" id="btn-zoom-in" title="Zoom in">+</button>
             <button class="tool-btn" id="btn-zoom-out" title="Zoom out">−</button>
+            <span class="zoom-level-text" id="zoom-level-text">95%</span>
+            <button class="tool-btn" id="btn-zoom-in" title="Zoom in">+</button>
             <button class="tool-btn-text" id="btn-zoom-reset">AUTO-FIT</button>
           </div>
         </div>
@@ -97,8 +125,8 @@
       <aside class="monograph-section">
         <div class="monograph-tabs">
           <button class="m-tab active" data-tab="inspector">DOSSIER</button>
-          <button class="m-tab" data-tab="traces">TRACES</button>
-          <button class="m-tab" data-tab="gaps">WHITE SPOTS</button>
+          <button class="m-tab" data-tab="traces">TRACES <span class="tab-count-badge" id="tab-badge-traces">0</span></button>
+          <button class="m-tab" data-tab="gaps">WHITE SPOTS <span class="tab-count-badge" id="tab-badge-gaps">0</span></button>
         </div>
 
         <!-- Tab 1: Specimen Dossier -->
@@ -108,11 +136,18 @@
               <div class="inner-sq"></div>
             </div>
             <h3 class="empty-heading">NO SPECIMEN SELECTED</h3>
-            <p class="empty-desc">Select any hypothesis facet on the topological canvas to inspect its theoretical mechanism and empirical falsification criteria.</p>
+            <p class="empty-desc">Select any hypothesis facet on the topological canvas to inspect its theoretical mechanism, Popperian boundary, and evidence ledger.</p>
           </div>
 
           <div id="inspector-body" class="dossier-filled" style="display: none;">
+            <!-- Specimen Header & Quick Action Bar -->
             <div class="specimen-card-top">
+              <div class="spec-action-bar">
+                <button class="spec-action-btn" id="btn-copy-id" title="Copy ID to clipboard">📋 COPY ID</button>
+                <button class="spec-action-btn" id="btn-focus-node" title="Center on graph">🎯 FOCUS</button>
+                <button class="spec-action-btn" id="btn-filter-traces" title="View in Traces">⚡ TRACES</button>
+              </div>
+
               <div class="spec-meta-row">
                 <span class="spec-id" id="ins-id"></span>
                 <span class="spec-badge" id="ins-status"></span>
@@ -121,26 +156,37 @@
               <h2 class="spec-title-text" id="ins-title"></h2>
             </div>
 
-            <!-- Monograph Sections -->
-            <div class="dossier-block">
+            <!-- Sticky Mini Anchor Navigation -->
+            <div class="dossier-nav-anchors">
+              <a href="#sec-mechanism" class="anchor-pill">§1 MECH</a>
+              <a href="#sec-falsification" class="anchor-pill">§2 BOUNDARY</a>
+              <a href="#sec-parents" class="anchor-pill">§3 DAG</a>
+              <a href="#sec-ledger" class="anchor-pill">§4 LEDGER (<span id="ins-ledger-count">0</span>)</a>
+            </div>
+
+            <!-- Monograph Section §1 -->
+            <div class="dossier-block" id="sec-mechanism">
               <span class="block-lbl">§ 1.0 THEORETICAL MECHANISM</span>
               <div class="block-prose" id="ins-mechanism"></div>
             </div>
 
-            <div class="dossier-block falsification-block">
+            <!-- Monograph Section §2 -->
+            <div class="dossier-block falsification-block" id="sec-falsification">
               <span class="block-lbl">§ 2.0 POPPERIAN FALSIFICATION BOUNDARY</span>
               <div class="block-prose falsification-prose" id="ins-falsification"></div>
             </div>
 
-            <div class="dossier-block">
+            <!-- Monograph Section §3 -->
+            <div class="dossier-block" id="sec-parents">
               <span class="block-lbl">§ 3.0 DAG ANTECEDENTS</span>
               <div class="dep-pill-row" id="ins-parents"></div>
             </div>
 
-            <div class="dossier-block">
-              <span class="block-lbl">§ 4.0 EMPIRICAL EVIDENCE LEDGER (<span id="ins-evidence-count">0</span>)</span>
-              <div class="evidence-list" id="ins-evidence-list">
-                <div class="empty-evidence">No empirical tests registered yet. Level: E0 (A Priori).</div>
+            <!-- Monograph Section §4: Structured Empirical Evidence Ledger -->
+            <div class="dossier-block" id="sec-ledger">
+              <span class="block-lbl">§ 4.0 EMPIRICAL EVIDENCE LEDGER</span>
+              <div class="evidence-ledger-container" id="ins-evidence-list">
+                <!-- Dynamically populated table/cards -->
               </div>
             </div>
           </div>
@@ -164,6 +210,20 @@
           <div class="gaps-list" id="gaps-matrix-container"></div>
         </div>
       </aside>
+    </div>
+  </div>
+
+  <!-- Command Palette / Search Modal (⌘K) -->
+  <div class="cmd-k-modal-overlay" id="search-modal" style="display: none;">
+    <div class="cmd-k-modal-panel">
+      <div class="cmd-k-input-row">
+        <span class="cmd-k-search-icon">🔍</span>
+        <input type="text" id="cmd-k-input" class="cmd-k-field" placeholder="Search specimens by ID, title, or status..." autocomplete="off">
+        <kbd class="kbd-pill">ESC</kbd>
+      </div>
+      <div class="cmd-k-results-list" id="cmd-k-results">
+        <!-- Dynamically populated search items -->
+      </div>
     </div>
   </div>
 
