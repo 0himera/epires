@@ -1,6 +1,6 @@
 /**
  * EPIRES HYPERGRAPH ENGINE // CLIENT CONTROLLER
- * Archival Paper Theme with Procedural Voronoi / Isogrid Crystallographic Facet Geometry
+ * Archival Paper Theme with Procedural Filleted Voronoi Pebble Facets & Organic Isogrid Layout
  */
 
 (function () {
@@ -16,7 +16,7 @@
     activeFilter: 'ALL',
     activeTab: 'inspector',
     theme: localStorage.getItem('epires_theme') || 'paper',
-    transform: { x: 50, y: 50, scale: 0.95 },
+    transform: { x: 60, y: 50, scale: 0.95 },
     isDraggingCanvas: false,
     dragStart: { x: 0, y: 0 },
     nodePositions: new Map(), // { id: { x, y, width, height } }
@@ -26,11 +26,11 @@
     pollingInterval: null
   };
 
-  // Dimensions for Voronoi / Isogrid Facet Cards
-  const NODE_WIDTH = 296;
-  const NODE_HEIGHT = 88;
-  const GAP_X = 60;
-  const GAP_Y = 100;
+  // Dimensions for Organic Voronoi Pebble Facets
+  const NODE_WIDTH = 260;
+  const NODE_HEIGHT = 92;
+  const GAP_X = 52;
+  const GAP_Y = 90;
 
   // DOM Elements
   const dom = {
@@ -75,49 +75,96 @@
   };
 
   // --------------------------------------------------------------------------
-  // Procedural Voronoi / Isogrid Crystallographic Geometry Generator
+  // Mathematical Smooth Filleted Polygon Path Generator (Continuous Curvature)
   // --------------------------------------------------------------------------
-  function getVoronoiCellGeometry(id, w = 296, h = 88) {
+  function createFilletedPolygonPath(rawPoints, radius = 16) {
+    const n = rawPoints.length;
+    if (n < 3) return '';
+
+    let path = '';
+    for (let i = 0; i < n; i++) {
+      const prev = rawPoints[(i - 1 + n) % n];
+      const curr = rawPoints[i];
+      const next = rawPoints[(i + 1) % n];
+
+      const dx1 = prev[0] - curr[0];
+      const dy1 = prev[1] - curr[1];
+      const len1 = Math.hypot(dx1, dy1) || 1;
+
+      const dx2 = next[0] - curr[0];
+      const dy2 = next[1] - curr[1];
+      const len2 = Math.hypot(dx2, dy2) || 1;
+
+      const r = Math.min(radius, len1 / 2.3, len2 / 2.3);
+
+      const startX = curr[0] + (dx1 / len1) * r;
+      const startY = curr[1] + (dy1 / len1) * r;
+
+      const endX = curr[0] + (dx2 / len2) * r;
+      const endY = curr[1] + (dy2 / len2) * r;
+
+      if (i === 0) {
+        path += `M ${startX.toFixed(1)} ${startY.toFixed(1)} `;
+      } else {
+        path += `L ${startX.toFixed(1)} ${startY.toFixed(1)} `;
+      }
+
+      path += `Q ${curr[0].toFixed(1)} ${curr[1].toFixed(1)} ${endX.toFixed(1)} ${endY.toFixed(1)} `;
+    }
+
+    path += 'Z';
+    return path;
+  }
+
+  // --------------------------------------------------------------------------
+  // Procedural Organic Voronoi Pebble Geometry (6 Interlocking Facet Profiles)
+  // --------------------------------------------------------------------------
+  function getVoronoiPebbleGeometry(id, w = 260, h = 92) {
     let hash = 0;
     for (let i = 0; i < id.length; i++) {
       hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
     }
     const variant = hash % 6;
 
-    // 6 compatible crystallographic Voronoi & Isogrid facet archetypes
+    let rawOuter, rawInner;
+
     switch (variant) {
-      case 0: // Beveled heptagonal isogrid cell (top-left & bottom-right chamfer)
-        return {
-          points: `20,0 ${w - 14},0 ${w},14 ${w},${h - 22} ${w - 22},${h} 14,${h} 0,${h - 14} 0,20`,
-          insetPoints: `22,4 ${w - 16},4 ${w - 4},16 ${w - 4},${h - 24} ${w - 24},${h - 4} 16,${h - 4} 4,${h - 16} 4,22`
-        };
-      case 1: // Angled Voronoi facet (asymmetric 30-deg cut on left wing)
-        return {
-          points: `0,34 26,0 ${w - 18},0 ${w},18 ${w},${h} 26,${h} 0,${h - 26}`,
-          insetPoints: `4,34 28,4 ${w - 20},4 ${w - 4},20 ${w - 4},${h - 4} 28,${h - 4} 4,${h - 28}`
-        };
-      case 2: // Dual-chamfered isogrid diamond facet
-        return {
-          points: `16,0 ${w - 26},0 ${w},26 ${w},${h - 16} ${w - 16},${h} 26,${h} 0,${h - 26} 0,16`,
-          insetPoints: `18,4 ${w - 28},4 ${w - 4},28 ${w - 4},${h - 18} ${w - 18},${h - 4} 28,${h - 4} 4,${h - 28} 4,18`
-        };
-      case 3: // Slanted crystallographic rhombus-hex
-        return {
-          points: `22,0 ${w},0 ${w - 22},${h} 0,${h}`,
-          insetPoints: `24,4 ${w - 6},4 ${w - 24},${h - 4} 6,${h - 4}`
-        };
-      case 4: // Stepped Voronoi cell with cut top-right shelf
-        return {
-          points: `16,0 ${w - 32},0 ${w},32 ${w},${h} 16,${h} 0,${h - 16} 0,16`,
-          insetPoints: `18,4 ${w - 34},4 ${w - 4},34 ${w - 4},${h - 4} 18,${h - 4} 4,${h - 18} 4,18`
-        };
-      case 5: // Asymmetric pentagonal isogrid facet
+      case 0: // Smooth Pebble Hexagon
+        rawOuter = [[28, 0], [w - 28, 0], [w, h * 0.48], [w - 24, h], [24, h], [0, h * 0.52]];
+        rawInner = [[30, 4], [w - 30, 4], [w - 4, h * 0.48], [w - 26, h - 4], [26, h - 4], [4, h * 0.52]];
+        break;
+
+      case 1: // Organic Facet with Asymmetric Shoulder
+        rawOuter = [[18, 0], [w - 36, 0], [w, h * 0.38], [w - 18, h], [32, h], [0, h * 0.65]];
+        rawInner = [[22, 4], [w - 38, 4], [w - 4, h * 0.38], [w - 20, h - 4], [34, h - 4], [4, h * 0.65]];
+        break;
+
+      case 2: // Elongated Voronoi Capsule-Diamond
+        rawOuter = [[34, 0], [w - 18, 0], [w, h * 0.6], [w - 32, h], [16, h], [0, h * 0.4]];
+        rawInner = [[36, 4], [w - 20, 4], [w - 4, h * 0.6], [w - 34, h - 4], [18, h - 4], [4, h * 0.4]];
+        break;
+
+      case 3: // Slanted Crystallographic Pebble
+        rawOuter = [[30, 0], [w, 0], [w - 16, h * 0.5], [w - 30, h], [0, h], [16, h * 0.5]];
+        rawInner = [[32, 4], [w - 4, 4], [w - 18, h * 0.5], [w - 32, h - 4], [4, h - 4], [18, h * 0.5]];
+        break;
+
+      case 4: // Soft Rounded Pentagonal Lobe
+        rawOuter = [[20, 0], [w - 20, 0], [w, h * 0.55], [w - 26, h], [12, h], [0, h * 0.45]];
+        rawInner = [[22, 4], [w - 22, 4], [w - 4, h * 0.55], [w - 28, h - 4], [14, h - 4], [4, h * 0.45]];
+        break;
+
+      case 5: // Curved Isogrid Facet
       default:
-        return {
-          points: `0,20 20,0 ${w},0 ${w - 16},${h} 16,${h} 0,${h - 20}`,
-          insetPoints: `4,22 22,4 ${w - 6},4 ${w - 18},${h - 4} 18,${h - 4} 4,${h - 22}`
-        };
+        rawOuter = [[14, 0], [w - 30, 0], [w, h * 0.45], [w - 16, h], [24, h], [0, h * 0.55]];
+        rawInner = [[16, 4], [w - 32, 4], [w - 4, h * 0.45], [w - 18, h - 4], [26, h - 4], [4, h * 0.55]];
+        break;
     }
+
+    return {
+      pathOuter: createFilletedPolygonPath(rawOuter, 16),
+      pathInner: createFilletedPolygonPath(rawInner, 12)
+    };
   }
 
   // --------------------------------------------------------------------------
@@ -278,7 +325,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Topological DAG Layout
+  // Organic Isogrid Topological Layout Algorithm
   // --------------------------------------------------------------------------
   function initializeLayoutIfEmpty(nodes) {
     const nodeMap = new Map();
@@ -311,7 +358,9 @@
 
     layers.forEach((layerNodes, layerIdx) => {
       const totalWidth = layerNodes.length * NODE_WIDTH + (layerNodes.length - 1) * GAP_X;
-      const startX = Math.max(40, 600 - totalWidth / 2);
+      // Stagger alternating rows slightly for interlocking crystallographic isogrid effect
+      const staggerX = (layerIdx % 2 === 1) ? 28 : 0;
+      const startX = Math.max(40, 560 - totalWidth / 2) + staggerX;
 
       layerNodes.forEach((node, nodeIdx) => {
         if (!state.nodePositions.has(node.id)) {
@@ -327,7 +376,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // SVG Voronoi & Isogrid Facet DAG Rendering
+  // SVG Organic Voronoi Pebble DAG Rendering
   // --------------------------------------------------------------------------
   function renderDAG() {
     const svg = dom.svg;
@@ -385,7 +434,7 @@
       });
     });
 
-    // 2. Voronoi / Isogrid Facet Nodes
+    // 2. Smooth Filleted Voronoi Pebble Nodes
     filteredNodes.forEach(node => {
       const pos = state.nodePositions.get(node.id);
       if (!pos) return;
@@ -400,32 +449,32 @@
       gNode.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
       gNode.dataset.id = node.id;
 
-      const truncatedTitle = node.title.length > 36 ? node.title.substring(0, 34) + '…' : node.title;
+      const truncatedTitle = node.title.length > 34 ? node.title.substring(0, 32) + '…' : node.title;
 
       let statusColor = 'var(--ink-secondary)';
       if (isFalsified) statusColor = 'var(--pastel-falsified-ink)';
       if (isConfirmed) statusColor = 'var(--pastel-confirmed-ink)';
       if (node.status === 'IN_PROGRESS') statusColor = 'var(--pastel-in-progress-ink)';
 
-      // Generate unique Voronoi/Isogrid polygon geometry for this node
-      const geom = getVoronoiCellGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
+      // Generate unique filleted Voronoi pebble path
+      const geom = getVoronoiPebbleGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
 
       gNode.innerHTML = `
-        <!-- Outer Voronoi Crystallographic Facet Plate -->
-        <polygon class="node-plate" points="${geom.points}" />
+        <!-- Outer Filleted Voronoi Pebble Plate -->
+        <path class="node-plate" d="${geom.pathOuter}" />
 
-        <!-- Inner Isogrid Contour Wireframe -->
-        <polygon class="node-inset" points="${geom.insetPoints}" />
+        <!-- Inner Crystallographic Contour -->
+        <path class="node-inset" d="${geom.pathInner}" />
 
         <!-- Header: ID + Level -->
-        <text x="24" y="25" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="13">${node.id}</text>
-        <text x="${NODE_WIDTH - 24}" y="25" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="10" font-weight="600" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
+        <text x="24" y="26" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="13">${node.id}</text>
+        <text x="${NODE_WIDTH - 24}" y="26" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="10" font-weight="600" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
 
         <!-- Clean Title -->
-        <text x="24" y="52" fill="var(--ink-primary)" font-family="Inter" font-size="12.5" font-weight="500">${truncatedTitle}</text>
+        <text x="24" y="53" fill="var(--ink-primary)" font-family="Inter" font-size="12.5" font-weight="500">${truncatedTitle}</text>
 
         <!-- Status Tag -->
-        <text x="24" y="73" fill="${statusColor}" font-family="IBM Plex Mono" font-size="10" font-weight="700">[ ${node.status} ]</text>
+        <text x="24" y="75" fill="${statusColor}" font-family="IBM Plex Mono" font-size="10" font-weight="700">[ ${node.status} ]</text>
       `;
 
       // Drag listener
@@ -705,7 +754,7 @@
 
     dom.btnZoomReset.addEventListener('click', () => {
       state.nodePositions.clear();
-      state.transform = { x: 50, y: 50, scale: 0.95 };
+      state.transform = { x: 60, y: 50, scale: 0.95 };
       renderDAG();
       updateTransform();
     });
