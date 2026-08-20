@@ -14,7 +14,7 @@
   <canvas id="noise-canvas" class="noise-overlay" aria-hidden="true"></canvas>
 
   <div class="print-container">
-    <!-- Top Editorial Header: 3-Zone Balanced Architecture -->
+    <!-- Top Editorial Header: 3-Zone Balanced Architecture (100% Dynamic) -->
     <header class="print-header">
       <!-- Zone 1 (Left): Project Title & Semantic Breadcrumbs -->
       <div class="header-left">
@@ -22,24 +22,24 @@
           <!-- Dynamically populated from config.domain -->
         </h1>
         <div class="header-sub-meta" id="header-crumbs-row">
-          <span class="meta-tag crumb-link" id="project-name">socomputing</span>
-          <span class="meta-dot">·</span>
-          <span class="meta-tag" id="project-metric">Recall@10 (maximize)</span>
+          <span class="meta-tag crumb-link" id="project-name"></span>
+          <span class="meta-dot" id="dot-metric" style="display: none;">·</span>
+          <span class="meta-tag" id="project-metric" style="display: none;"></span>
           <span class="meta-dot" id="dot-task" style="display: none;">·</span>
-          <span class="meta-tag meta-desc" id="hdr-task-desc"></span>
+          <span class="meta-tag meta-desc" id="hdr-task-desc" style="display: none;"></span>
         </div>
       </div>
 
-      <!-- Zone 2 (Center): Project Passport Capsule (Fills Composition Vacuum) -->
+      <!-- Zone 2 (Center): Project Passport Capsule (100% Dynamic) -->
       <div class="header-center-passport">
         <div class="passport-card">
           <div class="pass-row">
             <span class="pass-lbl">OBJECTIVE</span>
-            <span class="pass-val" id="pass-objective">Maximize Recall@10 & Task Acc</span>
+            <span class="pass-val" id="pass-objective">--</span>
           </div>
           <div class="pass-row">
             <span class="pass-lbl">REGIME</span>
-            <span class="pass-val pass-highlight" id="pass-regime">Empirical Validation (E0 → E1)</span>
+            <span class="pass-val pass-highlight" id="pass-regime">--</span>
           </div>
         </div>
       </div>
@@ -87,7 +87,7 @@
       <div class="kpi-cell kpi-spectrum-cell">
         <div class="ladder-header-row">
           <span class="kpi-lbl">EVIDENCE MATURITY (POPPER LADDER)</span>
-          <span class="ladder-hint" id="ladder-active-hint">E0: A Priori</span>
+          <span class="ladder-hint" id="ladder-active-hint">Hover to inspect Popperian criteria</span>
         </div>
         <div class="spectrum-pills" id="evidence-spectrum">
           <!-- Dynamically populated from hypothesis levels with Popper tooltips -->

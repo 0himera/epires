@@ -52,6 +52,7 @@
     noiseCanvas: document.getElementById('noise-canvas'),
     projectName: document.getElementById('project-name'),
     projectMetric: document.getElementById('project-metric'),
+    dotMetric: document.getElementById('dot-metric'),
     hdrTaskDesc: document.getElementById('hdr-task-desc'),
     dotTask: document.getElementById('dot-task'),
     hdrProjectDomain: document.getElementById('hdr-project-domain'),
@@ -326,40 +327,55 @@
   }
 
   function bindDynamicConfig() {
-    const conf = state.config;
+    const conf = state.config || {};
 
-    // 1. Zone 1: Domain & Breadcrumbs
+    // 1. Zone 1: Domain & Breadcrumbs (100% Dynamic)
     if (dom.hdrProjectDomain) {
-      dom.hdrProjectDomain.textContent = conf.domain || 'Autonomous Research & Hypothesis Governance';
+      dom.hdrProjectDomain.textContent = conf.domain || 'Autonomous Empirical Research & Hypothesis Governance';
     }
 
     if (dom.projectName) {
-      dom.projectName.textContent = conf.project_name || 'research_project';
+      if (conf.project_name) {
+        dom.projectName.textContent = conf.project_name;
+        dom.projectName.style.display = 'inline';
+      } else {
+        dom.projectName.style.display = 'none';
+      }
     }
 
     if (dom.projectMetric) {
       if (conf.primary_metric) {
         const goal = conf.metric_goal ? ` (${conf.metric_goal})` : '';
         dom.projectMetric.textContent = `${conf.primary_metric}${goal}`;
+        dom.projectMetric.style.display = 'inline';
+        if (dom.dotMetric) dom.dotMetric.style.display = conf.project_name ? 'inline' : 'none';
       } else {
-        dom.projectMetric.textContent = 'Metric Formulation';
+        dom.projectMetric.style.display = 'none';
+        if (dom.dotMetric) dom.dotMetric.style.display = 'none';
       }
     }
 
     if (dom.hdrTaskDesc) {
       if (conf.task_description) {
         dom.hdrTaskDesc.textContent = conf.task_description;
-        if (dom.dotTask) dom.dotTask.style.display = 'inline';
+        dom.hdrTaskDesc.style.display = 'inline';
+        if (dom.dotTask) dom.dotTask.style.display = (conf.project_name || conf.primary_metric) ? 'inline' : 'none';
       } else {
-        dom.hdrTaskDesc.textContent = '';
+        dom.hdrTaskDesc.style.display = 'none';
         if (dom.dotTask) dom.dotTask.style.display = 'none';
       }
     }
 
-    // 2. Zone 2: Project Passport Capsule
+    // 2. Zone 2: Project Passport Capsule (100% Dynamic)
     if (dom.passObjective) {
-      const metricText = conf.primary_metric ? `${conf.metric_goal ? conf.metric_goal.toUpperCase() + ' ' : ''}${conf.primary_metric}` : 'HYPOTHESIS GOVERNANCE';
-      dom.passObjective.textContent = metricText;
+      if (conf.primary_metric) {
+        const goal = conf.metric_goal ? `${conf.metric_goal.toUpperCase()} ` : '';
+        dom.passObjective.textContent = `${goal}${conf.primary_metric}`;
+      } else if (conf.task_description) {
+        dom.passObjective.textContent = conf.task_description;
+      } else {
+        dom.passObjective.textContent = 'Hypothesis Exploration & Validation';
+      }
     }
 
     if (dom.passRegime) {
@@ -367,7 +383,7 @@
         const lvlNum = parseInt((h.current_evidence_level || 'E0').replace('E', ''), 10) || 0;
         return Math.max(max, lvlNum);
       }, 0);
-      dom.passRegime.textContent = `Empirical Validation (E${maxLvl} → E${maxLvl + 1})`;
+      dom.passRegime.textContent = `Popperian Tier E${maxLvl} → E${Math.min(5, maxLvl + 1)}`;
     }
   }
 
@@ -725,7 +741,7 @@
     const containerW = dom.canvasContainer.clientWidth || 900;
     const containerH = dom.canvasContainer.clientHeight || 600;
 
-    const contentW = maxX - minX + 120; // 60px padding on each side
+    const contentW = maxX - minX + 120;
     const contentH = maxY - minY + 120;
 
     const scaleX = containerW / contentW;
