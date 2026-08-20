@@ -14,53 +14,60 @@
   <canvas id="noise-canvas" class="noise-overlay" aria-hidden="true"></canvas>
 
   <div class="print-container">
-    <!-- Top Editorial Header: 3-Zone Balanced Architecture -->
+    <!-- Compact technical-report masthead -->
     <header class="print-header">
       <!-- Zone 1 (Left): Project Domain & Clean Semantic Breadcrumbs -->
       <div class="header-left">
+        <div class="header-eyebrow">
+          EPIRES / RESEARCH ATLAS<span class="header-project-name" id="project-name"></span>
+        </div>
         <h1 class="editorial-headline" id="hdr-project-domain">
           <!-- Dynamically populated from config.domain -->
         </h1>
         <div class="header-sub-meta" id="header-crumbs-row">
-          <span class="meta-tag crumb-link" id="project-name"></span>
-          <span class="meta-dot" id="dot-metric" style="display: none;">·</span>
           <span class="meta-tag" id="project-metric" style="display: none;"></span>
           <span class="meta-dot" id="dot-task" style="display: none;">·</span>
           <span class="meta-tag meta-desc" id="hdr-task-desc" style="display: none;"></span>
         </div>
       </div>
 
-      <!-- Zone 2 (Center): Clean Project Target & Phase Panel -->
-      <div class="header-center-passport">
-        <div class="pass-metric-block">
-          <span class="pass-lbl">TARGET GOAL</span>
-          <span class="pass-val" id="pass-objective">--</span>
-        </div>
-        <div class="pass-divider"></div>
-        <div class="pass-metric-block">
-          <span class="pass-lbl">RESEARCH PHASE</span>
-          <span class="pass-val pass-highlight" id="pass-regime">--</span>
-        </div>
+      <!-- Zone 2: a quiet, non-interactive registration glyph for the research flow. -->
+      <div class="header-research-flow" aria-hidden="true">
+        <svg class="research-flow-glyph" viewBox="0 0 152 30" focusable="false">
+          <path class="flow-path flow-path-primary" d="M10 15H47L63 7H95L111 15H142" />
+          <path class="flow-signal" d="M10 15H47L63 7H95L111 15H142" />
+          <path class="flow-path flow-path-secondary" d="M47 15L63 23H95L111 15" />
+          <circle class="flow-node flow-node-source" cx="10" cy="15" r="3" />
+          <circle class="flow-node" cx="47" cy="15" r="3" />
+          <circle class="flow-node flow-node-active" cx="63" cy="7" r="3" />
+          <circle class="flow-node" cx="95" cy="7" r="3" />
+          <circle class="flow-node" cx="111" cy="15" r="3" />
+          <circle class="flow-node flow-node-result" cx="142" cy="15" r="3" />
+        </svg>
+        <span class="research-flow-label">AUTONOMOUS RESEARCH FLOW</span>
       </div>
 
-      <!-- Zone 3 (Right): Unified Height Status Cluster & Controls -->
+      <!-- Zone 3: record controls and a JS-bindable live-state placeholder. -->
       <div class="header-right">
-        <button class="hdr-ctrl-btn cmd-k-btn" id="btn-open-search" title="Search Specimens (⌘K / Ctrl+K)">
-          <span class="cmd-k-hint">SEARCH</span>
-          <kbd class="kbd-pill">⌘K</kbd>
-        </button>
-
-        <button class="hdr-ctrl-btn theme-toggle-btn" id="btn-theme-toggle" title="Toggle Paper / Noir theme">
-          <span id="theme-label">PAPER</span>
-        </button>
-
-        <div class="sync-cluster">
-          <button class="hdr-ctrl-btn sync-action-btn" id="btn-refresh" title="Sync live state from SQLite">
-            <span class="sync-dot" id="sync-status-dot"></span>
-            <span id="sync-status-label">SYNC</span>
+        <div class="header-actions">
+          <button class="hdr-ctrl-btn cmd-k-btn" id="btn-open-search" title="Search Specimens (⌘K / Ctrl+K)">
+            <span class="cmd-k-hint">SEARCH</span>
+            <kbd class="kbd-pill">⌘K</kbd>
           </button>
-          <span class="sync-timestamp" id="sync-time-text" aria-live="polite">--:--</span>
+
+          <button class="hdr-ctrl-btn theme-toggle-btn" id="btn-theme-toggle" title="Toggle Paper / Noir theme">
+            <span id="theme-label">PAPER</span>
+          </button>
+
+          <div class="sync-cluster">
+            <button class="hdr-ctrl-btn sync-action-btn" id="btn-refresh" title="Sync live state from SQLite">
+              <span class="sync-dot" id="sync-status-dot"></span>
+              <span id="sync-status-label">SYNC</span>
+            </button>
+            <span class="sync-timestamp" id="sync-time-text" aria-live="polite">--:--</span>
+          </div>
         </div>
+        <span class="header-record-state" id="header-record-state" aria-live="polite">RECORD / AWAITING SYNC</span>
       </div>
     </header>
 

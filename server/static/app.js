@@ -65,12 +65,10 @@
     noiseCanvas: document.getElementById('noise-canvas'),
     projectName: document.getElementById('project-name'),
     projectMetric: document.getElementById('project-metric'),
-    dotMetric: document.getElementById('dot-metric'),
     hdrTaskDesc: document.getElementById('hdr-task-desc'),
     dotTask: document.getElementById('dot-task'),
     hdrProjectDomain: document.getElementById('hdr-project-domain'),
-    passObjective: document.getElementById('pass-objective'),
-    passRegime: document.getElementById('pass-regime'),
+    headerRecordState: document.getElementById('header-record-state'),
     btnThemeToggle: document.getElementById('btn-theme-toggle'),
     themeLabel: document.getElementById('theme-label'),
     btnRefresh: document.getElementById('btn-refresh'),
@@ -778,10 +776,8 @@
         const goal = conf.metric_goal ? ` (${conf.metric_goal})` : '';
         dom.projectMetric.textContent = `${conf.primary_metric}${goal}`;
         dom.projectMetric.style.display = 'inline';
-        if (dom.dotMetric) dom.dotMetric.style.display = conf.project_name ? 'inline' : 'none';
       } else {
         dom.projectMetric.style.display = 'none';
-        if (dom.dotMetric) dom.dotMetric.style.display = 'none';
       }
     }
 
@@ -789,31 +785,25 @@
       if (conf.task_description) {
         dom.hdrTaskDesc.textContent = conf.task_description;
         dom.hdrTaskDesc.style.display = 'inline';
-        if (dom.dotTask) dom.dotTask.style.display = (conf.project_name || conf.primary_metric) ? 'inline' : 'none';
+        if (dom.dotTask) dom.dotTask.style.display = conf.primary_metric ? 'inline' : 'none';
       } else {
         dom.hdrTaskDesc.style.display = 'none';
         if (dom.dotTask) dom.dotTask.style.display = 'none';
       }
     }
 
-    // 2. Zone 2: Project Passport Capsule (Clean Typography, No Cramped Strings)
-    if (dom.passObjective) {
-      if (conf.primary_metric) {
-        const goal = conf.metric_goal ? `${conf.metric_goal.toUpperCase()} ` : '';
-        dom.passObjective.textContent = `${goal}${conf.primary_metric}`;
-      } else if (conf.task_description) {
-        dom.passObjective.textContent = conf.task_description;
-      } else {
-        dom.passObjective.textContent = 'Hypothesis Validation';
-      }
-    }
-
-    if (dom.passRegime) {
-      const maxLvl = state.hypotheses.reduce((max, h) => {
-        const lvlNum = parseInt((h.current_evidence_level || 'E0').replace('E', ''), 10) || 0;
-        return Math.max(max, lvlNum);
-      }, 0);
-      dom.passRegime.textContent = `Popperian Tier E${maxLvl} → E${Math.min(5, maxLvl + 1)}`;
+    // Persisted record totals replace the synthetic "research phase" label.
+    if (dom.headerRecordState) {
+      const summary = state.atlasSnapshot.summary || {};
+      // These state lists already encode primary-feed authority and snapshot
+      // fallback, so their displayed totals cannot disagree with the views.
+      const hypothesesTotal = state.hypotheses.length;
+      const tracesTotal = state.traces.length;
+      const snapshotAvailable = !(state.endpointStatus.snapshot && state.endpointStatus.snapshot.available === false);
+      const evidenceTotal = snapshotAvailable
+        ? (summary.evidence_total ?? [...state.evidenceByHypothesis.values()].reduce((total, rows) => total + rows.length, 0))
+        : '—';
+      dom.headerRecordState.textContent = `${hypothesesTotal} SPECIMENS · ${evidenceTotal} EVIDENCE · ${tracesTotal} TRACES`;
     }
   }
 

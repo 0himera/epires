@@ -155,24 +155,39 @@ body.editorial-body {
 }
 
 /* --------------------------------------------------------------------------
-   1. 3-Zone Balanced Editorial Header
+   1. Compact 3-Zone Technical-Report Masthead
    -------------------------------------------------------------------------- */
 .print-header {
   display: grid;
-  grid-template-columns: minmax(320px, 1.4fr) minmax(280px, 1.2fr) auto;
+  grid-template-columns: minmax(19rem, 1fr) minmax(11rem, 0.38fr) auto;
   align-items: center;
-  padding: 0.9rem 2rem 0.85rem 2rem;
+  padding: 0.65rem 2rem;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--rule-hairline);
   flex-shrink: 0;
-  gap: 1.8rem;
+  gap: 1.25rem;
 }
 
 /* Zone 1: Left */
 .header-left {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.16rem;
+}
+
+.header-eyebrow {
+  color: var(--ink-bluegray);
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.header-project-name:not(:empty)::before {
+  content: " / ";
+  color: var(--ink-faint);
 }
 
 .editorial-headline {
@@ -215,60 +230,111 @@ body.editorial-body {
   font-weight: 400;
 }
 
-/* Zone 2: Center Project Passport (Clean Metric Blocks) */
-.header-center-passport {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-plate-subtle);
-  border: 1px solid var(--rule-hairline);
-  padding: 0.4rem 1.1rem;
-  gap: 1.4rem;
-}
-
-.pass-metric-block {
+/* Zone 2: a small registration-like flow mark, not a dashboard metric. */
+.header-research-flow {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.12rem;
   min-width: 0;
+  padding: 0.1rem 0.85rem;
+  border-left: 1px solid var(--rule-hairline);
+  border-right: 1px solid var(--rule-hairline);
 }
 
-.pass-lbl {
+.research-flow-glyph {
+  display: block;
+  width: min(100%, 9.5rem);
+  height: 1.9rem;
+  overflow: visible;
+}
+
+.flow-path {
+  fill: none;
+  stroke: var(--ink-bluegray);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.flow-path-secondary {
+  stroke-dasharray: 2 3;
+  opacity: 0.7;
+}
+
+.flow-signal {
+  fill: none;
+  stroke: var(--ink-olive);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 1 16;
+  vector-effect: non-scaling-stroke;
+  animation: research-flow-travel 7s linear infinite;
+}
+
+.flow-node {
+  fill: var(--bg-surface);
+  stroke: var(--ink-bluegray);
+  stroke-width: 1.2;
+}
+
+.flow-node-source,
+.flow-node-result { fill: var(--ink-primary); }
+
+.flow-node-active {
+  fill: var(--ink-olive);
+  stroke: var(--ink-olive);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: research-flow-pulse 5s ease-in-out infinite;
+}
+
+.research-flow-label {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+@keyframes research-flow-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.35); }
+}
+
+@keyframes research-flow-travel {
+  to { stroke-dashoffset: -68; }
+}
+
+/* Zone 3: controls are kept as compact record operations. */
+.header-record-state {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
-}
-
-.pass-val {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--ink-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.pass-highlight {
-  color: var(--pastel-in-progress-ink);
-  font-weight: 700;
-}
-
-.pass-divider {
-  width: 1px;
-  height: 24px;
-  background: var(--rule-hairline);
-  flex-shrink: 0;
-}
-
-/* Zone 3: Right Status Cluster (Unified 2rem Height) */
 .header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.24rem;
+  justify-content: flex-end;
+}
+
+.header-actions {
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  justify-content: flex-end;
+}
+
+.header-record-state {
+  align-self: flex-end;
 }
 
 .hdr-ctrl-btn {
@@ -2235,6 +2301,11 @@ body.editorial-body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+
+  .flow-signal,
+  .flow-node-active {
+    animation: none !important;
+  }
 }
 
 /* ======================================================================
@@ -2243,7 +2314,7 @@ body.editorial-body {
 
 @media (max-width: 1280px) {
   .print-header {
-    grid-template-columns: minmax(240px, 1.2fr) minmax(240px, 1fr) auto;
+    grid-template-columns: minmax(15rem, 1fr) minmax(9rem, 0.34fr) auto;
     padding-left: 1.35rem;
     padding-right: 1.35rem;
     gap: 1rem;
@@ -2279,10 +2350,16 @@ body.editorial-body {
     align-items: start;
   }
 
-  .header-center-passport {
+  .header-research-flow {
     grid-column: 1 / -1;
     grid-row: 2;
-    justify-content: flex-start;
+    justify-self: start;
+    flex-direction: row;
+    gap: 0.55rem;
+    padding: 0.2rem 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 1px solid var(--rule-hairline);
   }
 
   .header-right { grid-column: 2; grid-row: 1; }
@@ -2340,15 +2417,13 @@ body.editorial-body {
 
   .header-left { flex: 1 1 100%; }
   .header-right { margin-left: auto; }
-  .header-center-passport {
-    flex: 1 1 100%;
-    order: 3;
-    overflow: hidden;
-  }
+  .header-research-flow { order: 2; }
+  .header-right { order: 3; }
 
   .header-right .hdr-ctrl-btn { padding: 0 0.55rem; }
   .cmd-k-hint { display: none; }
   .sync-timestamp { display: none; }
+  .header-record-state { display: none; }
 
   .kpi-strip {
     display: flex;
