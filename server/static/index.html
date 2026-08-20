@@ -3,48 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EPIRES // Epistemic Infrastructure</title>
+  <title>EPIRES // Epistemic Research Infrastructure</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="editorial-body">
-  <!-- Full-Page Noise & Tactile Grain Overlay -->
+  <!-- Full-Page Noise & Tactile Grain Canvas -->
   <canvas id="noise-canvas" class="noise-overlay" aria-hidden="true"></canvas>
 
   <div class="print-container">
-    <!-- Top Editorial Header: Clean, Airy & Minimalist -->
+    <!-- Top Editorial Header: Structured, Balanced & High-Information -->
     <header class="print-header">
       <div class="header-left">
         <h1 class="editorial-headline" id="hdr-project-domain">
           Computational research infrastructure; simulation-based discovery
         </h1>
         <div class="header-sub-meta">
-          <span class="project-tag" id="project-name">socomputing</span>
-          <span class="meta-dot">/</span>
-          <span class="metric-tag" id="project-metric">Primary: SNR & Capacity</span>
-          <span class="meta-dot">/</span>
-          <span class="task-tag" id="hdr-task-desc">Autonomous empirical discovery</span>
+          <span class="meta-tag" id="project-name">socomputing</span>
+          <span class="meta-sep">/</span>
+          <span class="meta-tag" id="project-metric">Recall@10 (maximize)</span>
+          <span class="meta-sep">/</span>
+          <span class="meta-tag" id="hdr-task-desc">Autonomous empirical discovery & hypothesis governance</span>
         </div>
       </div>
 
       <div class="header-right">
-        <div class="theme-switch-wrap">
+        <!-- Technical Architecture Spec Box (Balances Header Whitespace) -->
+        <div class="spec-panel">
+          <div class="spec-row">
+            <span class="spec-k">VSA SPACE:</span>
+            <span class="spec-v">D=10,000 (σ=0.01)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-k">CAPACITY:</span>
+            <span class="spec-v" id="vsa-capacity-text">C=11 / 500 max</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-k">PROTOCOL:</span>
+            <span class="spec-v spec-active">LEAD-PI ACTIVE</span>
+          </div>
+        </div>
+
+        <div class="header-ctrl-group">
           <button class="theme-toggle-btn" id="btn-theme-toggle" title="Toggle Paper / Noir theme">
             <span id="theme-label">PAPER</span>
           </button>
+          <button class="editorial-action-btn" id="btn-refresh">
+            <span>SYNC</span>
+          </button>
         </div>
-        <button class="editorial-action-btn" id="btn-refresh">
-          <span>SYNC</span>
-        </button>
       </div>
     </header>
 
-    <!-- Minimalist Tabular KPI Strip with Whitespace -->
+    <!-- Balanced Tabular KPI Ribbon -->
     <section class="kpi-strip">
       <div class="kpi-cell" data-filter="ALL">
-        <span class="kpi-lbl">TOTAL</span>
+        <span class="kpi-lbl">TOTAL SPECIMENS</span>
         <span class="kpi-num" id="kpi-total">11</span>
       </div>
 
@@ -54,7 +70,7 @@
       </div>
 
       <div class="kpi-cell" data-filter="FALSIFIED">
-        <span class="kpi-lbl">FALSIFIED</span>
+        <span class="kpi-lbl">FALSIFIED (REFUTED)</span>
         <span class="kpi-num falsified-num" id="kpi-falsified">02</span>
       </div>
 
@@ -64,7 +80,7 @@
       </div>
 
       <div class="kpi-cell kpi-spectrum-cell">
-        <span class="kpi-lbl">EVIDENCE LADDER</span>
+        <span class="kpi-lbl">EVIDENCE MATURITY SPECTRUM</span>
         <div class="spectrum-pills" id="evidence-spectrum">
           <!-- Populated by JS -->
         </div>
@@ -73,20 +89,20 @@
 
     <!-- Main Workspace Stage -->
     <div class="workspace-stage">
-      <!-- Left Stage: Topological Morphic DAG Canvas -->
+      <!-- Left Stage: Topological DAG Canvas -->
       <section class="canvas-section">
         <div class="canvas-top-bar">
           <div class="filter-pills" id="dag-filter-group">
-            <button class="f-pill active" data-status="ALL">ALL</button>
+            <button class="f-pill active" data-status="ALL">ALL [11]</button>
             <button class="f-pill" data-status="IN_PROGRESS">IN PROGRESS</button>
             <button class="f-pill f-pill-falsified" data-status="FALSIFIED">FALSIFIED</button>
             <button class="f-pill f-pill-confirmed" data-status="CONFIRMED">CONFIRMED</button>
           </div>
 
           <div class="canvas-tools">
-            <button class="tool-circle" id="btn-zoom-in" title="Zoom in">+</button>
-            <button class="tool-circle" id="btn-zoom-out" title="Zoom out">−</button>
-            <button class="tool-pill" id="btn-zoom-reset">RESET</button>
+            <button class="tool-btn" id="btn-zoom-in" title="Zoom in">+</button>
+            <button class="tool-btn" id="btn-zoom-out" title="Zoom out">−</button>
+            <button class="tool-btn-text" id="btn-zoom-reset">AUTO-FIT</button>
           </div>
         </div>
 
@@ -106,8 +122,11 @@
         <!-- Tab 1: Specimen Dossier -->
         <div class="tab-pane active" id="tab-inspector">
           <div id="inspector-empty" class="dossier-empty">
-            <div class="morphic-shape-glyph">⬡</div>
-            <p class="empty-desc">Select a hypothesis node on the topological canvas to view its theoretical mechanism and empirical falsification criteria.</p>
+            <div class="empty-wireframe-icon">
+              <div class="inner-sq"></div>
+            </div>
+            <h3 class="empty-heading">NO SPECIMEN SELECTED</h3>
+            <p class="empty-desc">Click any hypothesis card on the canvas to inspect its theoretical mathematical mechanism, Popperian boundaries, and empirical test claims.</p>
           </div>
 
           <div id="inspector-body" class="dossier-filled" style="display: none;">
@@ -122,24 +141,24 @@
 
             <!-- Monograph Sections -->
             <div class="dossier-block">
-              <span class="block-lbl">THEORETICAL MECHANISM</span>
+              <span class="block-lbl">§ 1.0 THEORETICAL MECHANISM</span>
               <div class="block-prose" id="ins-mechanism">...</div>
             </div>
 
             <div class="dossier-block falsification-block">
-              <span class="block-lbl">FALSIFICATION CRITERIA</span>
+              <span class="block-lbl">§ 2.0 POPPERIAN FALSIFICATION BOUNDARY</span>
               <div class="block-prose falsification-prose" id="ins-falsification">...</div>
             </div>
 
             <div class="dossier-block">
-              <span class="block-lbl">DEPENDENCIES</span>
+              <span class="block-lbl">§ 3.0 DAG ANTECEDENTS</span>
               <div class="dep-pill-row" id="ins-parents">None</div>
             </div>
 
             <div class="dossier-block">
-              <span class="block-lbl">EVIDENCE RECORD (<span id="ins-evidence-count">0</span>)</span>
+              <span class="block-lbl">§ 4.0 EMPIRICAL EVIDENCE LEDGER (<span id="ins-evidence-count">0</span>)</span>
               <div class="evidence-list" id="ins-evidence-list">
-                <div class="empty-evidence">No empirical tests registered yet.</div>
+                <div class="empty-evidence">No empirical tests registered yet. Level: E0 (A Priori).</div>
               </div>
             </div>
           </div>
@@ -148,7 +167,7 @@
         <!-- Tab 2: Operational Trace Feed -->
         <div class="tab-pane" id="tab-traces">
           <div class="trace-search-box">
-            <input type="text" id="traces-search" placeholder="Filter traces..." class="clean-input">
+            <input type="text" id="traces-search" placeholder="Filter operational log..." class="clean-input">
             <span class="trace-badge" id="traces-count-text">15 entries</span>
           </div>
           <div class="trace-list" id="traces-stream-container"></div>
@@ -157,7 +176,7 @@
         <!-- Tab 3: White Spot Gaps Analysis -->
         <div class="tab-pane" id="tab-gaps">
           <div class="gaps-info">
-            <h3>Cartesian White Spots</h3>
+            <h3>Cartesian White Spot Analysis</h3>
             <p>Untested parameter intersections across domain models and features.</p>
           </div>
           <div class="gaps-list" id="gaps-matrix-container"></div>

@@ -1,6 +1,6 @@
 /**
  * EPIRES HYPERGRAPH ENGINE // CLIENT CONTROLLER
- * Minimalist Archival Paper Theme with Topological Morphic Cards & Tactile Noise Shader
+ * High-DPI 2K Optimized Editorial Paper Theme with Tight Chamfered Geometry
  */
 
 (function () {
@@ -16,7 +16,7 @@
     activeFilter: 'ALL',
     activeTab: 'inspector',
     theme: localStorage.getItem('epires_theme') || 'paper',
-    transform: { x: 40, y: 40, scale: 0.88 },
+    transform: { x: 50, y: 50, scale: 0.95 },
     isDraggingCanvas: false,
     dragStart: { x: 0, y: 0 },
     nodePositions: new Map(), // { id: { x, y, width, height } }
@@ -26,10 +26,10 @@
     pollingInterval: null
   };
 
-  const NODE_WIDTH = 230;
-  const NODE_HEIGHT = 80;
+  const NODE_WIDTH = 270;
+  const NODE_HEIGHT = 92;
   const GAP_X = 64;
-  const GAP_Y = 96;
+  const GAP_Y = 100;
 
   // DOM Elements
   const dom = {
@@ -40,6 +40,7 @@
     projectMetric: document.getElementById('project-metric'),
     hdrProjectDomain: document.getElementById('hdr-project-domain'),
     hdrTaskDesc: document.getElementById('hdr-task-desc'),
+    vsaCapacityText: document.getElementById('vsa-capacity-text'),
     btnThemeToggle: document.getElementById('btn-theme-toggle'),
     themeLabel: document.getElementById('theme-label'),
     kpiTotal: document.getElementById('kpi-total'),
@@ -72,7 +73,7 @@
   };
 
   // --------------------------------------------------------------------------
-  // Full-Screen Procedural Paper Grain & Noise Shader
+  // Full-Screen Procedural Paper Grain Shader
   // --------------------------------------------------------------------------
   function initNoiseShader() {
     const canvas = dom.noiseCanvas;
@@ -96,10 +97,10 @@
 
       for (let i = 0; i < len; i += 4) {
         const val = (Math.random() * 255) | 0;
-        data[i] = val;     // R
-        data[i + 1] = val; // G
-        data[i + 2] = val; // B
-        data[i + 3] = 45;  // Alpha opacity
+        data[i] = val;
+        data[i + 1] = val;
+        data[i + 2] = val;
+        data[i + 3] = 48; // Alpha opacity
       }
 
       ctx.putImageData(imgData, 0, 0);
@@ -192,6 +193,10 @@
     dom.kpiInProgress.textContent = String(inProg).padStart(2, '0');
     dom.kpiFalsified.textContent = String(falsified).padStart(2, '0');
 
+    if (dom.vsaCapacityText) {
+      dom.vsaCapacityText.textContent = `C=${total} / 500 max`;
+    }
+
     // Evidence Maturity Spectrum
     const levels = { E0: 0, E1: 0, E2: 0, E3: 0, E4: 0, E5: 0 };
     state.hypotheses.forEach(h => {
@@ -207,7 +212,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Topological Morphic DAG Layout
+  // Topological DAG Layout
   // --------------------------------------------------------------------------
   function initializeLayoutIfEmpty(nodes) {
     const nodeMap = new Map();
@@ -240,7 +245,7 @@
 
     layers.forEach((layerNodes, layerIdx) => {
       const totalWidth = layerNodes.length * NODE_WIDTH + (layerNodes.length - 1) * GAP_X;
-      const startX = Math.max(50, 560 - totalWidth / 2);
+      const startX = Math.max(50, 600 - totalWidth / 2);
 
       layerNodes.forEach((node, nodeIdx) => {
         if (!state.nodePositions.has(node.id)) {
@@ -256,7 +261,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // SVG Morphic DAG Rendering & Node Dragging
+  // SVG Tight Chamfer DAG Rendering (rx="3")
   // --------------------------------------------------------------------------
   function renderDAG() {
     const svg = dom.svg;
@@ -314,7 +319,7 @@
       });
     });
 
-    // 2. Morphic Rounded Facet Nodes
+    // 2. Strict Architectural Chamfered Nodes (rx="3")
     filteredNodes.forEach(node => {
       const pos = state.nodePositions.get(node.id);
       if (!pos) return;
@@ -329,27 +334,29 @@
       gNode.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
       gNode.dataset.id = node.id;
 
-      const truncatedTitle = node.title.length > 30 ? node.title.substring(0, 28) + '…' : node.title;
+      const truncatedTitle = node.title.length > 34 ? node.title.substring(0, 32) + '…' : node.title;
 
-      // Soft pastel color overrides
-      let statusColor = 'var(--ink-muted)';
+      let statusColor = 'var(--ink-secondary)';
       if (isFalsified) statusColor = 'var(--pastel-falsified-ink)';
       if (isConfirmed) statusColor = 'var(--pastel-confirmed-ink)';
       if (node.status === 'IN_PROGRESS') statusColor = 'var(--pastel-in-progress-ink)';
 
       gNode.innerHTML = `
-        <!-- Morphic Rounded Card Surface -->
-        <rect class="node-plate" width="${NODE_WIDTH}" height="${NODE_HEIGHT}" rx="14" ry="14" />
+        <!-- Main Card Plate -->
+        <rect class="node-plate" width="${NODE_WIDTH}" height="${NODE_HEIGHT}" rx="3" ry="3" />
 
         <!-- Header: ID + Level -->
-        <text x="16" y="24" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="12">${node.id}</text>
-        <text x="${NODE_WIDTH - 16}" y="24" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="9" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
+        <text x="16" y="24" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="13">${node.id}</text>
+        <text x="${NODE_WIDTH - 16}" y="24" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="10" font-weight="600" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
+
+        <!-- Divider -->
+        <line x1="16" y1="32" x2="${NODE_WIDTH - 16}" y2="32" stroke="var(--rule-hairline)" stroke-width="1" />
 
         <!-- Clean Title -->
-        <text x="16" y="46" fill="var(--ink-primary)" font-family="Inter" font-size="11.5" font-weight="500">${truncatedTitle}</text>
+        <text x="16" y="52" fill="var(--ink-primary)" font-family="Inter" font-size="12.5" font-weight="500">${truncatedTitle}</text>
 
-        <!-- Pastel Status Pill -->
-        <text x="16" y="66" fill="${statusColor}" font-family="IBM Plex Mono" font-size="9" font-weight="700">${node.status}</text>
+        <!-- Status Tag -->
+        <text x="16" y="74" fill="${statusColor}" font-family="IBM Plex Mono" font-size="10" font-weight="700">[ ${node.status} ]</text>
       `;
 
       // Drag listener
@@ -498,7 +505,7 @@
       dom.insEvidenceCount.textContent = evidence.length;
 
       if (evidence.length === 0) {
-        dom.insEvidenceList.innerHTML = '<div class="empty-evidence">No empirical tests registered yet.</div>';
+        dom.insEvidenceList.innerHTML = '<div class="empty-evidence">No empirical tests registered yet. Level: E0 (A Priori).</div>';
       } else {
         dom.insEvidenceList.innerHTML = evidence.map(ev => `
           <div class="evidence-card">
@@ -629,7 +636,7 @@
 
     dom.btnZoomReset.addEventListener('click', () => {
       state.nodePositions.clear();
-      state.transform = { x: 40, y: 40, scale: 0.88 };
+      state.transform = { x: 50, y: 50, scale: 0.95 };
       renderDAG();
       updateTransform();
     });
