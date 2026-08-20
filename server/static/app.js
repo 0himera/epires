@@ -1212,8 +1212,6 @@
         gViewport.appendChild(gGhost);
       });
     }
-      });
-    }
 
     svg.appendChild(gViewport);
   }
