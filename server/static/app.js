@@ -271,39 +271,56 @@
   }
 
   // --------------------------------------------------------------------------
-  // Procedural Organic Voronoi Pebble Geometry (6 Clean Facet Profiles)
+  // Specimen docket geometry: one precise archival form for every hypothesis.
+  // Identity comes from the record, status and evidence ruler—not random shape.
   // --------------------------------------------------------------------------
-  function getVoronoiPebbleGeometry(id, w = 270, h = 100) {
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-      hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-    }
-    const variant = hash % 6;
+  function getSpecimenDocketGeometry(w = 270, h = 100, inset = 0) {
+    const smallCut = Math.max(8, 14 - inset * 0.45);
+    const largeCut = Math.max(22, 32 - inset * 0.45);
+    const left = inset;
+    const top = inset;
+    const right = w - inset;
+    const bottom = h - inset;
+    const points = [
+      [left + smallCut, top],
+      [right - largeCut, top],
+      [right, top + largeCut],
+      [right, bottom - smallCut],
+      [right - smallCut, bottom],
+      [left + smallCut, bottom],
+      [left, bottom - smallCut],
+      [left, top + smallCut]
+    ];
+    return createFilletedPolygonPath(points, inset ? 3 : 5);
+  }
 
-    let rawOuter;
-    switch (variant) {
-      case 0: // Smooth Pebble Hexagon
-        rawOuter = [[28, 0], [w - 28, 0], [w, h * 0.48], [w - 24, h], [24, h], [0, h * 0.52]];
-        break;
-      case 1: // Organic Facet with Asymmetric Shoulder
-        rawOuter = [[18, 0], [w - 36, 0], [w, h * 0.38], [w - 18, h], [32, h], [0, h * 0.65]];
-        break;
-      case 2: // Elongated Voronoi Capsule-Diamond
-        rawOuter = [[34, 0], [w - 18, 0], [w, h * 0.6], [w - 32, h], [16, h], [0, h * 0.4]];
-        break;
-      case 3: // Slanted Crystallographic Pebble
-        rawOuter = [[30, 0], [w, 0], [w - 16, h * 0.5], [w - 30, h], [0, h], [16, h * 0.5]];
-        break;
-      case 4: // Soft Rounded Pentagonal Lobe
-        rawOuter = [[20, 0], [w - 20, 0], [w, h * 0.55], [w - 26, h], [12, h], [0, h * 0.45]];
-        break;
-      case 5: // Curved Isogrid Facet
-      default:
-        rawOuter = [[14, 0], [w - 30, 0], [w, h * 0.45], [w - 16, h], [24, h], [0, h * 0.55]];
-        break;
-    }
+  function evidenceLevelNumber(value) {
+    const parsed = Number.parseInt(String(value || 'E0').replace(/^E/i, ''), 10);
+    return Number.isFinite(parsed) ? Math.max(0, Math.min(5, parsed)) : 0;
+  }
 
-    return createFilletedPolygonPath(rawOuter, 16);
+  function specimenStatusSymbol(status) {
+    return {
+      PROPOSED: '?',
+      IN_PROGRESS: '~',
+      CONFIRMED: '+',
+      FALSIFIED: '×',
+      BLOCKED: '∥',
+      REFINED: '↗'
+    }[status] || '·';
+  }
+
+  function renderNodeEvidenceRuler(currentLevel, targetLevel) {
+    const current = evidenceLevelNumber(currentLevel);
+    const target = evidenceLevelNumber(targetLevel);
+    return Array.from({ length: 6 }, (_, index) => {
+      const isTarget = index === target;
+      const className = `node-evidence-tick${index <= current ? ' reached' : ''}${isTarget ? ' target' : ''}`;
+      const x = 205 + index * 7.5;
+      const y = isTarget ? 81 : 84;
+      const height = isTarget ? 9 : 5;
+      return `<rect class="${className}" x="${x}" y="${y}" width="4" height="${height}" />`;
+    }).join('');
   }
 
   // --------------------------------------------------------------------------
@@ -1041,7 +1058,7 @@
       gEdges.appendChild(path);
     });
 
-    // 2. Smooth Filleted Voronoi Pebble Nodes
+    // 2. Archival specimen docket nodes
     filteredNodes.forEach(node => {
       const pos = state.nodePositions.get(node.id);
       if (!pos) return;
@@ -1049,9 +1066,10 @@
       const isSelected = state.selectedHypothesisId === node.id;
       const isFalsified = node.status === 'FALSIFIED';
       const isConfirmed = node.status === 'CONFIRMED';
+      const statusClass = `status-${String(node.status || 'PROPOSED').toLowerCase().replaceAll('_', '-')}`;
 
       const gNode = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      gNode.setAttribute('class', `dag-node-group ${isSelected ? 'selected' : ''} ${isFalsified ? 'falsified' : ''} ${isConfirmed ? 'confirmed' : ''}`);
+      gNode.setAttribute('class', `dag-node-group ${statusClass} ${isSelected ? 'selected' : ''} ${isFalsified ? 'falsified' : ''} ${isConfirmed ? 'confirmed' : ''}`);
       gNode.setAttribute('id', `node-group-${domIdPart(node.id)}`);
       gNode.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
       gNode.setAttribute('tabindex', '0');
@@ -1059,27 +1077,29 @@
       gNode.setAttribute('aria-label', `${node.id}: ${node.title}. ${node.status}, ${node.current_evidence_level || 'E0'}. Open dossier.`);
       gNode.dataset.id = node.id;
 
-      let statusColor = 'var(--ink-secondary)';
-      if (isFalsified) statusColor = 'var(--pastel-falsified-ink)';
-      if (isConfirmed) statusColor = 'var(--pastel-confirmed-ink)';
-      if (node.status === 'IN_PROGRESS') statusColor = 'var(--pastel-in-progress-ink)';
-
-      const pebblePath = getVoronoiPebbleGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
-      const titleLinesSVG = formatBalancedTitleSVG(node.title, 220, 24, 48, 2);
+      const platePath = getSpecimenDocketGeometry(NODE_WIDTH, NODE_HEIGHT);
+      const innerPath = getSpecimenDocketGeometry(NODE_WIDTH, NODE_HEIGHT, 7);
+      const titleLinesSVG = formatBalancedTitleSVG(node.title, 202, 30, 49, 2);
+      const currentLevel = node.current_evidence_level || 'E0';
+      const targetLevel = node.target_evidence_level || 'E3';
+      const evidenceRuler = renderNodeEvidenceRuler(currentLevel, targetLevel);
+      const statusSymbol = specimenStatusSymbol(node.status);
 
       gNode.innerHTML = `
-        <!-- Outer Filleted Voronoi Pebble Plate -->
-        <path class="node-plate" d="${pebblePath}" />
+        <path class="node-plate" d="${platePath}" />
+        <path class="node-status-band" d="M7 76H263V82L252 93H18L7 82Z" />
+        <path class="node-inner-frame" d="${innerPath}" />
+        <path class="node-status-rail" d="M7 20V73" />
+        <path class="node-header-rule" d="M18 33H235" />
+        <path class="node-selection-ticks" d="M1 17V1H17 M226 1H237L269 33V44 M269 72V85L254 99H241 M29 99H15L1 85V72" />
 
-        <!-- Header: ID + Level -->
-        <text x="24" y="26" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="13">${escapeSvgText(node.id)}</text>
-        <text x="${NODE_WIDTH - 24}" y="26" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="10" font-weight="600" text-anchor="end">${escapeSvgText(node.current_evidence_level || 'E0')}</text>
-
-        <!-- Balanced Multiline Title -->
+        <text class="node-id" x="28" y="23">${escapeSvgText(node.id)}</text>
+        <text class="node-level" x="230" y="23" text-anchor="end">${escapeSvgText(currentLevel)} / ${escapeSvgText(targetLevel)}</text>
         ${titleLinesSVG}
-
-        <!-- Status Tag -->
-        <text x="24" y="84" fill="${statusColor}" font-family="IBM Plex Mono" font-size="9.5" font-weight="700">[ ${escapeSvgText(node.status)} ]</text>
+        <rect class="node-status-key" x="19" y="79" width="15" height="14" />
+        <text class="node-status-symbol" x="26.5" y="90" text-anchor="middle">${escapeSvgText(statusSymbol)}</text>
+        <text class="node-status-text" x="40" y="90">${escapeSvgText(node.status)}</text>
+        <g class="node-evidence-ruler" aria-hidden="true">${evidenceRuler}</g>
       `;
 
       gNode.addEventListener('mousedown', (e) => {
@@ -1098,7 +1118,6 @@
     // 3. Optional White Spot Ghost Nodes
     if (state.showGhosts) {
       state.gaps.slice(0, 4).forEach((gap, idx) => {
-        const ghostId = `GHOST-${idx + 1}`;
         const ghostX = 60 + idx * (NODE_WIDTH + GAP_X);
         const ghostY = 380;
 
@@ -1106,14 +1125,21 @@
         gGhost.setAttribute('class', 'dag-node-group ghost-node');
         gGhost.setAttribute('transform', `translate(${ghostX}, ${ghostY})`);
 
-        const pebblePath = getVoronoiPebbleGeometry(ghostId, NODE_WIDTH, NODE_HEIGHT);
+        const platePath = getSpecimenDocketGeometry(NODE_WIDTH, NODE_HEIGHT);
+        const innerPath = getSpecimenDocketGeometry(NODE_WIDTH, NODE_HEIGHT, 7);
         const gapTitle = JSON.stringify(gap.combination || gap).substring(0, 32);
 
         gGhost.innerHTML = `
-          <path class="node-plate" d="${pebblePath}" />
-          <text x="24" y="26" fill="var(--pastel-in-progress-ink)" font-family="IBM Plex Mono" font-weight="700" font-size="11">WHITE SPOT / GAP</text>
-          <text x="24" y="52" fill="var(--ink-secondary)" font-family="IBM Plex Mono" font-size="10">${escapeSvgText(gapTitle)}</text>
-          <text x="24" y="82" fill="var(--pastel-in-progress-ink)" font-family="IBM Plex Mono" font-size="9.5" font-weight="700">[ WHITE SPOT ]</text>
+          <path class="node-plate" d="${platePath}" />
+          <path class="node-status-band" d="M7 76H263V82L252 93H18L7 82Z" />
+          <path class="node-inner-frame" d="${innerPath}" />
+          <path class="node-status-rail" d="M7 20V73" />
+          <path class="node-header-rule" d="M18 33H235" />
+          <text class="node-id" x="28" y="23">WHITE SPOT / GAP</text>
+          <text class="node-ghost-title" x="30" y="55">${escapeSvgText(gapTitle)}</text>
+          <rect class="node-status-key" x="19" y="79" width="15" height="14" />
+          <text class="node-status-symbol" x="26.5" y="90" text-anchor="middle">□</text>
+          <text class="node-status-text" x="40" y="90">UNDECLARED</text>
         `;
         gViewport.appendChild(gGhost);
       });

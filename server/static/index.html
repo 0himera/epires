@@ -31,20 +31,29 @@
         </div>
       </div>
 
-      <!-- Zone 2: a quiet, non-interactive registration glyph for the research flow. -->
-      <div class="header-research-flow" aria-hidden="true">
-        <svg class="research-flow-glyph" viewBox="0 0 152 30" focusable="false">
-          <path class="flow-path flow-path-primary" d="M10 15H47L63 7H95L111 15H142" />
-          <path class="flow-signal" d="M10 15H47L63 7H95L111 15H142" />
-          <path class="flow-path flow-path-secondary" d="M47 15L63 23H95L111 15" />
-          <circle class="flow-node flow-node-source" cx="10" cy="15" r="3" />
-          <circle class="flow-node" cx="47" cy="15" r="3" />
-          <circle class="flow-node flow-node-active" cx="63" cy="7" r="3" />
-          <circle class="flow-node" cx="95" cy="7" r="3" />
-          <circle class="flow-node" cx="111" cy="15" r="3" />
-          <circle class="flow-node flow-node-result" cx="142" cy="15" r="3" />
+      <!-- Zone 2: a quiet vector-memory calibration instrument. -->
+      <div class="header-research-field" aria-hidden="true">
+        <svg class="research-field-glyph" viewBox="0 0 184 44" focusable="false">
+          <defs>
+            <clipPath id="research-field-aperture">
+              <ellipse cx="92" cy="22" rx="50" ry="17" />
+            </clipPath>
+          </defs>
+          <path class="field-guide" d="M7 22H42M142 22H177" />
+          <path class="field-registration" d="M7 17V27M177 17V27" />
+          <ellipse class="field-shell" cx="92" cy="22" rx="50" ry="17" />
+          <g class="field-lattice" clip-path="url(#research-field-aperture)">
+            <path d="M42 10Q92 17 142 10M42 16Q92 19 142 16M42 22H142M42 28Q92 25 142 28M42 34Q92 27 142 34" />
+            <path d="M57 7Q72 22 57 37M74 5Q83 22 74 39M92 4V40M110 5Q101 22 110 39M127 7Q112 22 127 37" />
+          </g>
+          <g class="field-scan" clip-path="url(#research-field-aperture)">
+            <rect x="42" y="4" width="9" height="36" />
+            <path d="M46.5 4V40" />
+          </g>
+          <circle class="field-core" cx="92" cy="22" r="2.2" />
+          <path class="field-axis-ticks" d="M92 2V6M92 38V42" />
         </svg>
-        <span class="research-flow-label">AUTONOMOUS RESEARCH FLOW</span>
+        <span class="research-field-label">VECTOR MEMORY FIELD / LIVE CALIBRATION</span>
       </div>
 
       <!-- Zone 3: record controls and a JS-bindable live-state placeholder. -->

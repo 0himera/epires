@@ -230,8 +230,8 @@ body.editorial-body {
   font-weight: 400;
 }
 
-/* Zone 2: a small registration-like flow mark, not a dashboard metric. */
-.header-research-flow {
+/* Zone 2: a vector-memory calibration plate, not a dashboard metric. */
+.header-research-field {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -243,53 +243,65 @@ body.editorial-body {
   border-right: 1px solid var(--rule-hairline);
 }
 
-.research-flow-glyph {
+.research-field-glyph {
   display: block;
-  width: min(100%, 9.5rem);
-  height: 1.9rem;
+  width: min(100%, 11.5rem);
+  height: 2.35rem;
   overflow: visible;
 }
 
-.flow-path {
+.field-guide,
+.field-registration,
+.field-shell,
+.field-lattice path,
+.field-scan path,
+.field-axis-ticks {
   fill: none;
   stroke: var(--ink-bluegray);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
-.flow-path-secondary {
-  stroke-dasharray: 2 3;
+.field-guide,
+.field-registration,
+.field-axis-ticks {
   opacity: 0.7;
 }
 
-.flow-signal {
-  fill: none;
-  stroke: var(--ink-olive);
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-dasharray: 1 16;
-  vector-effect: non-scaling-stroke;
-  animation: research-flow-travel 7s linear infinite;
+.field-shell {
+  fill: color-mix(in srgb, var(--bg-plate-subtle) 52%, transparent);
+  stroke: var(--rule-crisp);
 }
 
-.flow-node {
-  fill: var(--bg-surface);
-  stroke: var(--ink-bluegray);
+.field-lattice {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: research-field-breathe 11s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.field-lattice path {
+  opacity: 0.58;
+}
+
+.field-scan {
+  animation: research-field-scan 12s cubic-bezier(0.36, 0, 0.18, 1) infinite;
+}
+
+.field-scan rect {
+  fill: color-mix(in srgb, var(--ink-olive) 12%, transparent);
+}
+
+.field-scan path {
+  stroke: var(--ink-olive);
   stroke-width: 1.2;
 }
 
-.flow-node-source,
-.flow-node-result { fill: var(--ink-primary); }
-
-.flow-node-active {
+.field-core {
   fill: var(--ink-olive);
   stroke: var(--ink-olive);
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: research-flow-pulse 5s ease-in-out infinite;
 }
 
-.research-flow-label {
+.research-field-label {
   font-family: var(--font-mono);
   font-size: 0.52rem;
   font-weight: 700;
@@ -298,13 +310,16 @@ body.editorial-body {
   white-space: nowrap;
 }
 
-@keyframes research-flow-pulse {
-  0%, 100% { opacity: 0.55; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.35); }
+@keyframes research-field-breathe {
+  0%, 100% { transform: scaleX(0.96) scaleY(1.02); opacity: 0.72; }
+  50% { transform: scaleX(1.035) scaleY(0.98); opacity: 1; }
 }
 
-@keyframes research-flow-travel {
-  to { stroke-dashoffset: -68; }
+@keyframes research-field-scan {
+  0%, 8% { opacity: 0; transform: translateX(0); }
+  13% { opacity: 0.82; }
+  76% { opacity: 0.82; transform: translateX(91px); }
+  82%, 100% { opacity: 0; transform: translateX(91px); }
 }
 
 /* Zone 3: controls are kept as compact record operations. */
@@ -1139,9 +1154,11 @@ body.editorial-body {
 }
 
 /* --------------------------------------------------------------------------
-   7. SVG Topological Morphic Nodes (Clean Voronoi Pebble Geometry)
+   7. SVG Specimen Dockets
    -------------------------------------------------------------------------- */
 .dag-node-group {
+  --node-status-ink: var(--ink-muted);
+  --node-status-wash: var(--bg-plate-subtle);
   cursor: grab;
   user-select: none;
 }
@@ -1157,20 +1174,150 @@ body.editorial-body {
   transition: stroke 0.15s ease, filter 0.15s ease, fill 0.15s ease;
 }
 
-.dag-node-group.falsified .node-plate {
-  fill: var(--pastel-falsified-bg);
-  stroke: var(--pastel-falsified-border);
+.dag-node-group.status-in-progress {
+  --node-status-ink: var(--ink-ochre);
+  --node-status-wash: color-mix(in srgb, var(--ink-ochre) 7%, var(--svg-node-bg));
 }
 
-.dag-node-group.confirmed .node-plate {
-  fill: var(--pastel-confirmed-bg);
-  stroke: var(--pastel-confirmed-border);
+.dag-node-group.status-confirmed {
+  --node-status-ink: var(--ink-olive);
+  --node-status-wash: color-mix(in srgb, var(--ink-olive) 7%, var(--svg-node-bg));
+}
+
+.dag-node-group.status-falsified {
+  --node-status-ink: var(--ink-rust);
+  --node-status-wash: color-mix(in srgb, var(--ink-rust) 7%, var(--svg-node-bg));
+}
+
+.dag-node-group.status-blocked {
+  --node-status-ink: var(--ink-rust);
+  --node-status-wash: color-mix(in srgb, var(--ink-rust) 4%, var(--svg-node-bg));
+}
+
+.dag-node-group.status-refined {
+  --node-status-ink: var(--ink-bluegray);
+  --node-status-wash: color-mix(in srgb, var(--ink-bluegray) 7%, var(--svg-node-bg));
+}
+
+.dag-node-group .node-inner-frame,
+.dag-node-group .node-header-rule,
+.dag-node-group .node-selection-ticks {
+  fill: none;
+  stroke: var(--rule-hairline);
+  stroke-width: 0.8px;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.dag-node-group .node-inner-frame {
+  opacity: 0.78;
+}
+
+.dag-node-group .node-header-rule {
+  stroke: var(--rule-crisp);
+}
+
+.dag-node-group .node-status-band {
+  fill: var(--node-status-wash);
+  stroke: none;
+  pointer-events: none;
+}
+
+.dag-node-group .node-status-rail {
+  fill: none;
+  stroke: var(--node-status-ink);
+  stroke-linecap: square;
+  stroke-width: 3px;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.dag-node-group .node-selection-ticks {
+  opacity: 0;
+  stroke: var(--ink-primary);
+  stroke-width: 1.4px;
+  transition: opacity 0.15s ease;
+}
+
+.dag-node-group .node-id,
+.dag-node-group .node-level,
+.dag-node-group .node-status-symbol,
+.dag-node-group .node-status-text,
+.dag-node-group .node-ghost-title {
+  font-family: var(--font-mono);
+}
+
+.dag-node-group .node-id {
+  fill: var(--ink-primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.dag-node-group .node-level {
+  fill: var(--ink-muted);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.dag-node-group .node-status-key {
+  fill: var(--svg-node-bg);
+  stroke: var(--node-status-ink);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+.dag-node-group .node-status-symbol,
+.dag-node-group .node-status-text {
+  fill: var(--node-status-ink);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.dag-node-group .node-status-symbol {
+  font-size: 10px;
+}
+
+.dag-node-group.status-falsified .node-status-text {
+  text-decoration: line-through;
+}
+
+.dag-node-group .node-evidence-tick {
+  fill: var(--rule-hairline);
+  stroke: transparent;
+  stroke-width: 0.8px;
+  vector-effect: non-scaling-stroke;
+}
+
+.dag-node-group .node-evidence-tick.reached {
+  fill: var(--ink-bluegray);
+}
+
+.dag-node-group .node-evidence-tick.target {
+  stroke: var(--node-status-ink);
+}
+
+.dag-node-group .node-ghost-title {
+  fill: var(--ink-secondary);
+  font-size: 9.5px;
 }
 
 .dag-node-group.ghost-node .node-plate {
   fill: transparent;
   stroke: var(--pastel-in-progress-ink);
   stroke-dasharray: 4 3;
+}
+
+.dag-node-group.ghost-node {
+  --node-status-ink: var(--ink-ochre);
+  --node-status-wash: transparent;
+}
+
+.dag-node-group.ghost-node .node-inner-frame {
+  stroke: var(--ink-ochre);
+  stroke-dasharray: 2 3;
 }
 
 .dag-node-group:hover .node-plate {
@@ -1180,8 +1327,15 @@ body.editorial-body {
 
 .dag-node-group.selected .node-plate {
   stroke: var(--ink-primary);
-  stroke-width: 2px;
-  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.08));
+  stroke-width: 1.6px;
+}
+
+.dag-node-group.selected .node-inner-frame {
+  stroke: var(--ink-primary);
+}
+
+.dag-node-group.selected .node-selection-ticks {
+  opacity: 1;
 }
 
 .edge-path {
@@ -2302,8 +2456,8 @@ body.editorial-body {
     transition-duration: 0.001ms !important;
   }
 
-  .flow-signal,
-  .flow-node-active {
+  .field-lattice,
+  .field-scan {
     animation: none !important;
   }
 }
@@ -2350,7 +2504,7 @@ body.editorial-body {
     align-items: start;
   }
 
-  .header-research-flow {
+  .header-research-field {
     grid-column: 1 / -1;
     grid-row: 2;
     justify-self: start;
@@ -2417,7 +2571,7 @@ body.editorial-body {
 
   .header-left { flex: 1 1 100%; }
   .header-right { margin-left: auto; }
-  .header-research-flow { order: 2; }
+  .header-research-field { order: 2; }
   .header-right { order: 3; }
 
   .header-right .hdr-ctrl-btn { padding: 0 0.55rem; }
