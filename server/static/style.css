@@ -22,6 +22,15 @@
   --ink-muted: #525663;
   --ink-faint: #8e92a0;
 
+  /* Printed research-atlas inks. Keep semantic accents sparse: these are
+     intended for rules, annotations and verdict marks rather than surfaces. */
+  --ink-olive: #59654a;
+  --ink-bluegray: #60727b;
+  --ink-rust: #984a3d;
+  --ink-ochre: #a87524;
+  --paper-grid: rgba(37, 44, 47, 0.055);
+  --focus-ring: #536a76;
+
   /* Pastel Semantic Accents */
   --pastel-falsified-ink: #dc2626;
   --pastel-falsified-bg: rgba(239, 68, 68, 0.07);
@@ -62,6 +71,13 @@
   --ink-secondary: #c0c3ce;
   --ink-muted: #8b8f9e;
   --ink-faint: #555866;
+
+  --ink-olive: #aebd96;
+  --ink-bluegray: #9aadb6;
+  --ink-rust: #ef9a88;
+  --ink-ochre: #e1b25f;
+  --paper-grid: rgba(255, 255, 255, 0.055);
+  --focus-ring: #c6d9d9;
 
   --pastel-falsified-ink: #f87171;
   --pastel-falsified-bg: rgba(239, 68, 68, 0.14);
@@ -117,12 +133,13 @@ body.editorial-body {
   pointer-events: none;
   z-index: 9999;
   mix-blend-mode: multiply;
-  opacity: 0.45;
+  /* Grain is a material cue, not a veil over evidence text. */
+  opacity: 0.12;
 }
 
 [data-theme="noir"] .noise-overlay {
   mix-blend-mode: screen;
-  opacity: 0.15;
+  opacity: 0.08;
 }
 
 .print-container {
@@ -131,6 +148,10 @@ body.editorial-body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background-image:
+    linear-gradient(to right, var(--paper-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--paper-grid) 1px, transparent 1px);
+  background-size: 5.5rem 5.5rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -516,6 +537,12 @@ body.editorial-body {
   border-color: var(--pastel-falsified-ink);
 }
 
+/* Confirmed is a positive finding, not merely the default selected state. */
+.f-pill-confirmed.active {
+  background: var(--pastel-confirmed-ink);
+  border-color: var(--pastel-confirmed-ink);
+}
+
 .f-pill-ghost {
   border-style: dashed;
 }
@@ -531,6 +558,7 @@ body.editorial-body {
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  flex: 0 0 auto;
 }
 
 .zoom-level-text {
@@ -1102,6 +1130,37 @@ body.editorial-body {
   stroke-width: 2px;
 }
 
+/* Relation type remains legible in monochrome printing through line rhythm,
+   while the restrained inks provide a second, non-essential cue on screen. */
+.edge-path.relation-depends_on { stroke: var(--ink-bluegray); }
+.edge-path.relation-blocks {
+  stroke: var(--ink-rust);
+  stroke-dasharray: 7 3;
+}
+.edge-path.relation-refines {
+  stroke: var(--ink-olive);
+  stroke-dasharray: 2 3;
+}
+.edge-path.relation-falsifies {
+  stroke: var(--ink-rust);
+  stroke-width: 1.7px;
+  stroke-dasharray: 9 2 2 2;
+}
+.edge-path.relation-produces {
+  stroke: var(--ink-ochre);
+  stroke-dasharray: 10 2;
+}
+.edge-path.relation-gated_by {
+  stroke: var(--ink-muted);
+  stroke-dasharray: 1 3;
+  stroke-linecap: round;
+}
+
+.edge-path.highlighted {
+  stroke-dasharray: none;
+  stroke-linecap: butt;
+}
+
 /* --------------------------------------------------------------------------
    8. Command Palette / Search Modal (⌘K)
    -------------------------------------------------------------------------- */
@@ -1199,4 +1258,1151 @@ body.editorial-body {
   font-size: 0.64rem;
   font-weight: 700;
   padding: 0.1rem 0.45rem;
+}
+
+/* ==========================================================================
+   9. RESEARCH ATLAS OVERRIDES
+   Annual-report composition with technical specimen-sheet affordances.
+   These selectors are additive so the existing dossier/DAG markup remains
+   usable while newer research views can share the same visual grammar.
+   ========================================================================== */
+
+/* Shared print language */
+.print-container,
+.research-view,
+.snapshot-folio,
+.research-mode-nav {
+  font-variant-numeric: tabular-nums;
+}
+
+.print-header,
+.kpi-strip,
+.canvas-top-bar,
+.monograph-tabs {
+  box-shadow: 0 1px 0 var(--rule-hairline);
+}
+
+.editorial-headline,
+.research-view-title,
+.folio-title,
+.spec-title-text {
+  text-wrap: balance;
+}
+
+.canvas-section {
+  background-color: var(--bg-app);
+}
+
+.svg-stage-viewport {
+  background-color: var(--bg-app);
+  background-image:
+    linear-gradient(to right, var(--paper-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--paper-grid) 1px, transparent 1px),
+    linear-gradient(135deg, transparent 49.8%, color-mix(in srgb, var(--paper-grid) 45%, transparent) 50%, transparent 50.2%);
+  background-size: 4.5rem 4.5rem, 4.5rem 4.5rem, 18rem 18rem;
+}
+
+.canvas-section::after,
+.snapshot-folio::after,
+.research-view::after {
+  content: "";
+  position: absolute;
+  inset: 0.65rem;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--rule-crisp) 42%, transparent);
+  opacity: 0.65;
+}
+
+.canvas-section::after {
+  z-index: 0;
+}
+
+.canvas-top-bar,
+.svg-stage-viewport {
+  position: relative;
+  z-index: 1;
+}
+
+.canvas-top-bar {
+  background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
+}
+
+.canvas-tools,
+.filter-pills {
+  position: relative;
+  z-index: 2;
+}
+
+/* Dossier rail: a continuous report column rather than stacked SaaS cards. */
+.monograph-section {
+  border-left: 1px solid var(--rule-crisp);
+  box-shadow: inset 12px 0 18px -24px var(--ink-primary);
+}
+
+.monograph-tabs {
+  min-height: 2.7rem;
+  padding: 0 1.1rem;
+}
+
+.m-tab {
+  position: relative;
+  letter-spacing: 0.08em;
+}
+
+.m-tab.active::before {
+  content: "";
+  width: 0.3rem;
+  height: 0.3rem;
+  background: var(--ink-olive);
+  position: absolute;
+  left: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tab-pane {
+  padding: 1.35rem 1.4rem 2.25rem;
+  scrollbar-color: var(--rule-crisp) transparent;
+  scrollbar-width: thin;
+}
+
+.dossier-filled {
+  gap: 0;
+}
+
+.specimen-card-top {
+  border-bottom: 2px solid var(--ink-primary);
+  padding-bottom: 1.15rem;
+  position: relative;
+}
+
+.specimen-card-top::before {
+  content: "PLATE / SELECTED SPECIMEN";
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--ink-bluegray);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.spec-action-bar {
+  order: 4;
+  padding-top: 0.7rem;
+  margin-top: 0.8rem;
+  border-top: 1px solid var(--rule-hairline);
+}
+
+.spec-action-btn,
+.anchor-pill,
+.dep-node-pill,
+.s-pill,
+.f-pill {
+  border-radius: 0;
+  letter-spacing: 0.03em;
+}
+
+.spec-action-btn,
+.anchor-pill {
+  background: transparent;
+  border-color: var(--rule-crisp);
+}
+
+/* The existing trace label includes a lightning glyph; request text presentation
+   so its legibility does not depend on an installed colour-emoji font. */
+.spec-action-btn { font-variant-emoji: text; }
+
+.spec-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  letter-spacing: 0.04em;
+  border-radius: 0;
+}
+
+.spec-badge.CONFIRMED::before { content: "+"; }
+.spec-badge.FALSIFIED::before { content: "×"; }
+.spec-badge.IN_PROGRESS::before { content: "~"; }
+.spec-badge.BLOCKED::before { content: "∥"; }
+.spec-badge.PROPOSED::before { content: "?"; }
+
+.spec-badge.CONFIRMED {
+  background-image: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--pastel-confirmed-ink) 12%, transparent) 4px 5px);
+}
+
+.spec-badge.FALSIFIED {
+  background-image: repeating-linear-gradient(-45deg, transparent 0 4px, color-mix(in srgb, var(--pastel-falsified-ink) 14%, transparent) 4px 5px);
+}
+
+.spec-badge.IN_PROGRESS {
+  background-image: repeating-linear-gradient(90deg, transparent 0 3px, color-mix(in srgb, var(--pastel-in-progress-ink) 13%, transparent) 3px 4px);
+}
+
+.dossier-nav-anchors {
+  gap: 0;
+  padding: 0.55rem 0;
+  background: var(--bg-surface);
+}
+
+.anchor-pill {
+  border-width: 0 1px 0 0;
+  padding: 0.16rem 0.65rem;
+}
+
+.anchor-pill:first-child {
+  padding-left: 0;
+}
+
+.dossier-block {
+  gap: 0.55rem;
+  padding: 1.15rem 0;
+  border-bottom: 1px solid var(--rule-hairline);
+}
+
+.dossier-block:last-child {
+  border-bottom: 0;
+}
+
+.block-lbl {
+  color: var(--ink-bluegray);
+  letter-spacing: 0.09em;
+}
+
+.block-prose {
+  background: transparent;
+  border: 0;
+  border-left: 2px solid var(--rule-crisp);
+  padding: 0.15rem 0 0.15rem 0.95rem;
+}
+
+.falsification-block .block-lbl {
+  color: var(--ink-rust);
+}
+
+.falsification-prose {
+  color: var(--ink-rust);
+  background: repeating-linear-gradient(-45deg, transparent 0 7px, color-mix(in srgb, var(--ink-rust) 6%, transparent) 7px 8px);
+  border-left-color: var(--ink-rust);
+  border-top: 1px solid color-mix(in srgb, var(--ink-rust) 38%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink-rust) 38%, transparent);
+}
+
+.evidence-ledger-container {
+  gap: 0;
+  border-top: 1px solid var(--rule-crisp);
+}
+
+.ledger-item-card {
+  background: transparent;
+  border-width: 0 0 1px;
+  border-radius: 0;
+  padding: 0.7rem 0;
+}
+
+.ledger-row-header {
+  letter-spacing: 0.04em;
+}
+
+.ledger-verdict-badge {
+  border: 1px solid currentColor;
+  border-radius: 0;
+  letter-spacing: 0.05em;
+}
+
+.ledger-verdict-badge.pass::before { content: "+ "; }
+.ledger-verdict-badge.fail::before { content: "× "; }
+
+.trace-card,
+.gap-pill-item {
+  border-radius: 0;
+  background: transparent;
+  border-width: 0 0 1px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Current atlas shell (kept separate from the generic research-mode names so
+   the same plates also work with server-rendered or embedded views). */
+.atlas-mode-nav {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-right: 1px solid var(--rule-hairline);
+}
+
+.atlas-mode-nav::-webkit-scrollbar { display: none; }
+
+.atlas-mode-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.7rem 0 0;
+  color: var(--ink-bluegray);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.atlas-mode-btn {
+  min-height: 1.85rem;
+  padding: 0 0.62rem;
+  border: 0;
+  border-left: 1px solid var(--rule-hairline);
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.atlas-mode-btn:hover,
+.atlas-mode-btn.active,
+.atlas-mode-btn[aria-selected="true"] {
+  color: var(--ink-primary);
+  background: var(--bg-plate-subtle);
+}
+
+.atlas-mode-btn.active::before,
+.atlas-mode-btn[aria-selected="true"]::before {
+  content: "+ ";
+  color: var(--ink-olive);
+}
+
+.atlas-mode-views {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.atlas-mode-view {
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.atlas-mode-view[hidden] { display: none !important; }
+
+.atlas-mode-view:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#atlas-view-atlas .svg-stage-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.atlas-view-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.7rem 1.25rem;
+  border-bottom: 1px solid var(--rule-crisp);
+  background: var(--bg-surface);
+}
+
+.atlas-view-note {
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-align: right;
+}
+
+.atlas-provenance-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-top: 1px solid var(--rule-crisp);
+  background: var(--bg-surface);
+}
+
+.atlas-provenance-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  min-width: 7.5rem;
+  padding: 0.45rem 0.75rem;
+  border-right: 1px solid var(--rule-hairline);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+}
+
+.atlas-provenance-label {
+  color: var(--ink-bluegray);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.atlas-provenance-value {
+  color: var(--ink-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.atlas-link {
+  border: 0;
+  background: transparent;
+  color: var(--ink-primary);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--ink-olive);
+  text-underline-offset: 0.18em;
+}
+
+.atlas-link:hover { color: var(--ink-olive); }
+
+/* Timeline generated by renderStratigraphy(). */
+.stratigraphy-timeline {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 1.1rem 1.25rem 2rem;
+}
+
+.stratigraphy-rows {
+  position: relative;
+  display: grid;
+  gap: 0;
+  max-width: 62rem;
+  margin: 0 auto;
+}
+
+.stratigraphy-rows::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1.1rem;
+  border-left: 1px solid var(--ink-bluegray);
+  opacity: 0.55;
+}
+
+.stratigraphy-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.2rem minmax(7.5rem, 0.35fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--rule-hairline);
+}
+
+.stratigraphy-index {
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 1.4rem;
+  background: var(--bg-surface);
+  color: var(--ink-bluegray);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+}
+
+.stratigraphy-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-top: 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+}
+
+.stratigraphy-agent {
+  color: var(--ink-primary);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.stratigraphy-time,
+.stratigraphy-trace-id {
+  color: var(--ink-muted);
+}
+
+.stratigraphy-body { min-width: 0; }
+
+.stratigraphy-event {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: normal;
+}
+
+.stratigraphy-event::before { display: none; }
+
+.stratigraphy-action {
+  color: var(--ink-olive);
+  text-transform: uppercase;
+}
+
+.stratigraphy-summary {
+  max-width: 70ch;
+  margin-top: 0.25rem;
+  color: var(--ink-secondary);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.stratigraphy-hypothesis-link {
+  display: inline-block;
+  max-width: 100%;
+  margin-top: 0.45rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
+}
+
+/* Atlas tables generated by renderLedgerAtlas/renderCoverageAtlas(). */
+.ledger-atlas-table-wrap,
+.coverage-atlas-container {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 1.1rem 1.25rem 2rem;
+}
+
+.ledger-atlas-table,
+.coverage-atlas-table {
+  width: 100%;
+  min-width: 47rem;
+  border-collapse: collapse;
+  background: var(--bg-surface);
+}
+
+.ledger-atlas-table th,
+.ledger-atlas-table td,
+.coverage-atlas-table th,
+.coverage-atlas-table td {
+  padding: 0.6rem 0.7rem;
+  border-right: 1px solid var(--rule-hairline);
+  border-bottom: 1px solid var(--rule-hairline);
+  text-align: left;
+  vertical-align: top;
+}
+
+.ledger-atlas-table th,
+.coverage-atlas-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  color: var(--ink-bluegray);
+  background: var(--bg-plate-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ledger-atlas-table td,
+.coverage-atlas-table td {
+  color: var(--ink-secondary);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.ledger-atlas-table tbody tr:hover,
+.coverage-atlas-table tbody tr:hover {
+  background: var(--bg-plate-subtle);
+}
+
+.ledger-specimen-cell {
+  min-width: 12rem;
+  font-family: var(--font-mono);
+}
+
+.ledger-title-inline {
+  display: block;
+  max-width: 20rem;
+  margin-top: 0.22rem;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.ledger-status,
+.ledger-level,
+.ledger-count,
+.ledger-verdict,
+.ledger-metric,
+.ledger-provenance,
+.coverage-tested,
+.coverage-status,
+.coverage-evidence {
+  font-family: var(--font-mono) !important;
+  font-size: 0.63rem !important;
+}
+
+.ledger-status.confirmed,
+.ledger-verdict.observed,
+.coverage-status.covered,
+.coverage-tested.declared {
+  color: var(--ink-olive) !important;
+}
+
+.ledger-status.falsified,
+.ledger-verdict.fail,
+.coverage-status.white-spot {
+  color: var(--ink-rust) !important;
+}
+
+.ledger-status.in_progress,
+.ledger-status.proposed {
+  color: var(--ink-ochre) !important;
+}
+
+.ledger-verdict.empty,
+.ledger-verdict.unavailable,
+.coverage-tested.empty {
+  color: var(--ink-muted) !important;
+}
+
+.ledger-status.falsified,
+.ledger-verdict.fail,
+.coverage-status.white-spot {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-style: double;
+}
+
+.coverage-dimension {
+  color: var(--ink-primary) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.64rem !important;
+}
+
+/* Table verdicts retain their meaning in grayscale and high-contrast modes. */
+.ledger-status::before,
+.coverage-status::before {
+  display: inline-block;
+  min-width: 1.1em;
+  margin-right: 0.25rem;
+  font-weight: 800;
+}
+
+.ledger-status.confirmed::before,
+.coverage-status.covered::before { content: "+"; }
+
+.ledger-status.falsified::before,
+.coverage-status.white-spot::before { content: "×"; }
+
+.ledger-status.in_progress::before,
+.ledger-status.proposed::before { content: "~"; }
+
+
+/* ======================================================================
+   11. STRATIGRAPHY / AGENT TIMELINE
+   ========================================================================== */
+
+.stratigraphy {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 40rem;
+  padding: 0.5rem 0 1rem;
+}
+
+.stratigraphy-axis,
+.stratigraphy-lane {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.8fr) repeat(var(--strata-columns, 8), minmax(5rem, 1fr));
+  align-items: stretch;
+}
+
+.stratigraphy-axis {
+  border-bottom: 1px solid var(--rule-crisp);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+.stratigraphy-axis > * {
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border-left: 1px solid var(--rule-hairline);
+}
+
+.stratigraphy-axis > :first-child {
+  border-left: 0;
+  color: var(--ink-bluegray);
+  text-transform: uppercase;
+}
+
+.stratigraphy-lane {
+  min-height: 3.3rem;
+  border-bottom: 1px solid var(--rule-hairline);
+  background-image: repeating-linear-gradient(to right, transparent 0 calc(12.5% - 1px), var(--rule-hairline) calc(12.5% - 1px) 12.5%);
+}
+
+.stratigraphy-lane-label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.45rem 0.6rem 0.45rem 0;
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.stratigraphy-lane-label small {
+  color: var(--ink-muted);
+  font-size: 0.56rem;
+  font-weight: 500;
+}
+
+/* ======================================================================
+   12. LEDGER AND COVERAGE MATRICES
+   ========================================================================== */
+
+.ledger-matrix,
+.coverage-matrix,
+.ledger-table-wrap,
+.coverage-table-wrap {
+  width: 100%;
+  overflow: auto;
+  border-top: 1px solid var(--rule-crisp);
+  border-bottom: 1px solid var(--rule-crisp);
+  scrollbar-width: thin;
+}
+
+.ledger-table,
+.coverage-table {
+  width: 100%;
+  min-width: 42rem;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.ledger-table th,
+.ledger-table td,
+.coverage-table th,
+.coverage-table td {
+  padding: 0.62rem 0.7rem;
+  border-right: 1px solid var(--rule-hairline);
+  border-bottom: 1px solid var(--rule-hairline);
+  text-align: left;
+  vertical-align: top;
+}
+
+.ledger-table th,
+.coverage-table th {
+  color: var(--ink-bluegray);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--bg-plate-subtle);
+}
+
+.ledger-table td,
+.coverage-table td {
+  color: var(--ink-secondary);
+  font-size: 0.73rem;
+  line-height: 1.4;
+}
+
+.ledger-table tbody tr:hover,
+.coverage-table tbody tr:hover {
+  background: color-mix(in srgb, var(--bg-plate-subtle) 60%, transparent);
+}
+
+.ledger-table th:first-child,
+.ledger-table td:first-child,
+.coverage-table th:first-child,
+.coverage-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 8rem;
+  background: var(--bg-surface);
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.ledger-table th:first-child,
+.coverage-table th:first-child {
+  background: var(--bg-plate-subtle);
+}
+
+.ledger-cell,
+.coverage-cell {
+  min-width: 5.5rem;
+  text-align: center !important;
+  font-family: var(--font-mono);
+  font-size: 0.65rem !important;
+  font-weight: 700;
+}
+
+.ledger-cell[data-verdict="PASS"],
+.ledger-cell.pass,
+.coverage-cell.tested,
+.coverage-cell[data-state="TESTED"] {
+  color: var(--ink-olive);
+  background: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in srgb, var(--ink-olive) 8%, transparent) 5px 6px);
+}
+
+.ledger-cell[data-verdict="FAIL"],
+.ledger-cell.fail,
+.coverage-cell.falsified,
+.coverage-cell[data-state="FALSIFIED"] {
+  color: var(--ink-rust);
+  background: repeating-linear-gradient(-45deg, transparent 0 5px, color-mix(in srgb, var(--ink-rust) 8%, transparent) 5px 6px);
+}
+
+.coverage-cell.partial,
+.coverage-cell[data-state="PARTIAL"] {
+  color: var(--ink-ochre);
+  background: repeating-linear-gradient(90deg, transparent 0 4px, color-mix(in srgb, var(--ink-ochre) 9%, transparent) 4px 5px);
+}
+
+.coverage-cell.empty,
+.coverage-cell[data-state="EMPTY"] {
+  color: var(--ink-faint);
+  background: repeating-linear-gradient(45deg, transparent 0 4px, var(--rule-hairline) 4px 5px);
+}
+
+.coverage-legend,
+.ledger-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.15rem;
+  margin-top: 0.7rem;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.61rem;
+}
+
+.coverage-legend-item::before,
+.ledger-legend-item::before {
+  content: "";
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-right: 0.35rem;
+  border: 1px solid currentColor;
+  vertical-align: -0.1rem;
+}
+
+.coverage-legend-item.tested,
+.ledger-legend-item.pass { color: var(--ink-olive); }
+.coverage-legend-item.partial { color: var(--ink-ochre); }
+.coverage-legend-item.falsified,
+.ledger-legend-item.fail { color: var(--ink-rust); }
+.coverage-legend-item.empty { color: var(--ink-faint); }
+
+/* ======================================================================
+   13. SNAPSHOT FOLIO / REPORT COVER
+   ========================================================================== */
+
+.snapshot-folio {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(11rem, 0.65fr);
+  gap: clamp(1.5rem, 4vw, 5rem);
+  min-height: 20rem;
+  padding: clamp(1.6rem, 4vw, 4.5rem);
+  border: 1px solid var(--rule-crisp);
+  background-color: var(--bg-surface);
+  background-image:
+    linear-gradient(to right, var(--paper-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--paper-grid) 1px, transparent 1px);
+  background-size: 3.25rem 3.25rem;
+}
+
+.snapshot-folio > * { position: relative; z-index: 1; }
+
+.snapshot-folio::after { inset: 0.65rem; }
+
+.folio-body {
+  align-self: end;
+}
+
+.folio-statement {
+  max-width: 34ch;
+  margin-top: 1rem;
+  color: var(--ink-secondary);
+  font-size: clamp(0.95rem, 1vw + 0.4rem, 1.35rem);
+  line-height: 1.35;
+}
+
+.folio-index {
+  align-self: start;
+  justify-self: end;
+  display: grid;
+  gap: 0.5rem;
+  min-width: 11rem;
+  padding: 0.9rem;
+  border: 1px solid var(--rule-crisp);
+  border-left: 3px solid var(--ink-olive);
+  background: color-mix(in srgb, var(--bg-surface) 76%, transparent);
+}
+
+.folio-index-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--rule-hairline);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+}
+
+.folio-index-row strong {
+  color: var(--ink-primary);
+  font-weight: 700;
+}
+
+/* Status styles work without relying on color alone. */
+[data-status="FALSIFIED"],
+.status-falsified,
+.is-falsified {
+  --status-ink: var(--ink-rust);
+  --status-mark: "×";
+}
+
+[data-status="CONFIRMED"],
+.status-confirmed,
+.is-confirmed {
+  --status-ink: var(--ink-olive);
+  --status-mark: "+";
+}
+
+[data-status="IN_PROGRESS"],
+.status-in-progress,
+.is-in-progress {
+  --status-ink: var(--ink-ochre);
+  --status-mark: "~";
+}
+
+.status-mark::before {
+  content: var(--status-mark, "•");
+  display: inline-block;
+  margin-right: 0.35rem;
+  color: var(--status-ink, var(--ink-bluegray));
+  font-weight: 800;
+}
+
+/* Keyboard navigation should be visible on both paper and noir themes. */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.dag-node-group:focus-visible .node-plate {
+  stroke: var(--focus-ring);
+  stroke-width: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ======================================================================
+   14. RESPONSIVE REPORT PLATES
+   ========================================================================== */
+
+@media (max-width: 1280px) {
+  .print-header {
+    grid-template-columns: minmax(240px, 1.2fr) minmax(240px, 1fr) auto;
+    padding-left: 1.35rem;
+    padding-right: 1.35rem;
+    gap: 1rem;
+  }
+
+  .kpi-strip { padding: 0 1.35rem; }
+  .canvas-top-bar {
+    flex-wrap: wrap;
+    gap: 0.55rem 0.8rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+  .atlas-mode-nav { flex: 1 1 auto; }
+  .filter-pills { order: 3; flex: 1 1 100%; overflow-x: auto; padding-bottom: 0.15rem; }
+  .canvas-tools { margin-left: auto; }
+  .monograph-section { width: clamp(340px, 32vw, 470px); }
+}
+
+@media (max-width: 960px) {
+  body.editorial-body {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+
+  .print-container {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .print-header {
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+
+  .header-center-passport {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+
+  .header-right { grid-column: 2; grid-row: 1; }
+  .kpi-strip {
+    grid-template-columns: repeat(4, minmax(100px, 1fr));
+    overflow-x: auto;
+  }
+
+  .kpi-spectrum-cell {
+    grid-column: 1 / -1;
+    align-items: flex-start;
+    padding: 0.65rem 0;
+    border-top: 1px solid var(--rule-hairline);
+  }
+
+  .workspace-stage {
+    display: block;
+    overflow: visible;
+  }
+
+  .canvas-section {
+    min-height: min(65vh, 38rem);
+    height: 62vh;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule-crisp);
+  }
+
+  .monograph-section {
+    width: 100%;
+    min-height: 30rem;
+    border-left: 0;
+  }
+
+  .tab-pane { overflow: visible; }
+
+  .atlas-mode-nav { max-width: 100%; }
+  .canvas-top-bar { align-items: flex-start; }
+  .filter-pills { flex-basis: 100%; }
+  .canvas-tools { margin-left: 0; }
+  .atlas-view-heading { align-items: flex-start; flex-direction: column; }
+  .atlas-view-note { text-align: left; }
+  .ledger-atlas-table-wrap,
+  .coverage-atlas-container,
+  .stratigraphy-timeline { padding-left: 1rem; padding-right: 1rem; }
+}
+
+@media (max-width: 760px) {
+  html { font-size: clamp(13px, 1.6vw + 8px, 17px); }
+
+  .print-header {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0.85rem 1rem;
+  }
+
+  .header-left { flex: 1 1 100%; }
+  .header-right { margin-left: auto; }
+  .header-center-passport {
+    flex: 1 1 100%;
+    order: 3;
+    overflow: hidden;
+  }
+
+  .header-right .hdr-ctrl-btn { padding: 0 0.55rem; }
+  .cmd-k-hint { display: none; }
+  .sync-timestamp { display: none; }
+
+  .kpi-strip {
+    display: flex;
+    padding: 0 1rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .kpi-cell { min-width: 6.8rem; padding-right: 0.8rem; }
+  .kpi-spectrum-cell { min-width: 18rem; border-top: 0; }
+
+  .canvas-section { height: 52vh; min-height: 24rem; }
+  .canvas-top-bar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.65rem 1rem;
+  }
+
+  .atlas-mode-nav {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule-hairline);
+  }
+
+  .atlas-mode-label { padding-left: 0; }
+  .atlas-mode-btn { flex: 0 0 auto; }
+  .atlas-provenance-item { flex: 1 1 8rem; }
+
+  .stratigraphy-row {
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+  }
+
+  .stratigraphy-meta {
+    grid-column: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.7rem;
+  }
+
+  .stratigraphy-body { grid-column: 2; }
+
+  .ledger-atlas-table,
+  .coverage-atlas-table { min-width: 42rem; }
+
+  .filter-pills {
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+  }
+
+  .canvas-tools { align-self: flex-end; margin-left: 0; }
+  .monograph-tabs { padding: 0; overflow-x: auto; }
+  .m-tab { padding-left: 0.8rem; padding-right: 0.8rem; }
+  .tab-pane { padding: 1.1rem 1rem 1.8rem; }
+
 }

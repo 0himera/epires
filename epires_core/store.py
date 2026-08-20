@@ -122,8 +122,31 @@ class EpiresStore:
     # -------------------------------------------------------------------------
     def register_hypothesis(self, h: HypothesisNode) -> HypothesisNode:
         now = self._now()
-        h.created_at = h.created_at or now
+        existing = self.get_hypothesis(h.id)
+        h.created_at = h.created_at or (existing.created_at if existing else now)
         h.updated_at = now
+
+        # Re-registration is an edit to the hypothesis declaration, not a new
+        # observation.  Do not let a stale caller erase progress already
+        # recorded in the evidence ledger, or reopen terminal outcomes.
+        if existing:
+            if existing.current_evidence_level.value > h.current_evidence_level.value:
+                h.current_evidence_level = existing.current_evidence_level
+            if existing.status == HypothesisStatus.FALSIFIED:
+                h.status = existing.status
+            elif h.status == HypothesisStatus.FALSIFIED:
+                # A falsifying observation is the one terminal transition that
+                # may supersede any non-falsified state.
+                pass
+            elif existing.status in {HypothesisStatus.BLOCKED, HypothesisStatus.REFINED}:
+                h.status = existing.status
+            elif (
+                existing.status == HypothesisStatus.CONFIRMED
+                and h.status in {HypothesisStatus.PROPOSED, HypothesisStatus.IN_PROGRESS}
+            ):
+                h.status = existing.status
+            elif existing.status == HypothesisStatus.IN_PROGRESS and h.status == HypothesisStatus.PROPOSED:
+                h.status = existing.status
 
         # Get existing relations for encoding
         relations = [
@@ -164,6 +187,10 @@ class EpiresStore:
             ))
 
             # Sync relations
+            conn.execute(
+                "DELETE FROM relations WHERE source_id = ? AND relation_type = ?",
+                (h.id, RelationType.DEPENDS_ON.value),
+            )
             for pid in h.parent_ids:
                 conn.execute("""
                 INSERT OR IGNORE INTO relations (source_id, target_id, relation_type, metadata_json)
@@ -244,9 +271,16 @@ class EpiresStore:
                 self.register_hypothesis(h)
                 blocked_children = self._cascade_falsification(ev.hypothesis_id)
             else:
-                # Promote evidence level
-                h.current_evidence_level = ev.evidence_level
-                if ev.evidence_level.value >= h.target_evidence_level.value:
+                # Evidence promotion is monotonic. A late-arriving E1/E2 claim
+                # must not downgrade a hypothesis already promoted by E3+.
+                if ev.evidence_level.value > h.current_evidence_level.value:
+                    h.current_evidence_level = ev.evidence_level
+
+                # Non-falsifying observations cannot reopen an invalidated or
+                # dependency-blocked hypothesis.
+                if h.status in {HypothesisStatus.FALSIFIED, HypothesisStatus.BLOCKED}:
+                    pass
+                elif h.current_evidence_level.value >= h.target_evidence_level.value:
                     h.status = HypothesisStatus.CONFIRMED
                 else:
                     h.status = HypothesisStatus.IN_PROGRESS
@@ -282,6 +316,13 @@ class EpiresStore:
             rows = cursor.fetchall()
             for r in rows:
                 child_id = r["child_id"]
+                child_status = conn.execute(
+                    "SELECT status FROM hypotheses WHERE id = ?", (child_id,)
+                ).fetchone()
+                # A separately falsified child remains FALSIFIED; do not
+                # replace one terminal scientific result with another label.
+                if child_status and child_status["status"] == HypothesisStatus.FALSIFIED.value:
+                    continue
                 conn.execute(
                     "UPDATE hypotheses SET status = ?, updated_at = ? WHERE id = ?",
                     (HypothesisStatus.BLOCKED.value, self._now(), child_id)
@@ -306,23 +347,99 @@ class EpiresStore:
     def get_evidence_for_hypothesis(self, h_id: str) -> List[EvidenceClaim]:
         with self._get_connection() as conn:
             rows = conn.execute("SELECT * FROM evidence WHERE hypothesis_id = ? ORDER BY timestamp ASC", (h_id,)).fetchall()
+            return [self._row_to_evidence(r) for r in rows]
+
+    @staticmethod
+    def _row_to_evidence(row: sqlite3.Row) -> EvidenceClaim:
+        """Convert an evidence row without exposing SQLite-specific values."""
+        return EvidenceClaim(
+            id=row["id"],
+            hypothesis_id=row["hypothesis_id"],
+            evidence_level=EvidenceLevel(row["evidence_level"]),
+            source_confidence=SourceConfidence(row["source_confidence"]),
+            claim=row["claim"],
+            metric_name=row["metric_name"],
+            metric_value=row["metric_value"],
+            delta_vs_baseline=row["delta_vs_baseline"],
+            ci_95_lower=row["ci_95_lower"],
+            ci_95_upper=row["ci_95_upper"],
+            falsification_triggered=bool(row["falsification_triggered"]),
+            citation_or_path=row["citation_or_path"] or "",
+            artifact_hash=row["artifact_hash"],
+            timestamp=row["timestamp"],
+        )
+
+    def list_evidence(self, hypothesis_id: Optional[str] = None) -> List[EvidenceClaim]:
+        """List evidence claims in insertion order (optionally for one hypothesis)."""
+        with self._get_connection() as conn:
+            if hypothesis_id is None:
+                rows = conn.execute("SELECT * FROM evidence ORDER BY timestamp ASC, id ASC").fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM evidence WHERE hypothesis_id = ? ORDER BY timestamp ASC, id ASC",
+                    (hypothesis_id,),
+                ).fetchall()
+            return [self._row_to_evidence(row) for row in rows]
+
+    def list_relations(self, relation_type: Optional[RelationType] = None) -> List[RelationEdge]:
+        """Return persisted graph edges in deterministic order."""
+        with self._get_connection() as conn:
+            if relation_type is None:
+                rows = conn.execute(
+                    "SELECT * FROM relations ORDER BY source_id ASC, target_id ASC, relation_type ASC"
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM relations WHERE relation_type = ? "
+                    "ORDER BY source_id ASC, target_id ASC",
+                    (relation_type.value,),
+                ).fetchall()
             return [
-                EvidenceClaim(
-                    id=r["id"],
-                    hypothesis_id=r["hypothesis_id"],
-                    evidence_level=EvidenceLevel(r["evidence_level"]),
-                    source_confidence=SourceConfidence(r["source_confidence"]),
-                    claim=r["claim"],
-                    metric_name=r["metric_name"],
-                    metric_value=r["metric_value"],
-                    delta_vs_baseline=r["delta_vs_baseline"],
-                    ci_95_lower=r["ci_95_lower"],
-                    ci_95_upper=r["ci_95_upper"],
-                    falsification_triggered=bool(r["falsification_triggered"]),
-                    citation_or_path=r["citation_or_path"] or "",
-                    artifact_hash=r["artifact_hash"],
-                    timestamp=r["timestamp"],
-                ) for r in rows
+                RelationEdge(
+                    source_id=row["source_id"],
+                    target_id=row["target_id"],
+                    relation_type=RelationType(row["relation_type"]),
+                    metadata=json.loads(row["metadata_json"] or "{}"),
+                )
+                for row in rows
+            ]
+
+    def list_experiments(self, hypothesis_id: Optional[str] = None) -> List[ExperimentNode]:
+        """List experiment records, tolerating legacy rows with missing JSON values."""
+        with self._get_connection() as conn:
+            if hypothesis_id is None:
+                rows = conn.execute("SELECT * FROM experiments ORDER BY created_at ASC, id ASC").fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM experiments WHERE hypothesis_id = ? ORDER BY created_at ASC, id ASC",
+                    (hypothesis_id,),
+                ).fetchall()
+
+            def decode(value: Optional[str], default: Any, expected_type: type) -> Any:
+                if not value:
+                    return default
+                try:
+                    decoded = json.loads(value)
+                except (TypeError, ValueError):
+                    return default
+                return decoded if isinstance(decoded, expected_type) else default
+
+            return [
+                ExperimentNode(
+                    id=row["id"],
+                    hypothesis_id=row["hypothesis_id"],
+                    name=row["name"],
+                    script_path=row["script_path"],
+                    commit_hash=row["commit_hash"],
+                    parameters=decode(row["parameters_json"], {}, dict),
+                    metrics=decode(row["metrics_json"], {}, dict),
+                    # The original schema has no evidence_ids column. Keep this
+                    # explicit instead of inventing links from artifact paths.
+                    evidence_ids=[],
+                    artifact_paths=decode(row["artifact_paths_json"], [], list),
+                    created_at=row["created_at"],
+                )
+                for row in rows
             ]
 
     # -------------------------------------------------------------------------

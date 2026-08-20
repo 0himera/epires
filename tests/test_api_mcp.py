@@ -68,6 +68,41 @@ def test_fastapi_endpoints():
         assert mermaid_resp.status_code == 200
         assert "```mermaid" in mermaid_resp.json()["mermaid"]
 
+        # Atlas projections share a versioned envelope and reflect persisted data.
+        snapshot = client.get("/atlas/snapshot")
+        assert snapshot.status_code == 200
+        snapshot_data = snapshot.json()
+        assert snapshot_data["schema_version"] == "atlas.v1"
+        assert snapshot_data["generated_at"]
+        assert snapshot_data["summary"]["hypotheses_total"] == 1
+        assert snapshot_data["summary"]["evidence_total"] == 1
+        assert snapshot_data["hypotheses"][0]["id"] == "H1"
+
+        stratigraphy = client.get("/atlas/stratigraphy")
+        assert stratigraphy.status_code == 200
+        assert stratigraphy.json()["schema_version"] == "atlas.v1"
+        assert {event["kind"] for event in stratigraphy.json()["events"]} >= {"hypothesis", "evidence", "trace"}
+
+        coverage = client.get("/atlas/coverage?dimensions=Model,Feature")
+        assert coverage.status_code == 200
+        coverage_data = coverage.json()
+        assert coverage_data["basis"] == "hypothesis_entities"
+        assert coverage_data["dimensions"] == ["Model", "Feature"]
+        assert coverage_data["summary"]["present_cells"] == 0
+        assert coverage_data["summary"]["absent_cells"] == 0
+
+        provenance = client.get("/atlas/provenance")
+        assert provenance.status_code == 200
+        provenance_data = provenance.json()
+        assert provenance_data["schema_version"] == "atlas.v1"
+        assert any(link["relation"] == "EVIDENCES" for link in provenance_data["links"])
+
+        # A lower-level late claim cannot downgrade a promoted hypothesis.
+        lower_ev = dict(ev_data)
+        lower_ev.update({"id": "ev0", "evidence_level": "E0", "claim": "A later replay was recorded"})
+        assert client.post("/evidence", json=lower_ev).status_code == 200
+        assert client.get("/hypotheses/H1").json()["hypothesis"]["current_evidence_level"] == "E2"
+
 
 def test_mcp_server_tools():
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -88,3 +123,42 @@ def test_mcp_server_tools():
         assert "epires_parallel_extract" in tool_names
         assert "epires_record_trace" in tool_names
         assert "epires_system_status" in tool_names
+
+
+def test_mcp_entity_pairs_are_persisted_and_validated():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        mcp = create_mcp_server(
+            db_path=str(Path(tmpdir) / "test_mcp_entities.db"),
+            trace_md=str(Path(tmpdir) / "trace.md"),
+        )
+        register = next(tool.fn for tool in mcp._tool_manager.list_tools()
+                        if tool.name == "epires_register_hypothesis")
+        register(
+            id="H-ENT",
+            title="Entity pair test",
+            a_priori_mechanism="A mechanism",
+            falsification_criteria="A criterion",
+            entity_types=["Model", "Feature"],
+            entity_values=["CatBoost", "FFT"],
+        )
+        # The closure's store is private, so query through the MCP graph tool.
+        query = next(tool.fn for tool in mcp._tool_manager.list_tools()
+                     if tool.name == "epires_query_graph")
+        result = json.loads(query(h_id="H-ENT"))
+        assert result["hypothesis"]["entities"] == [
+            {"type": "Model", "value": "CatBoost"},
+            {"type": "Feature", "value": "FFT"},
+        ]
+        try:
+            register(
+                id="H-BAD",
+                title="Bad entity pair",
+                a_priori_mechanism="A mechanism",
+                falsification_criteria="A criterion",
+                entity_types=["Model"],
+                entity_values=[],
+            )
+        except ValueError as exc:
+            assert "same number" in str(exc)
+        else:
+            raise AssertionError("MCP accepted entity lists of different lengths")

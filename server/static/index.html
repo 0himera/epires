@@ -57,9 +57,9 @@
         <div class="sync-cluster">
           <button class="hdr-ctrl-btn sync-action-btn" id="btn-refresh" title="Sync live state from SQLite">
             <span class="sync-dot" id="sync-status-dot"></span>
-            <span>SYNC</span>
+            <span id="sync-status-label">SYNC</span>
           </button>
-          <span class="sync-timestamp" id="sync-time-text">--:--</span>
+          <span class="sync-timestamp" id="sync-time-text" aria-live="polite">--:--</span>
         </div>
       </div>
     </header>
@@ -102,7 +102,14 @@
       <!-- Left Stage: Topological Morphic DAG Canvas -->
       <section class="canvas-section">
         <div class="canvas-top-bar">
-          <div class="filter-pills" id="dag-filter-group">
+          <nav class="atlas-mode-nav" id="atlas-mode-nav" role="tablist" aria-label="Research atlas views">
+            <span class="atlas-mode-label">RESEARCH ATLAS</span>
+            <button class="atlas-mode-btn active" id="atlas-tab-atlas" type="button" role="tab" tabindex="0" data-atlas-mode="atlas" aria-controls="atlas-view-atlas" aria-selected="true">01 ATLAS</button>
+            <button class="atlas-mode-btn" id="atlas-tab-stratigraphy" type="button" role="tab" tabindex="-1" data-atlas-mode="stratigraphy" aria-controls="atlas-view-stratigraphy" aria-selected="false">02 STRATIGRAPHY</button>
+            <button class="atlas-mode-btn" id="atlas-tab-ledger" type="button" role="tab" tabindex="-1" data-atlas-mode="ledger" aria-controls="atlas-view-ledger" aria-selected="false">03 LEDGER</button>
+            <button class="atlas-mode-btn" id="atlas-tab-coverage" type="button" role="tab" tabindex="-1" data-atlas-mode="coverage" aria-controls="atlas-view-coverage" aria-selected="false">04 COVERAGE</button>
+          </nav>
+          <div class="filter-pills atlas-only-control" id="dag-filter-group">
             <button class="f-pill active" data-status="ALL">ALL</button>
             <button class="f-pill" data-status="IN_PROGRESS">IN PROGRESS</button>
             <button class="f-pill f-pill-falsified" data-status="FALSIFIED">FALSIFIED</button>
@@ -110,29 +117,55 @@
             <button class="f-pill f-pill-ghost" id="btn-toggle-ghosts" data-status="GHOSTS" title="Toggle White Spot Ghost Nodes on Graph">WHITE SPOTS</button>
           </div>
 
-          <div class="canvas-tools">
-            <button class="tool-btn" id="btn-zoom-out" title="Zoom out">−</button>
+          <div class="canvas-tools atlas-only-control">
+            <button class="tool-btn" id="btn-zoom-out" title="Zoom out" aria-label="Zoom out">−</button>
             <span class="zoom-level-text" id="zoom-level-text">95%</span>
-            <button class="tool-btn" id="btn-zoom-in" title="Zoom in">+</button>
-            <button class="tool-btn-text" id="btn-zoom-reset">AUTO-FIT</button>
+            <button class="tool-btn" id="btn-zoom-in" title="Zoom in" aria-label="Zoom in">+</button>
+            <button class="tool-btn-text" id="btn-zoom-reset" title="Fit graph to canvas">AUTO-FIT</button>
           </div>
         </div>
 
-        <div class="svg-stage-viewport" id="canvas-container">
-          <svg id="dag-svg" class="dag-svg"></svg>
+        <div class="atlas-mode-views" id="atlas-mode-views">
+          <div class="atlas-mode-view active" id="atlas-view-atlas" data-atlas-view="atlas" role="tabpanel" aria-labelledby="atlas-tab-atlas">
+            <div class="svg-stage-viewport" id="canvas-container">
+              <svg id="dag-svg" class="dag-svg"></svg>
+            </div>
+            <div class="atlas-provenance-strip" id="atlas-provenance-strip" aria-live="polite"></div>
+          </div>
+          <section class="atlas-mode-view" id="atlas-view-stratigraphy" data-atlas-view="stratigraphy" role="tabpanel" aria-labelledby="atlas-tab-stratigraphy" hidden>
+            <div class="atlas-view-heading">
+              <span class="block-lbl">PLATE 02 / RESEARCH STRATIGRAPHY</span>
+              <span class="atlas-view-note" id="stratigraphy-summary">Waiting for trace chronology.</span>
+            </div>
+            <div class="stratigraphy-timeline" id="stratigraphy-container" aria-live="polite"></div>
+          </section>
+          <section class="atlas-mode-view" id="atlas-view-ledger" data-atlas-view="ledger" role="tabpanel" aria-labelledby="atlas-tab-ledger" hidden>
+            <div class="atlas-view-heading">
+              <span class="block-lbl">PLATE 03 / EVIDENCE LEDGER</span>
+              <span class="atlas-view-note" id="ledger-summary">Comparative evidence by specimen.</span>
+            </div>
+            <div class="ledger-atlas-table-wrap" id="ledger-atlas-container" aria-live="polite"></div>
+          </section>
+          <section class="atlas-mode-view" id="atlas-view-coverage" data-atlas-view="coverage" role="tabpanel" aria-labelledby="atlas-tab-coverage" hidden>
+            <div class="atlas-view-heading">
+              <span class="block-lbl">PLATE 04 / COVERAGE MATRIX</span>
+              <span class="atlas-view-note" id="coverage-summary">Basis: hypothesis-entity declarations · Model × Feature × Regime.</span>
+            </div>
+            <div class="coverage-atlas-container" id="coverage-atlas-container" aria-live="polite"></div>
+          </section>
         </div>
       </section>
 
       <!-- Right Stage: Clean Monograph Dossier -->
       <aside class="monograph-section">
         <div class="monograph-tabs">
-          <button class="m-tab active" data-tab="inspector">DOSSIER</button>
-          <button class="m-tab" data-tab="traces">TRACES <span class="tab-count-badge" id="tab-badge-traces">0</span></button>
-          <button class="m-tab" data-tab="gaps">WHITE SPOTS <span class="tab-count-badge" id="tab-badge-gaps">0</span></button>
+          <button class="m-tab active" id="tab-inspector-button" data-tab="inspector" role="tab" aria-controls="tab-inspector" aria-selected="true">DOSSIER</button>
+          <button class="m-tab" id="tab-traces-button" data-tab="traces" role="tab" aria-controls="tab-traces" aria-selected="false">TRACES <span class="tab-count-badge" id="tab-badge-traces">0</span></button>
+          <button class="m-tab" id="tab-gaps-button" data-tab="gaps" role="tab" aria-controls="tab-gaps" aria-selected="false">WHITE SPOTS <span class="tab-count-badge" id="tab-badge-gaps">0</span></button>
         </div>
 
         <!-- Tab 1: Specimen Dossier -->
-        <div class="tab-pane active" id="tab-inspector">
+        <div class="tab-pane active" id="tab-inspector" role="tabpanel" aria-labelledby="tab-inspector-button">
           <div id="inspector-empty" class="dossier-empty">
             <div class="empty-wireframe-icon">
               <div class="inner-sq"></div>
@@ -145,9 +178,9 @@
             <!-- Specimen Header & Quick Action Bar -->
             <div class="specimen-card-top">
               <div class="spec-action-bar">
-                <button class="spec-action-btn" id="btn-copy-id" title="Copy ID to clipboard">📋 COPY ID</button>
-                <button class="spec-action-btn" id="btn-focus-node" title="Center on graph">🎯 FOCUS</button>
-                <button class="spec-action-btn" id="btn-filter-traces" title="View in Traces">⚡ TRACES</button>
+                <button class="spec-action-btn" id="btn-copy-id" title="Copy ID to clipboard">COPY ID</button>
+                <button class="spec-action-btn" id="btn-focus-node" title="Center on graph">FOCUS</button>
+                <button class="spec-action-btn" id="btn-filter-traces" title="View in Traces">TRACES</button>
               </div>
 
               <div class="spec-meta-row">
@@ -195,7 +228,7 @@
         </div>
 
         <!-- Tab 2: Operational Trace Feed -->
-        <div class="tab-pane" id="tab-traces">
+        <div class="tab-pane" id="tab-traces" role="tabpanel" aria-labelledby="tab-traces-button" hidden>
           <div class="trace-search-box">
             <input type="text" id="traces-search" placeholder="Filter operational log..." class="clean-input">
             <span class="trace-badge" id="traces-count-text"></span>
@@ -204,10 +237,10 @@
         </div>
 
         <!-- Tab 3: White Spot Gaps Analysis -->
-        <div class="tab-pane" id="tab-gaps">
+        <div class="tab-pane" id="tab-gaps" role="tabpanel" aria-labelledby="tab-gaps-button" hidden>
           <div class="gaps-info">
             <h3>Cartesian White Spot Analysis</h3>
-            <p>Untested parameter intersections across domain models and features.</p>
+            <p>Undeclared hypothesis-entity intersections across domain models and features.</p>
           </div>
           <div class="gaps-list" id="gaps-matrix-container"></div>
         </div>
@@ -216,14 +249,14 @@
   </div>
 
   <!-- Command Palette / Search Modal (⌘K) -->
-  <div class="cmd-k-modal-overlay" id="search-modal" style="display: none;">
+  <div class="cmd-k-modal-overlay" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-modal-title" style="display: none;">
     <div class="cmd-k-modal-panel">
       <div class="cmd-k-input-row">
-        <span class="cmd-k-search-icon">🔍</span>
-        <input type="text" id="cmd-k-input" class="cmd-k-field" placeholder="Search specimens by ID, title, or status..." autocomplete="off">
+        <span class="cmd-k-search-icon" id="search-modal-title">SEARCH</span>
+        <input type="text" id="cmd-k-input" class="cmd-k-field" placeholder="Search specimens by ID, title, or status..." autocomplete="off" aria-controls="cmd-k-results">
         <kbd class="kbd-pill">ESC</kbd>
       </div>
-      <div class="cmd-k-results-list" id="cmd-k-results">
+      <div class="cmd-k-results-list" id="cmd-k-results" role="listbox" aria-label="Specimen search results">
         <!-- Dynamically populated search items -->
       </div>
     </div>

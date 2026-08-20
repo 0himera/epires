@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional, Union
 from mcp.server.mcpserver import MCPServer
 
 from epires_core.models import (
+    Entity,
     EvidenceClaim,
     EvidenceLevel,
     ExperimentNode,
@@ -77,16 +78,20 @@ def create_mcp_server(
         
         Requires theoretical a_priori_mechanism and Popperian falsification_criteria.
         """
+        entity_types = entity_types or []
+        entity_values = entity_values or []
+        if len(entity_types) != len(entity_values):
+            raise ValueError(
+                "entity_types and entity_values must contain the same number of items"
+            )
         node = HypothesisNode(
             id=id,
             title=title,
             a_priori_mechanism=a_priori_mechanism,
             falsification_criteria=falsification_criteria,
             parent_ids=parent_ids or [],
-            entity_types=entity_types or [],
-            entity_values=entity_values or [],
-            proposed_by=proposed_by,
-            confidence_score=initial_confidence,
+            entities=[Entity(type=entity_type, value=entity_value)
+                      for entity_type, entity_value in zip(entity_types, entity_values)],
             current_evidence_level=EvidenceLevel.E0,
             status=HypothesisStatus.PROPOSED,
         )

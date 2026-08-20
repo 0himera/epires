@@ -11,6 +11,8 @@ from epires_core.models import (
     GapQuery,
     HypothesisNode,
     HypothesisStatus,
+    RelationEdge,
+    RelationType,
     SearchQuery,
     SourceConfidence,
 )
@@ -78,6 +80,65 @@ def test_evidence_promotion(temp_store: EpiresStore):
     updated_h1 = temp_store.get_hypothesis("H1")
     assert updated_h1.current_evidence_level == EvidenceLevel.E3
     assert updated_h1.status == HypothesisStatus.CONFIRMED
+
+
+def test_reregister_preserves_progress_and_replaces_only_dependency_edges(temp_store: EpiresStore):
+    parent_a = HypothesisNode(id="HA", title="A", a_priori_mechanism="a", falsification_criteria="a")
+    parent_b = HypothesisNode(id="HB", title="B", a_priori_mechanism="b", falsification_criteria="b")
+    child = HypothesisNode(
+        id="HC", title="Child", a_priori_mechanism="c", falsification_criteria="c", parent_ids=["HA"]
+    )
+    for hypothesis in (parent_a, parent_b, child):
+        temp_store.register_hypothesis(hypothesis)
+    with temp_store._get_connection() as conn:
+        conn.execute(
+            "INSERT INTO relations (source_id, target_id, relation_type, metadata_json) VALUES (?, ?, ?, ?)",
+            ("HC", "HA", RelationType.REFINES.value, "{}"),
+        )
+    temp_store.log_evidence(EvidenceClaim(
+        id="ev-progress", hypothesis_id="HC", evidence_level=EvidenceLevel.E3,
+        claim="target achieved",
+    ))
+
+    temp_store.register_hypothesis(HypothesisNode(
+        id="HC", title="Edited child", a_priori_mechanism="edited", falsification_criteria="edited",
+        parent_ids=["HB"],
+    ))
+    saved = temp_store.get_hypothesis("HC")
+    assert saved.current_evidence_level == EvidenceLevel.E3
+    assert saved.status == HypothesisStatus.CONFIRMED
+
+    # Even an explicitly stale active status must not reopen a confirmed row.
+    temp_store.register_hypothesis(HypothesisNode(
+        id="HC", title="Edited again", a_priori_mechanism="edited", falsification_criteria="edited",
+        parent_ids=["HB"], current_evidence_level=EvidenceLevel.E1,
+        status=HypothesisStatus.IN_PROGRESS,
+    ))
+    saved = temp_store.get_hypothesis("HC")
+    assert saved.current_evidence_level == EvidenceLevel.E3
+    assert saved.status == HypothesisStatus.CONFIRMED
+
+    relations = temp_store.list_relations()
+    assert RelationEdge(source_id="HC", target_id="HB", relation_type=RelationType.DEPENDS_ON) in relations
+    assert not any(edge.source_id == "HC" and edge.target_id == "HA" and edge.relation_type == RelationType.DEPENDS_ON for edge in relations)
+    assert RelationEdge(source_id="HC", target_id="HA", relation_type=RelationType.REFINES) in relations
+
+
+def test_non_falsifying_evidence_does_not_reopen_blocked_or_falsified(temp_store: EpiresStore):
+    for identifier in ("HF", "HB"):
+        temp_store.register_hypothesis(HypothesisNode(
+            id=identifier, title=identifier, a_priori_mechanism="m", falsification_criteria="f",
+        ))
+    with temp_store._get_connection() as conn:
+        conn.execute("UPDATE hypotheses SET status = ? WHERE id = ?", (HypothesisStatus.FALSIFIED.value, "HF"))
+        conn.execute("UPDATE hypotheses SET status = ? WHERE id = ?", (HypothesisStatus.BLOCKED.value, "HB"))
+    for identifier in ("HF", "HB"):
+        temp_store.log_evidence(EvidenceClaim(
+            id=f"ev-{identifier}", hypothesis_id=identifier, evidence_level=EvidenceLevel.E3,
+            claim="a non-falsifying result",
+        ))
+    assert temp_store.get_hypothesis("HF").status == HypothesisStatus.FALSIFIED
+    assert temp_store.get_hypothesis("HB").status == HypothesisStatus.BLOCKED
 
 
 def test_cascading_falsification_dag(temp_store: EpiresStore):
