@@ -10,7 +10,38 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="editorial-body">
-  <div class="halftone-overlay"></div>
+  <!-- SVG Filter & Pattern Definitions -->
+  <svg class="svg-defs-container" aria-hidden="true">
+    <defs>
+      <!-- Risograph / Archival Paper Grain Filter via feTurbulence & feColorMatrix -->
+      <filter id="paper-grain-filter" x="0%" y="0%" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" result="noise" />
+        <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.22 0" result="coloredNoise" />
+        <feComposite operator="in" in2="SourceGraphic" />
+      </filter>
+
+      <!-- Crisp Edge Sharpness Filter via feConvolveMatrix -->
+      <filter id="sharp-convolve">
+        <feConvolveMatrix order="3" kernelMatrix="0 -0.5 0 -0.5 3 -0.5 0 -0.5 0" preserveAlpha="true" />
+      </filter>
+
+      <!-- Bayer 1-Bit Dither Halftone Pattern for Tessellation & Accent Badges -->
+      <pattern id="bayer-dither-pat" width="8" height="8" patternUnits="userSpaceOnUse">
+        <rect x="0" y="0" width="2" height="2" fill="currentColor" opacity="0.35" />
+        <rect x="4" y="2" width="2" height="2" fill="currentColor" opacity="0.55" />
+        <rect x="2" y="4" width="2" height="2" fill="currentColor" opacity="0.25" />
+        <rect x="6" y="6" width="2" height="2" fill="currentColor" opacity="0.7" />
+      </pattern>
+
+      <!-- Fine 45-deg Litho Hatching -->
+      <pattern id="litho-hatch-pat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="6" stroke="currentColor" stroke-width="1.2" opacity="0.35" />
+      </pattern>
+    </defs>
+  </svg>
+
+  <!-- Tactile Paper Grain Overlay -->
+  <div class="paper-grain-texture"></div>
 
   <div class="print-container">
     <!-- Top Editorial Header & Document Title -->
@@ -135,11 +166,29 @@
         </div>
 
         <div class="svg-stage-viewport" id="canvas-container">
+          <!-- Ambient Dithered Tessellation Crystal Graphic (Directly from Middle Sheet) -->
+          <div class="dithered-tessellation-bg">
+            <svg viewBox="0 0 240 240" class="tessellation-svg">
+              <!-- Geometric Voronoi / Diamond Crystal Lattice with Dither Fill -->
+              <g stroke="currentColor" stroke-width="0.8" opacity="0.25">
+                <polygon points="120,30 150,55 120,80 90,55" fill="url(#bayer-dither-pat)" />
+                <polygon points="150,55 180,80 150,105 120,80" fill="url(#litho-hatch-pat)" />
+                <polygon points="90,55 120,80 90,105 60,80" fill="none" />
+                <polygon points="120,80 150,105 120,130 90,105" fill="url(#bayer-dither-pat)" />
+                <polygon points="150,105 180,130 150,155 120,130" fill="none" />
+                <polygon points="90,105 120,130 90,155 60,130" fill="url(#litho-hatch-pat)" />
+                <polygon points="120,130 150,155 120,180 90,155" fill="url(#bayer-dither-pat)" />
+                <polygon points="180,80 210,105 180,130 150,105" fill="url(#bayer-dither-pat)" />
+                <polygon points="60,80 90,105 60,130 30,105" fill="url(#bayer-dither-pat)" />
+              </g>
+            </svg>
+            <span class="tess-caption">ATOMIC TESSELLATOR // HYPERVECTOR TOPOLOGY</span>
+          </div>
+
           <svg id="dag-svg" class="dag-svg"></svg>
           
           <!-- Subtle Editorial Corner Watermark (Inspired by Middle Sheet) -->
           <div class="architectural-watermark watermark-left">
-            <div class="tessellation-glyph"></div>
             <span>VSA HYPERVECTOR SUBSTRATE: D=10,000</span>
             <span>GAUSSIAN PROJECTION σ = 1/√D = 0.01</span>
           </div>

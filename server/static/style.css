@@ -1,21 +1,21 @@
 /* ==========================================================================
    EPIRES EDITORIAL PAPER & SWISS BRUTALIST DESIGN SYSTEM
-   Inspired by Vintage Technical Exhibition Posters & Computational Materials Discovery
+   With Authentic Risograph / Halftone Dithering & Tactile Grain Texture
    ========================================================================== */
 
 :root {
-  /* Paper Theme (Default - Clean Off-White Editorial) */
-  --bg-app: #f4f3ee;
+  /* Paper Theme (Default - Clean Off-White Archival Print) */
+  --bg-app: #f5f4ef;
   --bg-surface: #ffffff;
-  --bg-plate: #ebe9e2;
+  --bg-plate: #eceae3;
   --bg-plate-hover: #e2dfd5;
   --bg-input: #ffffff;
 
   --rule-crisp: rgba(0, 0, 0, 0.14);
-  --rule-faint: rgba(0, 0, 0, 0.06);
+  --rule-faint: rgba(0, 0, 0, 0.05);
   --rule-bold: rgba(0, 0, 0, 0.85);
 
-  --ink-primary: #111216;
+  --ink-primary: #121316;
   --ink-secondary: #4a4d56;
   --ink-muted: #797c88;
   --ink-faint: #abaeb8;
@@ -105,7 +105,32 @@ body.editorial-body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Crisp Halftone Overlay */
+.svg-defs-container {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Tactile Grain & Micro-Noise Overlay (feTurbulence) */
+.paper-grain-texture {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+  mix-blend-mode: multiply;
+  opacity: 0.65;
+}
+
+[data-theme="noir"] .paper-grain-texture {
+  mix-blend-mode: overlay;
+  opacity: 0.45;
+}
+
 .halftone-overlay {
   position: absolute;
   top: 0;
@@ -127,7 +152,7 @@ body.editorial-body {
 }
 
 /* --------------------------------------------------------------------------
-   1. Editorial Header (Inspired by Ref Middle Sheet & Left Sheet)
+   1. Editorial Header
    -------------------------------------------------------------------------- */
 .print-header {
   display: flex;
@@ -186,7 +211,7 @@ body.editorial-body {
   gap: 16px;
 }
 
-/* Nested Wireframe Box (Inspired by Ref Right Sheet CRT borders) */
+/* Nested Wireframe Box */
 .nested-wireframe-box {
   border: 1px solid var(--rule-crisp);
   padding: 3px;
@@ -275,7 +300,7 @@ body.editorial-body {
 }
 
 /* --------------------------------------------------------------------------
-   2. Program Metric Table Strip (Inspired by Ref Left Sheet Table)
+   2. Program Metric Table Strip
    -------------------------------------------------------------------------- */
 .program-strip {
   display: grid;
@@ -357,7 +382,7 @@ body.editorial-body {
 }
 
 /* --------------------------------------------------------------------------
-   3. Main Workspace Stage: Canvas + Monograph
+   3. Main Workspace Stage
    -------------------------------------------------------------------------- */
 .workspace-stage {
   display: flex;
@@ -498,6 +523,32 @@ body.editorial-body {
   height: 100%;
 }
 
+/* Ambient Dithered Tessellation (Directly inspired by Middle Sheet) */
+.dithered-tessellation-bg {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.45;
+}
+
+.tessellation-svg {
+  width: 180px;
+  height: 180px;
+}
+
+.tess-caption {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--ink-muted);
+}
+
 .architectural-watermark {
   position: absolute;
   pointer-events: none;
@@ -521,7 +572,6 @@ body.editorial-body {
   align-items: flex-end;
 }
 
-/* Diagonal Hatch Box (Inspired by Left Sheet Hatching) */
 .hatch-box {
   width: 28px;
   height: 16px;
@@ -537,7 +587,7 @@ body.editorial-body {
 }
 
 /* --------------------------------------------------------------------------
-   4. Right Monograph Section (Specimen Dossier)
+   4. Right Monograph Section
    -------------------------------------------------------------------------- */
 .monograph-section {
   width: 480px;
@@ -590,7 +640,6 @@ body.editorial-body {
   display: block;
 }
 
-/* Empty Placeholder */
 .dossier-empty {
   height: 100%;
   display: flex;
@@ -647,7 +696,6 @@ body.editorial-body {
   max-width: 320px;
 }
 
-/* Filled Dossier Content */
 .dossier-filled {
   display: flex;
   flex-direction: column;
@@ -707,7 +755,6 @@ body.editorial-body {
   letter-spacing: -0.02em;
 }
 
-/* Cybernetic Circuit Plate (Cause -> Condition -> Result) */
 .cybernetic-circuit-plate {
   display: flex;
   align-items: center;
@@ -745,7 +792,6 @@ body.editorial-body {
   font-size: 11px;
 }
 
-/* Dossier Entry */
 .dossier-entry {
   display: flex;
   flex-direction: column;
