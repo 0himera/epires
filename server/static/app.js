@@ -203,7 +203,7 @@
   // --------------------------------------------------------------------------
   const textMeasureCanvas = document.createElement('canvas');
   const textMeasureCtx = textMeasureCanvas.getContext('2d');
-  textMeasureCtx.font = '500 11.5px "Alliance No.2", Geist, -apple-system, sans-serif';
+  textMeasureCtx.font = '500 11.5px "IBM Plex Sans", -apple-system, sans-serif';
 
   function formatBalancedTitleSVG(text, maxWidth = 218, startX = 24, startY = 48, maxLines = 2) {
     const words = text.split(/\s+/);
@@ -234,7 +234,7 @@
 
     return lines.map((l, idx) => {
       const y = startY + idx * 15;
-      return `<text x="${startX}" y="${y}" fill="var(--ink-primary)" font-family="'Alliance No.2', Geist, -apple-system, sans-serif" font-size="11.5" font-weight="500">${escapeSvgText(l)}</text>`;
+      return `<text x="${startX}" y="${y}" fill="var(--ink-primary)" font-family="'IBM Plex Sans', -apple-system, sans-serif" font-size="11.5" font-weight="500">${escapeSvgText(l)}</text>`;
     }).join('');
   }
 
@@ -1319,7 +1319,7 @@
     if (filteredNodes.length === 0 && !state.showGhosts) {
       state.lastGraphFingerprint = null;
       svg.innerHTML = `
-        <text x="50%" y="50%" text-anchor="middle" fill="var(--ink-muted)" font-family="Geist Mono, monospace" font-size="14">
+        <text x="50%" y="50%" text-anchor="middle" fill="var(--ink-muted)" font-family="'IBM Plex Mono', monospace" font-size="14">
           [ No specimens matching filter: ${state.activeFilter}${state.activeLevelFilter ? ' / ' + state.activeLevelFilter : ''} ]
         </text>
       `;
