@@ -54,11 +54,11 @@
     wsConnected: false
   };
 
-  // Dimensions for Sleek Expressive Voronoi Pebble Facets
-  const NODE_WIDTH = 280;
-  const NODE_HEIGHT = 86;
-  const GAP_X = 48;
-  const GAP_Y = 88;
+  // Dimensions for Precision Voronoi Crystalline Facets (2.7:1 Ratio)
+  const NODE_WIDTH = 270;
+  const NODE_HEIGHT = 100;
+  const GAP_X = 50;
+  const GAP_Y = 92;
 
   // DOM Elements
   const dom = {
@@ -194,9 +194,9 @@
   // --------------------------------------------------------------------------
   const textMeasureCanvas = document.createElement('canvas');
   const textMeasureCtx = textMeasureCanvas.getContext('2d');
-  textMeasureCtx.font = '500 11px Inter, -apple-system, sans-serif';
+  textMeasureCtx.font = '500 11.5px Inter, -apple-system, sans-serif';
 
-  function formatBalancedTitleSVG(text, maxWidth = 232, startX = 24, startY = 41, maxLines = 2) {
+  function formatBalancedTitleSVG(text, maxWidth = 222, startX = 24, startY = 48, maxLines = 2) {
     const words = text.split(/\s+/);
     const lines = [];
     let curLine = '';
@@ -224,15 +224,15 @@
     }
 
     return lines.map((l, idx) => {
-      const y = startY + idx * 14;
-      return `<text x="${startX}" y="${y}" fill="var(--ink-primary)" font-family="Inter, -apple-system, sans-serif" font-size="11" font-weight="500">${escapeSvgText(l)}</text>`;
+      const y = startY + idx * 15;
+      return `<text x="${startX}" y="${y}" fill="var(--ink-primary)" font-family="Inter, -apple-system, sans-serif" font-size="11.5" font-weight="500">${escapeSvgText(l)}</text>`;
     }).join('');
   }
 
   // --------------------------------------------------------------------------
   // Mathematical Smooth Filleted Polygon Path Generator (Continuous Curvature)
   // --------------------------------------------------------------------------
-  function createFilletedPolygonPath(rawPoints, radius = 15) {
+  function createFilletedPolygonPath(rawPoints, radius = 7) {
     const n = rawPoints.length;
     if (n < 3) return '';
 
@@ -272,7 +272,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Procedural Organic Asymmetric Voronoi Pebble Geometry (Expressive Morphology)
+  // Procedural Organic Asymmetric Voronoi Crystalline Geometry (Sharp Steep Facets)
   // --------------------------------------------------------------------------
   function createDeterministicPRNG(seedStr) {
     let h = 2166136261 >>> 0;
@@ -287,29 +287,37 @@
     };
   }
 
-  function getVoronoiPebbleGeometry(id, w = 280, h = 86) {
+  function getVoronoiPebbleGeometry(id, w = 270, h = 100) {
     const rand = createDeterministicPRNG(id);
-    // 8 expressive asymmetric boundary vertices creating distinctive Voronoi morphology
+    // 12 sharp-faceted Voronoi polygon vertices with steep angular cuts
     const points = [
-      // 1. Top-left shoulder
-      [14 + rand() * 16, 0 + rand() * 6],
-      // 2. Top crest / scallop
-      [w * 0.45 + (rand() - 0.5) * 44, 0 + rand() * 5],
-      // 3. Top-right shoulder
-      [w - (14 + rand() * 18), 0 + rand() * 6],
-      // 4. Right flank apex
-      [w - rand() * 6, h * 0.48 + (rand() - 0.5) * 20],
-      // 5. Bottom-right corner
-      [w - (14 + rand() * 18), h - rand() * 6],
-      // 6. Bottom waist / dip
-      [w * 0.54 + (rand() - 0.5) * 44, h - rand() * 5],
-      // 7. Bottom-left corner
-      [14 + rand() * 16, h - rand() * 6],
-      // 8. Left flank apex
-      [0 + rand() * 6, h * 0.52 + (rand() - 0.5) * 20]
+      // 1. Top-left shoulder edge
+      [16 + rand() * 12, 0 + rand() * 3],
+      // 2. Top facet crest
+      [w * 0.46 + (rand() - 0.5) * 36, 0 + rand() * 4],
+      // 3. Top-right shoulder edge
+      [w - (16 + rand() * 12), 0 + rand() * 3],
+      // 4. Top-right steep facet cut
+      [w - rand() * 3, 16 + rand() * 12],
+      // 5. Right flank vertex
+      [w - rand() * 4, h * 0.52 + (rand() - 0.5) * 16],
+      // 6. Bottom-right steep facet cut
+      [w - rand() * 3, h - (16 + rand() * 12)],
+      // 7. Bottom-right shoulder edge
+      [w - (16 + rand() * 12), h - rand() * 3],
+      // 8. Bottom facet dip
+      [w * 0.54 + (rand() - 0.5) * 36, h - rand() * 4],
+      // 9. Bottom-left shoulder edge
+      [16 + rand() * 12, h - rand() * 3],
+      // 10. Bottom-left steep facet cut
+      [0 + rand() * 3, h - (16 + rand() * 12)],
+      // 11. Left flank vertex
+      [0 + rand() * 4, h * 0.48 + (rand() - 0.5) * 16],
+      // 12. Top-left steep facet cut
+      [0 + rand() * 3, 16 + rand() * 12]
     ];
 
-    return createFilletedPolygonPath(points, 15);
+    return createFilletedPolygonPath(points, 7);
   }
 
   // --------------------------------------------------------------------------
@@ -1269,7 +1277,7 @@
       gNode.dataset.id = node.id;
 
       const pebblePath = getVoronoiPebbleGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
-      const titleLinesSVG = formatBalancedTitleSVG(node.title, 232, 24, 41, 2);
+      const titleLinesSVG = formatBalancedTitleSVG(node.title, 222, 24, 46, 2);
       const currentLevel = node.current_evidence_level || 'E0';
       const targetLevel = node.target_evidence_level || 'E3';
 
@@ -1277,10 +1285,10 @@
 
       gNode.innerHTML = `
         <path class="node-plate" d="${pebblePath}" />
-        <text class="node-id" x="24" y="23">${escapeSvgText(node.id)}</text>
-        <text class="node-level" x="${NODE_WIDTH - 24}" y="23" text-anchor="end">${escapeSvgText(currentLevel)} / ${escapeSvgText(targetLevel)}</text>
+        <text class="node-id" x="24" y="24">${escapeSvgText(node.id)}</text>
+        <text class="node-level" x="${NODE_WIDTH - 24}" y="24" text-anchor="end">${escapeSvgText(currentLevel)} / ${escapeSvgText(targetLevel)}</text>
         ${titleLinesSVG}
-        <g class="node-status-cluster" transform="translate(24, 72)">
+        <g class="node-status-cluster" transform="translate(24, 84)">
           <text class="node-status-dot" x="0" y="0">●</text>
           <text class="node-status-text" x="8" y="0">${escapeSvgText(statusRaw)}</text>
         </g>
@@ -1315,9 +1323,9 @@
 
         gGhost.innerHTML = `
           <path class="node-plate" d="${pebblePath}" />
-          <text class="node-id" x="24" y="23">⚡ WHITE SPOT GAP</text>
-          <text class="node-ghost-title" x="24" y="44">${escapeSvgText(gapTitle)}</text>
-          <g class="node-status-cluster" transform="translate(24, 72)">
+          <text class="node-id" x="24" y="24">⚡ WHITE SPOT GAP</text>
+          <text class="node-ghost-title" x="24" y="48">${escapeSvgText(gapTitle)}</text>
+          <g class="node-status-cluster" transform="translate(24, 84)">
             <text class="node-status-dot" x="0" y="0">○</text>
             <text class="node-status-text" x="8" y="0">untested</text>
           </g>
