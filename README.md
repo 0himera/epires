@@ -59,20 +59,23 @@ When applied to serious scientific ML, quantitative finance, or complex systems,
 
 ### Installation via pip
 
-Install directly from source:
+Install from PyPI:
+
+```bash
+pip install epires
+```
+
+Or install directly from source for local development:
 
 ```bash
 git clone https://github.com/himera/epires.git
 cd epires
 
-# Standard installation
-pip install -e .
-
-# Development & fuzz-testing dependencies
+# Editable installation with dev dependencies
 pip install -e ".[dev]"
 ```
 
-*(For `uv` users, you can run: `uv sync --extra dev`)*
+*(For `uv` users: `uv add epires` or `uv sync --extra dev`)*
 
 ---
 
@@ -82,10 +85,10 @@ The `init` command performs a safe, non-destructive setup in the current directo
 
 ```bash
 # 1. Reconnaissance scan (detects domain, existing docs, stack, and metrics)
-python main.py recon
+epires recon
 
 # 2. Initialize research environment (.epires/, .gitignore, config.json, MCP config)
-python main.py init
+epires init
 ```
 
 ---
@@ -94,14 +97,14 @@ python main.py init
 
 ```bash
 # 1. Start the MCP Server for AI coding assistants (Cursor, Claude Code, Antigravity):
-python main.py mcp
+epires mcp
 
 # 2. Start the FastAPI REST API Server & Web Dashboard (open http://localhost:8000 in your browser):
-python main.py serve --port 8000
+epires serve --port 8000
 
 # 3. Inspect research status and generate Mermaid DAG in the terminal:
-python main.py status
-python main.py dag
+epires status
+epires dag
 ```
 
 ---
@@ -303,22 +306,22 @@ Epires adapts seamlessly to any repository structure:
 
 ```bash
 # Initialize Epires in the current repository
-python main.py init [--dir <path>] [--force]
+epires init [--dir <path>] [--force]
 
 # Perform reconnaissance scan on repository topology and domain
-python main.py recon [--dir <path>]
+epires recon [--dir <path>]
 
 # Start the MCP stdio server for AI agents
-python main.py mcp
+epires mcp
 
-# Start the FastAPI REST API server
-python main.py serve [--host 127.0.0.1] [--port 8000]
+# Start the FastAPI REST API server & Web Dashboard
+epires serve [--host 127.0.0.1] [--port 8000]
 
 # Display hypothesis status in terminal
-python main.py status
+epires status
 
 # Output Mermaid DAG diagram
-python main.py dag
+epires dag
 ```
 
 ---

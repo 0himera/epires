@@ -58,18 +58,23 @@ $$
 
 ### Установка через pip
 
+Установка из официального репозитория PyPI:
+
+```bash
+pip install epires
+```
+
+Либо установка из исходного кода для локальной разработки:
+
 ```bash
 git clone https://github.com/himera/epires.git
 cd epires
 
-# Базовая установка
-pip install -e .
-
-# Или установка с зависимостями для разработки и фаззинга
+# Установка в editable-режиме со всеми dev-зависимостями
 pip install -e ".[dev]"
 ```
 
-*(Для пользователей `uv` также доступно: `uv sync --extra dev`)*
+*(Для пользователей `uv`: `uv add epires` или `uv sync --extra dev`)*
 
 ---
 
@@ -79,10 +84,10 @@ pip install -e ".[dev]"
 
 ```bash
 # Разведывательный скан репозитория (детекция стека, домена и метрик)
-python main.py recon
+epires recon
 
 # Инициализация лаборатории (создание .epires/, .gitignore, config.json, MCP конфига)
-python main.py init
+epires init
 ```
 
 ---
@@ -91,14 +96,14 @@ python main.py init
 
 ```bash
 # 1. Запуск MCP-сервера для AI-агентов (Cursor / Claude Code / Antigravity):
-python main.py mcp
+epires mcp
 
 # 2. Запуск REST API сервера и Веб-Дашборда (откройте http://localhost:8000 в браузере):
-python main.py serve --port 8000
+epires serve --port 8000
 
 # 3. Просмотр статуса лаборатории и Mermaid DAG в терминале:
-python main.py status
-python main.py dag
+epires status
+epires dag
 ```
 
 ---
@@ -302,22 +307,22 @@ graph TD
 
 ```bash
 # Инициализация лаборатории в текущей папке
-python main.py init [--dir <path>] [--force]
+epires init [--dir <path>] [--force]
 
 # Разведывательный аудит кодовой базы и домена
-python main.py recon [--dir <path>]
+epires recon [--dir <path>]
 
 # Запуск MCP сервера для агентов
-python main.py mcp
+epires mcp
 
-# Запуск REST API сервера
-python main.py serve [--host 127.0.0.1] [--port 8000]
+# Запуск REST API сервера и Веб-Дашборда
+epires serve [--host 127.0.0.1] [--port 8000]
 
 # Вывод статуса гипотез в терминал
-python main.py status
+epires status
 
 # Вывод Mermaid DAG графа
-python main.py dag
+epires dag
 ```
 
 ---
