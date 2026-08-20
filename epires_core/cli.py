@@ -144,10 +144,8 @@ def init_workspace(target_dir: str = ".", force: bool = False) -> None:
             domain=profile["detected_domain"],
             primary_metric=profile["suggested_metric"],
             paths=ProjectPaths(
-                db_path=".epires/hypotheses.db",
-                trace_path="docs/agent-trace.md",
-                artifacts_dir="artifacts"
-            )
+                db_path=".epires/hypotheses.db", trace_path="docs/agent-trace.md", artifacts_dir="artifacts"
+            ),
         )
         config.save(root)
         print(f"[+] Initialized .epires/config.json with domain: '{config.domain}'")
@@ -181,7 +179,7 @@ def init_workspace(target_dir: str = ".", force: bool = False) -> None:
             f"> Project: **{config.project_name}** | Domain: **{config.domain}** | Target: **{config.primary_metric}**\n\n"
             "| Timestamp (UTC) | Role | Action | H-Tag | Commit | Summary |\n"
             "|---|---|---|---|---|---|\n",
-            encoding="utf-8"
+            encoding="utf-8",
         )
         print(f"[+] Created trace ledger: {config.paths.trace_path}")
 
@@ -246,15 +244,9 @@ from . import __version__
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        prog="epires",
-        description="Epires: Epistemic Auto-Research Harness"
-    )
+    parser = argparse.ArgumentParser(prog="epires", description="Epires: Epistemic Auto-Research Harness")
     parser.add_argument(
-        "-v", "--version",
-        action="version",
-        version=f"epires {__version__}",
-        help="Show Epires version and exit."
+        "-v", "--version", action="version", version=f"epires {__version__}", help="Show Epires version and exit."
     )
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
@@ -273,7 +265,7 @@ def main():
         nargs="?",
         default="all",
         choices=["cursor", "claude", "claude-code", "opencode", "codex", "antigravity", "agy", "all"],
-        help="Target IDE/Agent (default: all)"
+        help="Target IDE/Agent (default: all)",
     )
     setup_parser.add_argument("--dir", default=".", help="Project directory (default: current directory)")
 
@@ -303,27 +295,63 @@ def main():
     subparsers.add_parser("doctor", help="Run comprehensive diagnostic checks on MCP, SQLite, and configuration")
 
     # Schema
-    schema_parser = subparsers.add_parser("schema", help="Output canonical JSON Schema and Python SDK migration snippet")
-    schema_parser.add_argument("--format", choices=["json", "python"], default="json", help="Output format (default: json)")
+    schema_parser = subparsers.add_parser(
+        "schema", help="Output canonical JSON Schema and Python SDK migration snippet"
+    )
+    schema_parser.add_argument(
+        "--format", choices=["json", "python"], default="json", help="Output format (default: json)"
+    )
 
     # Ingest
-    ingest_parser = subparsers.add_parser("ingest", help="Bulk import hypotheses & evidence from Markdown, JSON, or JSONL")
-    ingest_parser.add_argument("file", nargs="?", default=None, help="Path to findings.md, hypotheses.json, or experiments.jsonl (auto-detected if omitted)")
-    ingest_parser.add_argument("--dry-run", action="store_true", help="Preview extracted records without modifying database")
-    ingest_parser.add_argument("--upsert", action="store_true", default=True, help="Update existing hypotheses if present (default: True)")
-    ingest_parser.add_argument("--no-upsert", action="store_false", dest="upsert", help="Do not overwrite existing hypotheses")
-    ingest_parser.add_argument("--template", nargs="?", const="scripts/migrate_findings.py", default=None, help="Generate a customized Python migration script template (default: scripts/migrate_findings.py)")
+    ingest_parser = subparsers.add_parser(
+        "ingest", help="Bulk import hypotheses & evidence from Markdown, JSON, or JSONL"
+    )
+    ingest_parser.add_argument(
+        "file",
+        nargs="?",
+        default=None,
+        help="Path to findings.md, hypotheses.json, or experiments.jsonl (auto-detected if omitted)",
+    )
+    ingest_parser.add_argument(
+        "--dry-run", action="store_true", help="Preview extracted records without modifying database"
+    )
+    ingest_parser.add_argument(
+        "--upsert", action="store_true", default=True, help="Update existing hypotheses if present (default: True)"
+    )
+    ingest_parser.add_argument(
+        "--no-upsert", action="store_false", dest="upsert", help="Do not overwrite existing hypotheses"
+    )
+    ingest_parser.add_argument(
+        "--template",
+        nargs="?",
+        const="scripts/migrate_findings.py",
+        default=None,
+        help="Generate a customized Python migration script template (default: scripts/migrate_findings.py)",
+    )
 
     # Export
-    export_parser = subparsers.add_parser("export", help="Export research graph to portable JSON bundle with SHA256 checksum")
-    export_parser.add_argument("--out", "-o", default=None, help="Output file path (default: stdout or research-graph.json)")
-    export_parser.add_argument("--format", choices=["json", "jsonl"], default="json", help="Export format (default: json)")
+    export_parser = subparsers.add_parser(
+        "export", help="Export research graph to portable JSON bundle with SHA256 checksum"
+    )
+    export_parser.add_argument(
+        "--out", "-o", default=None, help="Output file path (default: stdout or research-graph.json)"
+    )
+    export_parser.add_argument(
+        "--format", choices=["json", "jsonl"], default="json", help="Export format (default: json)"
+    )
 
     # Import
     import_parser = subparsers.add_parser("import", help="Import research graph from JSON bundle")
-    import_parser.add_argument("file", nargs="?", default="research-graph.json", help="Path to exported graph bundle JSON file (default: research-graph.json)")
+    import_parser.add_argument(
+        "file",
+        nargs="?",
+        default="research-graph.json",
+        help="Path to exported graph bundle JSON file (default: research-graph.json)",
+    )
     import_parser.add_argument("--dry-run", action="store_true", help="Preview import without modifying database")
-    import_parser.add_argument("--upsert", action="store_true", default=True, help="Upsert existing hypotheses (default: True)")
+    import_parser.add_argument(
+        "--upsert", action="store_true", default=True, help="Upsert existing hypotheses (default: True)"
+    )
 
     args = parser.parse_args()
 
@@ -342,12 +370,14 @@ def main():
 
     elif args.command == "doctor":
         from .doctor import run_epires_doctor, print_doctor_report
+
         checks = run_epires_doctor()
         ok = print_doctor_report(checks)
         sys.exit(0 if ok else 1)
 
     elif args.command == "schema":
         from .schema import get_canonical_schema
+
         schema_data = get_canonical_schema()
         if args.format == "python":
             print(schema_data["python_quickstart"].strip())
@@ -357,6 +387,7 @@ def main():
     elif args.command == "ingest":
         from .importer import ingest_file
         from .schema import generate_migration_script_template
+
         root = find_project_root()
         config = EpiresProjectConfig.load(root)
         store = EpiresStore(db_path=str(root / config.paths.db_path))
@@ -368,7 +399,9 @@ def main():
             template_code = generate_migration_script_template(source_file=source_candidate)
             template_path.write_text(template_code, encoding="utf-8")
             print(f"[+] Created custom migration template: {template_path.relative_to(root)}")
-            print(f"    Edit {template_path.name} to match your repo notes and run: python {template_path.relative_to(root)}")
+            print(
+                f"    Edit {template_path.name} to match your repo notes and run: python {template_path.relative_to(root)}"
+            )
             return
 
         if not args.file:
@@ -404,11 +437,16 @@ def main():
                     print(f"    - [{h['id']}] {h['title']} (Status: {h['status']})")
             print("\nRun without --dry-run to commit records into SQLite research database.")
         else:
-            print(f"[+] Successfully ingested {res.get('hypotheses_ingested', 0)} hypotheses and {res.get('evidence_ingested', 0)} evidence claims.")
-            print(f"[+] Total database state: {res.get('total_hypotheses', 0)} hypotheses, {res.get('total_evidence', 0)} evidence records.")
+            print(
+                f"[+] Successfully ingested {res.get('hypotheses_ingested', 0)} hypotheses and {res.get('evidence_ingested', 0)} evidence claims."
+            )
+            print(
+                f"[+] Total database state: {res.get('total_hypotheses', 0)} hypotheses, {res.get('total_evidence', 0)} evidence records."
+            )
 
     elif args.command == "export":
         from .importer import export_graph_bundle
+
         root = find_project_root()
         config = EpiresProjectConfig.load(root)
         store = EpiresStore(db_path=str(root / config.paths.db_path))
@@ -427,13 +465,16 @@ def main():
         if args.out:
             out_path = Path(args.out).resolve()
             out_path.write_text(out_str, encoding="utf-8")
-            print(f"[+] Exported research graph ({bundle['counts']['hypotheses']} hypotheses, {bundle['counts']['evidence']} evidence) to {out_path}")
+            print(
+                f"[+] Exported research graph ({bundle['counts']['hypotheses']} hypotheses, {bundle['counts']['evidence']} evidence) to {out_path}"
+            )
             print(f"    SHA256 Checksum: {bundle['checksum_sha256']}")
         else:
             print(out_str)
 
     elif args.command == "import":
         from .importer import import_graph_bundle
+
         root = find_project_root()
         config = EpiresProjectConfig.load(root)
         store = EpiresStore(db_path=str(root / config.paths.db_path))
@@ -443,9 +484,13 @@ def main():
         res = import_graph_bundle(store=store, bundle=bundle, upsert=args.upsert, dry_run=args.dry_run)
 
         if args.dry_run:
-            print(f"[DRY RUN] Would import {res['hypotheses_count']} hypotheses and {res['evidence_count']} evidence records.")
+            print(
+                f"[DRY RUN] Would import {res['hypotheses_count']} hypotheses and {res['evidence_count']} evidence records."
+            )
         else:
-            print(f"[+] Successfully imported {res.get('hypotheses_ingested', 0)} hypotheses and {res.get('evidence_ingested', 0)} evidence claims.")
+            print(
+                f"[+] Successfully imported {res.get('hypotheses_ingested', 0)} hypotheses and {res.get('evidence_ingested', 0)} evidence claims."
+            )
 
     elif args.command == "serve":
         root = find_project_root()
@@ -475,9 +520,11 @@ def main():
                 "BLOCKED": "⚫",
                 "IN_PROGRESS": "🟡",
                 "PROPOSED": "🔵",
-                "REFINED": "🟣"
+                "REFINED": "🟣",
             }.get(h.status.value, "⚪")
-            print(f"{status_icon} [{h.id}] {h.title} (Level: {h.current_evidence_level.value}, Status: {h.status.value})")
+            print(
+                f"{status_icon} [{h.id}] {h.title} (Level: {h.current_evidence_level.value}, Status: {h.status.value})"
+            )
         print("================================================================\n")
 
     elif args.command == "version":

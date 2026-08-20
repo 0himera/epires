@@ -1,6 +1,5 @@
 """Tests for Schema and Migration Script Generator."""
 
-
 from epires_core.schema import generate_migration_script_template, get_canonical_schema
 
 

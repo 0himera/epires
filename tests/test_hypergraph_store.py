@@ -40,7 +40,7 @@ def test_register_and_get_hypothesis(temp_store: EpiresStore):
             Entity(type="Model", value="LightGBM"),
             Entity(type="Metric", value="RMSLE"),
         ],
-        tags=["baseline", "tabular"]
+        tags=["baseline", "tabular"],
     )
     temp_store.register_hypothesis(h1)
 
@@ -95,48 +95,75 @@ def test_reregister_preserves_progress_and_replaces_only_dependency_edges(temp_s
             "INSERT INTO relations (source_id, target_id, relation_type, metadata_json) VALUES (?, ?, ?, ?)",
             ("HC", "HA", RelationType.REFINES.value, "{}"),
         )
-    temp_store.log_evidence(EvidenceClaim(
-        id="ev-progress", hypothesis_id="HC", evidence_level=EvidenceLevel.E3,
-        claim="target achieved",
-    ))
+    temp_store.log_evidence(
+        EvidenceClaim(
+            id="ev-progress",
+            hypothesis_id="HC",
+            evidence_level=EvidenceLevel.E3,
+            claim="target achieved",
+        )
+    )
 
-    temp_store.register_hypothesis(HypothesisNode(
-        id="HC", title="Edited child", a_priori_mechanism="edited", falsification_criteria="edited",
-        parent_ids=["HB"],
-    ))
+    temp_store.register_hypothesis(
+        HypothesisNode(
+            id="HC",
+            title="Edited child",
+            a_priori_mechanism="edited",
+            falsification_criteria="edited",
+            parent_ids=["HB"],
+        )
+    )
     saved = temp_store.get_hypothesis("HC")
     assert saved.current_evidence_level == EvidenceLevel.E3
     assert saved.status == HypothesisStatus.CONFIRMED
 
     # Even an explicitly stale active status must not reopen a confirmed row.
-    temp_store.register_hypothesis(HypothesisNode(
-        id="HC", title="Edited again", a_priori_mechanism="edited", falsification_criteria="edited",
-        parent_ids=["HB"], current_evidence_level=EvidenceLevel.E1,
-        status=HypothesisStatus.IN_PROGRESS,
-    ))
+    temp_store.register_hypothesis(
+        HypothesisNode(
+            id="HC",
+            title="Edited again",
+            a_priori_mechanism="edited",
+            falsification_criteria="edited",
+            parent_ids=["HB"],
+            current_evidence_level=EvidenceLevel.E1,
+            status=HypothesisStatus.IN_PROGRESS,
+        )
+    )
     saved = temp_store.get_hypothesis("HC")
     assert saved.current_evidence_level == EvidenceLevel.E3
     assert saved.status == HypothesisStatus.CONFIRMED
 
     relations = temp_store.list_relations()
     assert RelationEdge(source_id="HC", target_id="HB", relation_type=RelationType.DEPENDS_ON) in relations
-    assert not any(edge.source_id == "HC" and edge.target_id == "HA" and edge.relation_type == RelationType.DEPENDS_ON for edge in relations)
+    assert not any(
+        edge.source_id == "HC" and edge.target_id == "HA" and edge.relation_type == RelationType.DEPENDS_ON
+        for edge in relations
+    )
     assert RelationEdge(source_id="HC", target_id="HA", relation_type=RelationType.REFINES) in relations
 
 
 def test_non_falsifying_evidence_does_not_reopen_blocked_or_falsified(temp_store: EpiresStore):
     for identifier in ("HF", "HB"):
-        temp_store.register_hypothesis(HypothesisNode(
-            id=identifier, title=identifier, a_priori_mechanism="m", falsification_criteria="f",
-        ))
+        temp_store.register_hypothesis(
+            HypothesisNode(
+                id=identifier,
+                title=identifier,
+                a_priori_mechanism="m",
+                falsification_criteria="f",
+            )
+        )
     with temp_store._get_connection() as conn:
         conn.execute("UPDATE hypotheses SET status = ? WHERE id = ?", (HypothesisStatus.FALSIFIED.value, "HF"))
         conn.execute("UPDATE hypotheses SET status = ? WHERE id = ?", (HypothesisStatus.BLOCKED.value, "HB"))
     for identifier in ("HF", "HB"):
-        temp_store.log_evidence(EvidenceClaim(
-            id=f"ev-{identifier}", hypothesis_id=identifier, evidence_level=EvidenceLevel.E3,
-            claim="a non-falsifying result",
-        ))
+        temp_store.log_evidence(
+            EvidenceClaim(
+                id=f"ev-{identifier}",
+                hypothesis_id=identifier,
+                evidence_level=EvidenceLevel.E3,
+                claim="a non-falsifying result",
+            )
+        )
     assert temp_store.get_hypothesis("HF").status == HypothesisStatus.FALSIFIED
     assert temp_store.get_hypothesis("HB").status == HypothesisStatus.BLOCKED
 
@@ -207,7 +234,7 @@ def test_vsa_associative_search(temp_store: EpiresStore):
         a_priori_mechanism="Wavelets capture multiscale periodicity",
         falsification_criteria="Delta > 0",
         entities=[Entity(type="Model", value="CatBoost"), Entity(type="Feature", value="Wavelet")],
-        tags=["wavelet", "catboost"]
+        tags=["wavelet", "catboost"],
     )
     h_lgbm = HypothesisNode(
         id="H11",
@@ -215,7 +242,7 @@ def test_vsa_associative_search(temp_store: EpiresStore):
         a_priori_mechanism="Lags capture temporal momentum",
         falsification_criteria="Delta > 0",
         entities=[Entity(type="Model", value="LightGBM"), Entity(type="Feature", value="Lags")],
-        tags=["lags", "lightgbm"]
+        tags=["lags", "lightgbm"],
     )
     temp_store.register_hypothesis(h_catboost)
     temp_store.register_hypothesis(h_lgbm)
@@ -233,14 +260,14 @@ def test_gap_analysis(temp_store: EpiresStore):
         title="CatBoost + Lags",
         a_priori_mechanism="...",
         falsification_criteria="...",
-        entities=[Entity(type="Model", value="CatBoost"), Entity(type="Feature", value="Lags")]
+        entities=[Entity(type="Model", value="CatBoost"), Entity(type="Feature", value="Lags")],
     )
     h2 = HypothesisNode(
         id="H2",
         title="LightGBM + Wavelets",
         a_priori_mechanism="...",
         falsification_criteria="...",
-        entities=[Entity(type="Model", value="LightGBM"), Entity(type="Feature", value="Wavelets")]
+        entities=[Entity(type="Model", value="LightGBM"), Entity(type="Feature", value="Wavelets")],
     )
     temp_store.register_hypothesis(h1)
     temp_store.register_hypothesis(h2)
@@ -250,20 +277,35 @@ def test_gap_analysis(temp_store: EpiresStore):
 
     # Should identify untested combinations: (CatBoost, Wavelets) and (LightGBM, Lags)
     untested = [g["combination"] for g in gaps if g["status"] == "UNTESTED"]
-    assert {"Model": "CatBoost", "Feature": "Wavelets"} in untested or {"Model": "LightGBM", "Feature": "Lags"} in untested
+    assert {"Model": "CatBoost", "Feature": "Wavelets"} in untested or {
+        "Model": "LightGBM",
+        "Feature": "Lags",
+    } in untested
 
 
 def test_retract_evidence_and_cascade_unblock(temp_store: EpiresStore):
     # Setup H1 -> H2 -> H3
-    h1 = HypothesisNode(id="H100", title="Root mechanism", a_priori_mechanism="math", falsification_criteria="loss > 1.0")
-    h2 = HypothesisNode(id="H101", title="Child 1", a_priori_mechanism="math", falsification_criteria="loss > 1.0", parent_ids=["H100"])
-    h3 = HypothesisNode(id="H102", title="Child 2", a_priori_mechanism="math", falsification_criteria="loss > 1.0", parent_ids=["H101"])
+    h1 = HypothesisNode(
+        id="H100", title="Root mechanism", a_priori_mechanism="math", falsification_criteria="loss > 1.0"
+    )
+    h2 = HypothesisNode(
+        id="H101", title="Child 1", a_priori_mechanism="math", falsification_criteria="loss > 1.0", parent_ids=["H100"]
+    )
+    h3 = HypothesisNode(
+        id="H102", title="Child 2", a_priori_mechanism="math", falsification_criteria="loss > 1.0", parent_ids=["H101"]
+    )
     temp_store.register_hypothesis(h1)
     temp_store.register_hypothesis(h2)
     temp_store.register_hypothesis(h3)
 
     # Log an initial positive E2 observation for H100
-    ev_ok = EvidenceClaim(id="ev_ok", hypothesis_id="H100", evidence_level=EvidenceLevel.E2, source_confidence=SourceConfidence.V, claim="Passed local smoke test")
+    ev_ok = EvidenceClaim(
+        id="ev_ok",
+        hypothesis_id="H100",
+        evidence_level=EvidenceLevel.E2,
+        source_confidence=SourceConfidence.V,
+        claim="Passed local smoke test",
+    )
     temp_store.log_evidence(ev_ok)
     assert temp_store.get_hypothesis("H100").status == HypothesisStatus.IN_PROGRESS
     assert temp_store.get_hypothesis("H100").current_evidence_level == EvidenceLevel.E2
@@ -275,7 +317,7 @@ def test_retract_evidence_and_cascade_unblock(temp_store: EpiresStore):
         evidence_level=EvidenceLevel.E4,
         source_confidence=SourceConfidence.V,
         claim="Data leak caused false regression",
-        falsification_triggered=True
+        falsification_triggered=True,
     )
     _, blocked = temp_store.log_evidence(ev_bug)
     assert temp_store.get_hypothesis("H100").status == HypothesisStatus.FALSIFIED
@@ -299,4 +341,3 @@ def test_retract_evidence_and_cascade_unblock(temp_store: EpiresStore):
     assert "H102" in unblocked
     assert temp_store.get_hypothesis("H101").status == HypothesisStatus.PROPOSED
     assert temp_store.get_hypothesis("H102").status == HypothesisStatus.PROPOSED
-

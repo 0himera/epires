@@ -102,16 +102,18 @@ def test_export_import_bundle_roundtrip():
             falsification_criteria="Loss > 1.0",
             target_evidence_level=EvidenceLevel.E3,
             status=HypothesisStatus.CONFIRMED,
-            entities=[Entity(type="Model", value="XGBoost")]
+            entities=[Entity(type="Model", value="XGBoost")],
         )
         store1.register_hypothesis(h1)
-        store1.log_evidence(EvidenceClaim(
-            id="ev10",
-            hypothesis_id="H10",
-            evidence_level=EvidenceLevel.E3,
-            source_confidence=SourceConfidence.V,
-            claim="Loss = 0.62 validated"
-        ))
+        store1.log_evidence(
+            EvidenceClaim(
+                id="ev10",
+                hypothesis_id="H10",
+                evidence_level=EvidenceLevel.E3,
+                source_confidence=SourceConfidence.V,
+                claim="Loss = 0.62 validated",
+            )
+        )
 
         # Export bundle
         bundle = export_graph_bundle(store=store1, project_name="roundtrip-test")

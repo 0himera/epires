@@ -24,7 +24,7 @@ def test_autotracer_records_sqlite_and_markdown():
             summary="SDM memory rejected vs kNN [E3, V]",
             h_tag="H3",
             agent_role="Lead-PI",
-            details={"ci_delta": 0.0}
+            details={"ci_delta": 0.0},
         )
 
         # Check SQLite

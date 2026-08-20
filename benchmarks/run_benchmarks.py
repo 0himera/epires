@@ -33,7 +33,14 @@ def generate_synthetic_corpus(store: EpiresStore, n_items: int = 500) -> List[Hy
         m = random.choice(models)
         f = random.choice(features)
         r = random.choice(regimes)
-        status = random.choice([HypothesisStatus.PROPOSED, HypothesisStatus.IN_PROGRESS, HypothesisStatus.CONFIRMED, HypothesisStatus.FALSIFIED])
+        status = random.choice(
+            [
+                HypothesisStatus.PROPOSED,
+                HypothesisStatus.IN_PROGRESS,
+                HypothesisStatus.CONFIRMED,
+                HypothesisStatus.FALSIFIED,
+            ]
+        )
         level = random.choice([EvidenceLevel.E0, EvidenceLevel.E1, EvidenceLevel.E2, EvidenceLevel.E3])
 
         h = HypothesisNode(
@@ -50,7 +57,7 @@ def generate_synthetic_corpus(store: EpiresStore, n_items: int = 500) -> List[Hy
                 Entity(type="Feature", value=f),
                 Entity(type="Regime", value=r),
             ],
-            tags=[m.lower(), f.lower(), r.lower(), f"tag_{i%10}"],
+            tags=[m.lower(), f.lower(), r.lower(), f"tag_{i % 10}"],
         )
         corpus.append(h)
 
@@ -59,7 +66,9 @@ def generate_synthetic_corpus(store: EpiresStore, n_items: int = 500) -> List[Hy
     return corpus
 
 
-def evaluate_retrieval_quality(store: EpiresStore, corpus: List[HypothesisNode], n_queries: int = 150) -> Dict[str, Any]:
+def evaluate_retrieval_quality(
+    store: EpiresStore, corpus: List[HypothesisNode], n_queries: int = 150
+) -> Dict[str, Any]:
     """Evaluates MRR, Recall@1, and Recall@5 comparing Pure VSA, Pure FTS5, and Hybrid."""
     random.seed(42)
     results = {
@@ -90,7 +99,9 @@ def evaluate_retrieval_quality(store: EpiresStore, corpus: List[HypothesisNode],
     for sq, target_id in test_cases:
         # 1. Pure VSA
         terms = sq.query.split() if sq.query else []
-        q_vec = store.encoder.encode_query(text_terms=terms, entities=sq.entities or [], status=sq.status.value if sq.status else None)
+        q_vec = store.encoder.encode_query(
+            text_terms=terms, entities=sq.entities or [], status=sq.status.value if sq.status else None
+        )
         vsa_sims = store.vsa.batch_similarity(q_vec, matrix)
         vsa_ranked = [ids[idx] for idx in np.argsort(-vsa_sims)[:10]]
 
@@ -102,7 +113,10 @@ def evaluate_retrieval_quality(store: EpiresStore, corpus: List[HypothesisNode],
                     words = [w for w in sq.query.replace('"', " ").split() if len(w) >= 2]
                     if words:
                         match_query = " OR ".join([f'"{w}"*' for w in words])
-                        fts_rows = conn.execute("SELECT id FROM hypotheses_fts WHERE hypotheses_fts MATCH ? ORDER BY rank LIMIT 10", (match_query,)).fetchall()
+                        fts_rows = conn.execute(
+                            "SELECT id FROM hypotheses_fts WHERE hypotheses_fts MATCH ? ORDER BY rank LIMIT 10",
+                            (match_query,),
+                        ).fetchall()
                         fts_ranked = [r["id"] for r in fts_rows]
                 except Exception:
                     pass
@@ -168,12 +182,14 @@ def benchmark_latency_and_scaling(scales: List[int] = [100, 500, 1000, 2000]) ->
 
             qps = 1000.0 / t_hybrid if t_hybrid > 0 else 0
 
-            results.append({
-                "scale_n": n,
-                "vsa_matrix_latency_ms": round(t_vsa, 4),
-                "hybrid_search_latency_ms": round(t_hybrid, 4),
-                "throughput_qps": round(qps, 1),
-            })
+            results.append(
+                {
+                    "scale_n": n,
+                    "vsa_matrix_latency_ms": round(t_vsa, 4),
+                    "hybrid_search_latency_ms": round(t_hybrid, 4),
+                    "throughput_qps": round(qps, 1),
+                }
+            )
 
     return results
 
@@ -255,16 +271,18 @@ def profile_real_projects() -> List[Dict[str, Any]]:
             _ = store.search(SearchQuery(query="model feature loss", limit=5))
         avg_search_ms = (time.perf_counter() - t0) / n_searches * 1000.0
 
-        reports.append({
-            "project": label,
-            "db_size_kb": round(p.stat().st_size / 1024, 1),
-            "hypotheses_count": len(hypotheses),
-            "evidence_count": len(evidence),
-            "relations_count": len(relations),
-            "traces_count": len(traces),
-            "avg_search_latency_ms": round(avg_search_ms, 3),
-            "qps": round(1000.0 / avg_search_ms, 1) if avg_search_ms > 0 else 0,
-        })
+        reports.append(
+            {
+                "project": label,
+                "db_size_kb": round(p.stat().st_size / 1024, 1),
+                "hypotheses_count": len(hypotheses),
+                "evidence_count": len(evidence),
+                "relations_count": len(relations),
+                "traces_count": len(traces),
+                "avg_search_latency_ms": round(avg_search_ms, 3),
+                "qps": round(1000.0 / avg_search_ms, 1) if avg_search_ms > 0 else 0,
+            }
+        )
 
     return reports
 
@@ -285,7 +303,9 @@ if __name__ == "__main__":
     print(f"{'Method':<20} | {'MRR':<15} | {'Recall@1':<15} | {'Recall@5':<15}")
     print("-" * 75)
     for method, metrics in eval_metrics.items():
-        print(f"{method.upper():<20} | {metrics['MRR']:<15.4f} | {metrics['Recall@1']:<15.4f} | {metrics['Recall@5']:<15.4f}")
+        print(
+            f"{method.upper():<20} | {metrics['MRR']:<15.4f} | {metrics['Recall@1']:<15.4f} | {metrics['Recall@5']:<15.4f}"
+        )
     print("-" * 75)
     print(">> OBSERVATION: Hybrid FTS5+VSA outperforms Pure VSA and Pure FTS5 across all metrics.\n")
 
@@ -296,7 +316,9 @@ if __name__ == "__main__":
     print(f"{'Nodes (N)':<12} | {'VSA Matrix (ms)':<18} | {'Hybrid Search (ms)':<20} | {'QPS':<15}")
     print("-" * 75)
     for row in scaling_results:
-        print(f"{row['scale_n']:<12} | {row['vsa_matrix_latency_ms']:<18.4f} | {row['hybrid_search_latency_ms']:<20.4f} | {row['throughput_qps']:<15.1f}")
+        print(
+            f"{row['scale_n']:<12} | {row['vsa_matrix_latency_ms']:<18.4f} | {row['hybrid_search_latency_ms']:<20.4f} | {row['throughput_qps']:<15.1f}"
+        )
     print("-" * 75)
     print(">> OBSERVATION: Sub-millisecond latency (<0.8ms) maintained up to 2,000 active nodes.\n")
 
@@ -317,6 +339,8 @@ if __name__ == "__main__":
     print(f"{'Project':<30} | {'Hypotheses':<12} | {'Evidence':<10} | {'DAG Edges':<10} | {'Search (ms)':<12}")
     print("-" * 85)
     for r in real_res:
-        print(f"{r['project']:<30} | {r['hypotheses_count']:<12} | {r['evidence_count']:<10} | {r['relations_count']:<10} | {r['avg_search_latency_ms']:<12.3f}")
+        print(
+            f"{r['project']:<30} | {r['hypotheses_count']:<12} | {r['evidence_count']:<10} | {r['relations_count']:<10} | {r['avg_search_latency_ms']:<12.3f}"
+        )
     print("-" * 85)
     print("\n[✔] Benchmark suite complete.")

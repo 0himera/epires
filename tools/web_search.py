@@ -118,9 +118,7 @@ class ParallelWebSearcher:
     def client(self) -> Parallel:
         key = self._resolve_api_key()
         if not key:
-            raise ValueError(
-                "Parallel API key not configured. Use native harness search or run 'epires login'."
-            )
+            raise ValueError("Parallel API key not configured. Use native harness search or run 'epires login'.")
         if self._client is None:
             self._client = Parallel(api_key=key)
         return self._client
@@ -129,9 +127,7 @@ class ParallelWebSearcher:
     def async_client(self) -> AsyncParallel:
         key = self._resolve_api_key()
         if not key:
-            raise ValueError(
-                "Parallel API key not configured. Use native harness search or run 'epires login'."
-            )
+            raise ValueError("Parallel API key not configured. Use native harness search or run 'epires login'.")
         if self._async_client is None:
             self._async_client = AsyncParallel(api_key=key)
         return self._async_client
@@ -152,7 +148,7 @@ class ParallelWebSearcher:
                 "status": "fallback_to_native",
                 "message": "PARALLEL_API_KEY not configured. You can use your native harness/IDE search tool (Claude Code / Codex / Antigravity / Cursor / OpenCode), or run 'epires login'.",
                 "queries": queries,
-                "results": []
+                "results": [],
             }
 
         search_kwargs: Dict[str, Any] = {
@@ -173,7 +169,7 @@ class ParallelWebSearcher:
                 "queries": queries,
                 "objective": objective,
                 "mode": mode,
-                "data": serialize_sdk_object(getattr(res, "data", None) or getattr(res, "results", None) or res)
+                "data": serialize_sdk_object(getattr(res, "data", None) or getattr(res, "results", None) or res),
             }
         except Exception as e:
             return {"status": "error", "message": str(e), "queries": queries}
@@ -204,7 +200,7 @@ class ParallelWebSearcher:
             return {
                 "status": "success",
                 "urls": urls,
-                "data": serialize_sdk_object(getattr(res, "data", None) or getattr(res, "results", None) or res)
+                "data": serialize_sdk_object(getattr(res, "data", None) or getattr(res, "results", None) or res),
             }
         except Exception as e:
             return {"status": "error", "message": str(e), "urls": urls}
@@ -225,7 +221,7 @@ class ParallelWebSearcher:
                 "status": "fallback_to_native",
                 "message": "PARALLEL_API_KEY not configured. You can use your native harness/IDE search tool, or run 'epires login'.",
                 "queries": queries,
-                "results": []
+                "results": [],
             }
 
         search_kwargs: Dict[str, Any] = {
@@ -246,7 +242,7 @@ class ParallelWebSearcher:
                 "queries": queries,
                 "objective": objective,
                 "mode": mode,
-                "data": serialize_sdk_object(getattr(res, "data", None) or getattr(res, "results", None) or res)
+                "data": serialize_sdk_object(getattr(res, "data", None) or getattr(res, "results", None) or res),
             }
         except Exception as e:
             return {"status": "error", "message": str(e), "queries": queries}

@@ -14,7 +14,7 @@ def get_canonical_schema() -> Dict[str, Any]:
             "EvidenceLevel": ["E0", "E1", "E2", "E3", "E4", "E5"],
             "HypothesisStatus": ["PROPOSED", "IN_PROGRESS", "CONFIRMED", "FALSIFIED", "BLOCKED", "REFINED"],
             "SourceConfidence": ["V", "P", "D"],
-            "RelationType": ["DEPENDS_ON", "SUPERSEDES", "REFINES", "BLOCKS", "CONFLICTS_WITH"]
+            "RelationType": ["DEPENDS_ON", "SUPERSEDES", "REFINES", "BLOCKS", "CONFLICTS_WITH"],
         },
         "hypothesis_format": {
             "id": "H1 (string, required, unique node identifier)",
@@ -26,7 +26,7 @@ def get_canonical_schema() -> Dict[str, Any]:
             "status": "PROPOSED (enum: PROPOSED, IN_PROGRESS, CONFIRMED, FALSIFIED, BLOCKED, REFINED)",
             "parent_ids": ["H0 (list of parent hypothesis IDs)"],
             "entities": [{"type": "Model", "value": "CatBoost"}, {"type": "Feature", "value": "HaarWavelets"}],
-            "tags": ["wavelets", "tabular", "gbm"]
+            "tags": ["wavelets", "tabular", "gbm"],
         },
         "evidence_format": {
             "id": "ev_H1_1 (string, unique evidence ID)",
@@ -38,7 +38,7 @@ def get_canonical_schema() -> Dict[str, Any]:
             "metric_value": 0.38,
             "delta_vs_baseline": -0.05,
             "falsification_triggered": False,
-            "citation_or_path": "artifacts/metrics/run1.json"
+            "citation_or_path": "artifacts/metrics/run1.json",
         },
         "python_quickstart": """
 from epires_core import EpiresStore, HypothesisNode, EvidenceClaim, EvidenceLevel, HypothesisStatus, SourceConfidence
@@ -71,7 +71,7 @@ evidence = [
 ]
 
 store.bulk_import(hypotheses=hypotheses, evidence=evidence, upsert=True)
-"""
+""",
     }
 
 

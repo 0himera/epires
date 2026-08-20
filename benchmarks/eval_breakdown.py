@@ -27,7 +27,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
             status=HypothesisStatus.PROPOSED,
             parent_ids=[],
             entities=[Entity(type="Model", value=m), Entity(type="Feature", value=f), Entity(type="Regime", value=r)],
-            tags=[m.lower(), f.lower(), r.lower(), f"tag_{i%10}"],
+            tags=[m.lower(), f.lower(), r.lower(), f"tag_{i % 10}"],
         )
         corpus.append(h)
     store.bulk_import(hypotheses=corpus, evidence=[], upsert=True, emit_summary_trace=False)
@@ -57,7 +57,9 @@ with tempfile.TemporaryDirectory() as tmpdir:
     for qtype, sq, target_id in test_cases:
         # VSA
         terms = sq.query.split() if sq.query else []
-        q_vec = store.encoder.encode_query(text_terms=terms, entities=sq.entities or [], status=sq.status.value if sq.status else None)
+        q_vec = store.encoder.encode_query(
+            text_terms=terms, entities=sq.entities or [], status=sq.status.value if sq.status else None
+        )
         vsa_sims = store.vsa.batch_similarity(q_vec, matrix)
         vsa_order = np.argsort(-vsa_sims)
         vsa_rank_map = {ids[idx]: rank + 1 for rank, idx in enumerate(vsa_order)}
@@ -72,7 +74,10 @@ with tempfile.TemporaryDirectory() as tmpdir:
                     words = [w for w in sq.query.replace('"', " ").split() if len(w) >= 2]
                     if words:
                         match_query = " OR ".join([f'"{w}"*' for w in words])
-                        fts_rows = conn.execute("SELECT id FROM hypotheses_fts WHERE hypotheses_fts MATCH ? ORDER BY rank LIMIT 50", (match_query,)).fetchall()
+                        fts_rows = conn.execute(
+                            "SELECT id FROM hypotheses_fts WHERE hypotheses_fts MATCH ? ORDER BY rank LIMIT 50",
+                            (match_query,),
+                        ).fetchall()
                         fts_top10 = [r["id"] for r in fts_rows[:10]]
                         for rank, r in enumerate(fts_rows):
                             fts_rank_map[r["id"]] = rank + 1
@@ -95,7 +100,12 @@ with tempfile.TemporaryDirectory() as tmpdir:
             rrf_scores[h_id] = score
         rrf_top10 = sorted(rrf_scores.keys(), key=lambda k: rrf_scores[k], reverse=True)[:10]
 
-        for method, ranked in [("pure_vsa", vsa_top10), ("pure_fts", fts_top10), ("naive_hybrid", naive_top10), ("rrf_hybrid", rrf_top10)]:
+        for method, ranked in [
+            ("pure_vsa", vsa_top10),
+            ("pure_fts", fts_top10),
+            ("naive_hybrid", naive_top10),
+            ("rrf_hybrid", rrf_top10),
+        ]:
             rank = ranked.index(target_id) + 1 if target_id in ranked else 0
             rr = 1.0 / rank if rank > 0 else 0.0
             res[method].append((qtype, rr, 1.0 if rank == 1 else 0.0, 1.0 if 0 < rank <= 5 else 0.0))
@@ -112,7 +122,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
     print(f"{'Method':<15} | {'Keyword':<12} | {'Entity':<12} | {'Mixed':<12}")
     print("-" * 55)
     for m in res:
-        kw_mrr = np.mean([x[1] for x in res[m] if x[0] == 'keyword'])
-        ent_mrr = np.mean([x[1] for x in res[m] if x[0] == 'entity'])
-        mix_mrr = np.mean([x[1] for x in res[m] if x[0] == 'mixed'])
+        kw_mrr = np.mean([x[1] for x in res[m] if x[0] == "keyword"])
+        ent_mrr = np.mean([x[1] for x in res[m] if x[0] == "entity"])
+        mix_mrr = np.mean([x[1] for x in res[m] if x[0] == "mixed"])
         print(f"{m:<15} | {kw_mrr:<12.4f} | {ent_mrr:<12.4f} | {mix_mrr:<12.4f}")

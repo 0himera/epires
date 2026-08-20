@@ -78,11 +78,9 @@ def test_setup_all_merges_preserving_existing():
     with tempfile.TemporaryDirectory() as tmpdir:
         cursor_file = Path(tmpdir) / ".cursor" / "mcp.json"
         cursor_file.parent.mkdir(parents=True, exist_ok=True)
-        cursor_file.write_text(json.dumps({
-            "mcpServers": {
-                "existing_custom_server": {"command": "custom", "args": []}
-            }
-        }), encoding="utf-8")
+        cursor_file.write_text(
+            json.dumps({"mcpServers": {"existing_custom_server": {"command": "custom", "args": []}}}), encoding="utf-8"
+        )
 
         setup_all(tmpdir)
 

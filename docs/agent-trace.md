@@ -3943,3 +3943,807 @@
 | 2026-08-20T21:07:32.318857+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H10` | `local` | Evidence [E3, V] logged for H10: Loss = 0.62 validated |
 | 2026-08-20T21:07:32.323092+00:00 | `Lead-PI` | **BULK_INGEST** | — | `local` | Bulk ingested 1 hypotheses and 1 evidence claims. |
 | 2026-08-20 21:07:32 | `Lead-PI` | **FALSIFY** | `H3` | `local` | SDM memory rejected vs kNN [E3, V] |
+| 2026-08-20T21:11:18.458673+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Fourier frequency decomposition baseline [Status: PROPOSED] |
+| 2026-08-20T21:11:18.469981+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H1` | `local` | Evidence [E2, V] logged for H1: FFT pass on fold 1 with RMSLE 1.72 |
+| 2026-08-20T21:11:18.488002+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H1` | `local` | Evidence [E0, V] logged for H1: A later replay was recorded |
+| 2026-08-20T21:11:18.533012+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H-TEST-MCP` | `local` | Registered hypothesis H-TEST-MCP: MCP test [Status: PROPOSED] |
+| 2026-08-20T21:11:18.536325+00:00 | `Lead-PI` | **REGISTER_EXPERIMENT** | `H-TEST-MCP` | `local` | Registered experiment exp_H-TEST-MCP_1787260278536 for H-TEST-MCP: Smoke run |
+| 2026-08-20T21:11:18.537625+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H-TEST-MCP` | `local` | Evidence [E3, V] logged for H-TEST-MCP: Erroneous fail -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:18.542459+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H-TEST-MCP` | `local` | Registered hypothesis H-TEST-MCP: MCP test [Status: PROPOSED] |
+| 2026-08-20T21:11:18.541506+00:00 | `Lead-PI` | **RETRACT_EVIDENCE** | `H-TEST-MCP` | `local` | Retracted evidence [ev_H-TEST-MCP_1787260278537_88da28b4] for H-TEST-MCP: Correction of benchmark error |
+| 2026-08-20T21:11:18.546944+00:00 | `Lead-PI` | **UPDATE_HYPOTHESIS** | `H-TEST-MCP` | `local` | Updated hypothesis H-TEST-MCP -> Status: REFINED, Target: E4 |
+| 2026-08-20T21:11:18.547750+00:00 | `Lead-PI` | **BULK_INGEST** | — | `local` | Bulk ingested 2 hypotheses and 0 evidence claims. |
+| 2026-08-20T21:11:18.586897+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H-ENT` | `local` | Registered hypothesis H-ENT: Entity pair test [Status: PROPOSED] |
+| 2026-08-20T21:11:18.593490+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypo 1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.596028+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypo 2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.657441+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.659586+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.661794+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.665736+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1 |
+| 2026-08-20T21:11:18.663319+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 1 child hypotheses. |
+| 2026-08-20T21:11:18.669822+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.672017+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.674945+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.676214+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.677369+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.678925+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.680715+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.682528+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.684587+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.687096+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.688982+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.694407+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1 |
+| 2026-08-20T21:11:18.691062+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 1 child hypotheses. |
+| 2026-08-20T21:11:18.701957+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.704127+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.706097+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.707962+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.709099+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.710407+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.712385+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.714169+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.715891+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.717717+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.721632+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.723800+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H8` | `local` | Evidence [E3, V] logged for H8: Falsification triggered for H8 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:18.731145+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.733658+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.736517+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.737890+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.741542+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1 |
+| 2026-08-20T21:11:18.739110+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 1 child hypotheses. |
+| 2026-08-20T21:11:18.746846+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.748769+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.750766+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.752534+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.753795+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H1` | `local` | Evidence [E3, V] logged for H1: Falsification triggered for H1 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:18.759650+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.761939+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.763752+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.766792+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.768485+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.769784+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.773826+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1 |
+| 2026-08-20T21:11:18.771086+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 1 child hypotheses. |
+| 2026-08-20T21:11:18.777383+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.780429+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.782981+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.785173+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.787268+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.790528+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.794208+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H1` | `local` | Falsification of H1 cascaded to block dependent hypotheses: H2 |
+| 2026-08-20T21:11:18.791719+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H1` | `local` | Evidence [E3, V] logged for H1: Falsification triggered for H1 -> FALSIFIED! Blocked 1 child hypotheses. |
+| 2026-08-20T21:11:18.798418+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.800667+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.803714+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.805228+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.806776+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.808003+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.809312+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.811075+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.814285+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.815873+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.817711+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.819342+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.820987+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.822696+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.824259+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.825845+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.827486+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H16` | `local` | Registered hypothesis H16: Hypothesis H16 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.828902+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H14` | `local` | Evidence [E3, V] logged for H14: Falsification triggered for H14 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:18.837627+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.839584+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.841236+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.842410+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.843624+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.844772+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.846078+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.847742+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.849650+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.853684+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.855439+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.856996+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.858680+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.860258+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.861794+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.863407+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.865121+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H16` | `local` | Registered hypothesis H16: Hypothesis H16 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.866715+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H17` | `local` | Registered hypothesis H17: Hypothesis H17 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.868090+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H6` | `local` | Evidence [E3, V] logged for H6: Falsification triggered for H6 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:18.877050+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.878988+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.880808+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.882319+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.883901+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.885359+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H3` | `local` | Evidence [E3, V] logged for H3: Falsification triggered for H3 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:18.892247+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.894207+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.896068+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.897640+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.899152+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.900677+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.902310+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.903902+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.905506+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.908381+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.910035+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.911635+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.913281+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.917296+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H5` | `local` | Falsification of H5 cascaded to block dependent hypotheses: H6, H7, H8, H9, H10, H11, H12 |
+| 2026-08-20T21:11:18.914722+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H5` | `local` | Evidence [E3, V] logged for H5: Falsification triggered for H5 -> FALSIFIED! Blocked 7 child hypotheses. |
+| 2026-08-20T21:11:18.922002+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.923952+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.927013+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.928640+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.930204+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.931720+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.933238+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.934827+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.936490+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.938132+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.939796+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.941424+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.944349+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.948288+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H4, H5, H6, H11, H12, H9, H10, H7, H8 |
+| 2026-08-20T21:11:18.945877+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 12 child hypotheses. |
+| 2026-08-20T21:11:18.953072+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.955044+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.957210+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.958737+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.960420+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.963362+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.964903+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.966432+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.970400+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H6` | `local` | Falsification of H6 cascaded to block dependent hypotheses: H7 |
+| 2026-08-20T21:11:18.967883+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H6` | `local` | Evidence [E3, V] logged for H6: Falsification triggered for H6 -> FALSIFIED! Blocked 1 child hypotheses. |
+| 2026-08-20T21:11:18.974244+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.976369+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.978222+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.979749+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.982716+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.984282+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.986390+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.988079+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.989706+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.991958+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.993579+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.995279+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.996892+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:18.998471+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.003921+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H4, H5, H13, H11, H12, H9, H10, H7, H8, H6 |
+| 2026-08-20T21:11:19.001257+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 13 child hypotheses. |
+| 2026-08-20T21:11:19.008913+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.010863+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.012734+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.014539+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.016091+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.018766+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.020140+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.021854+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.023308+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H3` | `local` | Evidence [E3, V] logged for H3: Falsification triggered for H3 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:19.029449+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.031403+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.033174+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.037343+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2 |
+| 2026-08-20T21:11:19.034703+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 2 child hypotheses. |
+| 2026-08-20T21:11:19.042132+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.044055+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.046933+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.049273+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.051236+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.052836+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.054424+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.055990+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.059051+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.060749+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.062328+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.063915+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.065514+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.067592+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.070376+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.073093+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.076518+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H16` | `local` | Registered hypothesis H16: Hypothesis H16 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.078430+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H17` | `local` | Registered hypothesis H17: Hypothesis H17 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.082685+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H14` | `local` | Falsification of H14 cascaded to block dependent hypotheses: H17 |
+| 2026-08-20T21:11:19.079999+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H14` | `local` | Evidence [E3, V] logged for H14: Falsification triggered for H14 -> FALSIFIED! Blocked 1 child hypotheses. |
+| 2026-08-20T21:11:19.088218+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.090167+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.091948+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.094727+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.096316+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.097877+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.099485+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.101106+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.102795+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.104439+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.106084+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.107854+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.109556+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.112654+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.116838+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H4, H5, H6, H7, H13, H11, H12, H9, H10, H8 |
+| 2026-08-20T21:11:19.114355+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 13 child hypotheses. |
+| 2026-08-20T21:11:19.121824+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.123964+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.125641+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.126794+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.127921+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.130351+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.131806+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.133508+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.135340+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.137051+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.138788+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.140369+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.142184+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.143738+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.145323+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.146992+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.152516+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H15, H13, H14 |
+| 2026-08-20T21:11:19.148422+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 4 child hypotheses. |
+| 2026-08-20T21:11:19.158002+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.159952+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.161822+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.163364+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.164593+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.166338+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.170495+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.173403+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.175239+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.176775+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.178454+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.179999+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.181561+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.183125+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.184906+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.186766+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.188461+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H16` | `local` | Registered hypothesis H16: Hypothesis H16 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.191501+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H17` | `local` | Registered hypothesis H17: Hypothesis H17 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.195832+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H7` | `local` | Falsification of H7 cascaded to block dependent hypotheses: H16, H17 |
+| 2026-08-20T21:11:19.193012+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H7` | `local` | Evidence [E3, V] logged for H7: Falsification triggered for H7 -> FALSIFIED! Blocked 2 child hypotheses. |
+| 2026-08-20T21:11:19.201158+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.203165+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.205052+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.206554+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.207940+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.210548+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.211921+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.215862+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2 |
+| 2026-08-20T21:11:19.213548+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 2 child hypotheses. |
+| 2026-08-20T21:11:19.219911+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.221929+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.223749+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.225294+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.226995+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.231005+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.232707+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.234709+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.237456+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.239136+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.240761+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.242342+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.243955+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.245587+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.247246+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.252865+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H5` | `local` | Falsification of H5 cascaded to block dependent hypotheses: H6, H7, H8, H9, H10, H14, H12, H13, H11 |
+| 2026-08-20T21:11:19.250052+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H5` | `local` | Evidence [E3, V] logged for H5: Falsification triggered for H5 -> FALSIFIED! Blocked 9 child hypotheses. |
+| 2026-08-20T21:11:19.257968+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.260024+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.261845+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.263412+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.264945+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.266489+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.269865+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.271752+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.273392+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.275004+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.276600+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.278198+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.279854+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.281561+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.283184+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.288848+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H4, H5, H13, H14, H11, H12, H9, H10, H7, H8, H6 |
+| 2026-08-20T21:11:19.284699+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 14 child hypotheses. |
+| 2026-08-20T21:11:19.293927+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.296395+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.298277+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.299653+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.300819+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.302210+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.303716+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.307513+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.309255+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.310816+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.314836+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H3` | `local` | Falsification of H3 cascaded to block dependent hypotheses: H9 |
+| 2026-08-20T21:11:19.312416+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H3` | `local` | Evidence [E3, V] logged for H3: Falsification triggered for H3 -> FALSIFIED! Blocked 1 child hypotheses. |
+| 2026-08-20T21:11:19.319129+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.321407+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.323377+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.324809+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.327424+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.328698+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.330057+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.331776+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.333609+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.335331+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.337258+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.338911+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.340499+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.344437+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H11, H12 |
+| 2026-08-20T21:11:19.341944+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 4 child hypotheses. |
+| 2026-08-20T21:11:19.351235+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.353551+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.355830+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.357718+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.359406+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.360658+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.362019+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.363832+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.367136+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.369518+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.371529+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.373215+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.374963+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.376814+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.378550+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.380286+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.381838+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H11` | `local` | Evidence [E3, V] logged for H11: Falsification triggered for H11 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:19.392583+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.394670+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.396594+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.398428+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.399902+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.401679+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.403921+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.405764+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.407619+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.410949+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.412773+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.416789+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H9, H10 |
+| 2026-08-20T21:11:19.414338+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 5 child hypotheses. |
+| 2026-08-20T21:11:19.423179+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.427705+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.431255+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.433726+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.437729+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.438975+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.440467+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.442158+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.443860+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.445423+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.446982+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.448565+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.450195+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.452576+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.454720+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.457910+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.459896+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H16` | `local` | Registered hypothesis H16: Hypothesis H16 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.462628+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H17` | `local` | Registered hypothesis H17: Hypothesis H17 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.464302+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H16` | `local` | Evidence [E3, V] logged for H16: Falsification triggered for H16 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:19.474201+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.476303+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.479514+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.482790+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.485192+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.486989+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.488614+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.490312+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.492011+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.493794+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.495496+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.497233+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.498911+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.500757+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.505319+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.507361+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.509979+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H16` | `local` | Registered hypothesis H16: Hypothesis H16 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.511849+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H17` | `local` | Registered hypothesis H17: Hypothesis H17 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.517194+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H15, H16, H17, H13, H14, H11, H12, H9, H10 |
+| 2026-08-20T21:11:19.514043+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 12 child hypotheses. |
+| 2026-08-20T21:11:19.525544+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.528191+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.530438+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.531982+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.533541+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.535067+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.536820+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.538288+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H6` | `local` | Evidence [E3, V] logged for H6: Falsification triggered for H6 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:19.545491+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.547499+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.549280+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.550777+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.552280+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.553852+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.555342+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.559275+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H4, H5, H6 |
+| 2026-08-20T21:11:19.556688+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 6 child hypotheses. |
+| 2026-08-20T21:11:19.565670+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.567901+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.570708+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.572298+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.573660+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.574932+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.576276+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.578000+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.579733+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.581239+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.582767+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.586163+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.588666+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.590523+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.592148+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.593762+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.597760+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H3` | `local` | Falsification of H3 cascaded to block dependent hypotheses: H9, H10, H11, H12, H13, H14, H15 |
+| 2026-08-20T21:11:19.595201+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H3` | `local` | Evidence [E3, V] logged for H3: Falsification triggered for H3 -> FALSIFIED! Blocked 7 child hypotheses. |
+| 2026-08-20T21:11:19.604455+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.606492+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.608956+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.610648+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.612020+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.613135+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.614421+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.616064+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.617705+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.619555+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.621259+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.624274+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.625837+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.627385+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.628958+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.630604+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.634478+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H15, H13, H14, H11, H12, H9, H10 |
+| 2026-08-20T21:11:19.632100+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 10 child hypotheses. |
+| 2026-08-20T21:11:19.641365+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.643388+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.645179+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.646685+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.648184+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.649720+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.651327+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.652996+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.654678+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.657458+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.659587+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.661229+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.662804+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.664469+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.666063+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.667768+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.670366+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H16` | `local` | Registered hypothesis H16: Hypothesis H16 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.671820+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H16` | `local` | Evidence [E3, V] logged for H16: Falsification triggered for H16 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:19.680694+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.682608+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.684415+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.686636+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.688733+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.690318+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.691858+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.694810+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.696537+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.698191+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.699769+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.701396+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.703193+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.704893+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.706573+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.708374+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.711176+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H16` | `local` | Registered hypothesis H16: Hypothesis H16 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.715374+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H4, H5, H15, H16, H13, H14, H11, H12, H9, H10, H7, H8, H6 |
+| 2026-08-20T21:11:19.712820+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 16 child hypotheses. |
+| 2026-08-20T21:11:19.720990+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.722927+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.725696+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.727195+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.730837+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.732811+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.734398+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.736351+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.738023+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.739641+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.741571+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.743160+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.744723+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.746631+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.749746+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.751479+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.756330+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H2` | `local` | Falsification of H2 cascaded to block dependent hypotheses: H11, H12, H13, H14, H15 |
+| 2026-08-20T21:11:19.753728+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H2` | `local` | Evidence [E3, V] logged for H2: Falsification triggered for H2 -> FALSIFIED! Blocked 5 child hypotheses. |
+| 2026-08-20T21:11:19.761585+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.763639+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.765430+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.768614+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.770844+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.772403+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.774116+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.775848+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.777418+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.779056+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.781617+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.783184+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.784846+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.788537+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.790461+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.792249+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.796299+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H4, H5, H15, H13, H14, H11, H12, H9, H10, H7, H8, H6 |
+| 2026-08-20T21:11:19.793750+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 15 child hypotheses. |
+| 2026-08-20T21:11:19.801641+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.804785+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.808564+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.810610+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.812157+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.813860+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.815201+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.820550+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H5` | `local` | Falsification of H5 cascaded to block dependent hypotheses: H6 |
+| 2026-08-20T21:11:19.816896+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H5` | `local` | Evidence [E3, V] logged for H5: Falsification triggered for H5 -> FALSIFIED! Blocked 1 child hypotheses. |
+| 2026-08-20T21:11:19.824441+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.826651+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.831945+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.833731+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.835751+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.837401+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.838863+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.842907+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H4 |
+| 2026-08-20T21:11:19.840592+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 4 child hypotheses. |
+| 2026-08-20T21:11:19.846798+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.848786+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.850419+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.853830+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.855499+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.856858+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.858245+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.859916+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.861578+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.863080+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.864709+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.866209+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.867811+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H6` | `local` | Evidence [E3, V] logged for H6: Falsification triggered for H6 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:19.876626+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.878622+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.880278+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.881397+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.882509+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.883669+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.885125+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.886981+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.888682+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.890190+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.893144+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.894663+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.896320+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.897885+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.899430+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.901020+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.903347+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H16` | `local` | Registered hypothesis H16: Hypothesis H16 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.905801+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H17` | `local` | Registered hypothesis H17: Hypothesis H17 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.910553+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H15, H16, H13, H14, H17 |
+| 2026-08-20T21:11:19.908000+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 6 child hypotheses. |
+| 2026-08-20T21:11:19.917521+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.920531+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.922311+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.923447+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.924803+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.925964+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.927232+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.928931+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.930668+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.933515+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.935535+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.937982+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.939658+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.941123+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H6` | `local` | Evidence [E3, V] logged for H6: Falsification triggered for H6 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:19.947865+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.949761+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.951626+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.954425+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.955554+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.956746+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.958058+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.959728+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.961359+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.962924+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.964581+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.966068+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.967796+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.971486+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1 |
+| 2026-08-20T21:11:19.969219+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 1 child hypotheses. |
+| 2026-08-20T21:11:19.977621+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.979533+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.981356+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.982873+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.984288+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.985497+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.986866+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.988547+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.991392+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H7` | `local` | Evidence [E3, V] logged for H7: Falsification triggered for H7 -> FALSIFIED! Blocked 0 child hypotheses. |
+| 2026-08-20T21:11:19.997272+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:19.999171+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.001034+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.002645+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.004091+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.005241+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.006538+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.008225+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.013624+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3 |
+| 2026-08-20T21:11:20.011295+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 3 child hypotheses. |
+| 2026-08-20T21:11:20.017467+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.019452+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.021322+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.025138+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2 |
+| 2026-08-20T21:11:20.022717+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 2 child hypotheses. |
+| 2026-08-20T21:11:20.029937+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.031896+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.033743+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.037497+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2 |
+| 2026-08-20T21:11:20.035130+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 2 child hypotheses. |
+| 2026-08-20T21:11:20.040721+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.042637+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.044492+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.046085+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.048906+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.052869+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H2` | `local` | Falsification of H2 cascaded to block dependent hypotheses: H3 |
+| 2026-08-20T21:11:20.050290+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H2` | `local` | Evidence [E3, V] logged for H2: Falsification triggered for H2 -> FALSIFIED! Blocked 1 child hypotheses. |
+| 2026-08-20T21:11:20.056427+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.058405+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.060220+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.062127+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.064629+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.071470+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H4 |
+| 2026-08-20T21:11:20.066787+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 4 child hypotheses. |
+| 2026-08-20T21:11:20.075111+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H0` | `local` | Registered hypothesis H0: Hypothesis H0 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.077068+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Hypothesis H1 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.078874+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Hypothesis H2 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.080459+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: Hypothesis H3 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.081970+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H4` | `local` | Registered hypothesis H4: Hypothesis H4 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.083449+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H5` | `local` | Registered hypothesis H5: Hypothesis H5 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.085010+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H6` | `local` | Registered hypothesis H6: Hypothesis H6 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.086684+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H7` | `local` | Registered hypothesis H7: Hypothesis H7 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.089740+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H8` | `local` | Registered hypothesis H8: Hypothesis H8 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.091475+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H9` | `local` | Registered hypothesis H9: Hypothesis H9 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.093058+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Hypothesis H10 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.094700+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: Hypothesis H11 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.096371+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H12` | `local` | Registered hypothesis H12: Hypothesis H12 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.097992+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H13` | `local` | Registered hypothesis H13: Hypothesis H13 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.099579+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H14` | `local` | Registered hypothesis H14: Hypothesis H14 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.101291+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H15` | `local` | Registered hypothesis H15: Hypothesis H15 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.103097+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H16` | `local` | Registered hypothesis H16: Hypothesis H16 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.106048+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H17` | `local` | Registered hypothesis H17: Hypothesis H17 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.108144+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H18` | `local` | Registered hypothesis H18: Hypothesis H18 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.112430+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H0` | `local` | Falsification of H0 cascaded to block dependent hypotheses: H1, H2, H3, H4, H5, H6, H15, H16, H17, H18, H13, H14, H11, H12, H9, H10, H7, H8 |
+| 2026-08-20T21:11:20.109835+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H0` | `local` | Evidence [E3, V] logged for H0: Falsification triggered for H0 -> FALSIFIED! Blocked 18 child hypotheses. |
+| 2026-08-20T21:11:20.134999+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `0` | `local` | Registered hypothesis 0: 0 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.137944+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `0` | `local` | Evidence [E2, V] logged for 0: Fuzz empirical claim |
+| 2026-08-20T21:11:20.143701+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `¤🛞tā^]ÁļµĺQ³N𚊏ĸKt>` | `local` | Registered hypothesis ¤🛞tā^]ÁļµĺQ³N𚊏ĸKt>: 0 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.146430+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `¤🛞tā^]ÁļµĺQ³N𚊏ĸKt>` | `local` | Evidence [E2, V] logged for ¤🛞tā^]ÁļµĺQ³N𚊏ĸKt>: Fuzz empirical claim |
+| 2026-08-20T21:11:20.152726+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `¤🛞tā^]ÁļµĺQ³N𚊏ĸKt>` | `local` | Registered hypothesis ¤🛞tā^]ÁļµĺQ³N𚊏ĸKt>: 𴵜 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.155868+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `¤🛞tā^]ÁļµĺQ³N𚊏ĸKt>` | `local` | Evidence [E2, V] logged for ¤🛞tā^]ÁļµĺQ³N𚊏ĸKt>: Fuzz empirical claim |
+| 2026-08-20T21:11:20.161178+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `Ī` | `local` | Registered hypothesis Ī: 0 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.163900+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `Ī` | `local` | Evidence [E2, V] logged for Ī: Fuzz empirical claim |
+| 2026-08-20T21:11:20.169169+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `Ī` | `local` | Registered hypothesis Ī: ¼îil [Status: PROPOSED] |
+| 2026-08-20T21:11:20.173400+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `Ī` | `local` | Evidence [E2, V] logged for Ī: Fuzz empirical claim |
+| 2026-08-20T21:11:20.178653+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `Ě&>` | `local` | Registered hypothesis Ě&>: 0 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.181392+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `Ě&>` | `local` | Evidence [E2, V] logged for Ě&>: Fuzz empirical claim |
+| 2026-08-20T21:11:20.186740+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `Ě&>` | `local` | Registered hypothesis Ě&>: 14¹𦡏 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.189833+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `Ě&>` | `local` | Evidence [E2, V] logged for Ě&>: Fuzz empirical claim |
+| 2026-08-20T21:11:20.196376+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `=񯚦Ė¼򂰑ĩ` | `local` | Registered hypothesis =񯚦Ė¼򂰑ĩ: n5¿𮐰 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.199148+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `=񯚦Ė¼򂰑ĩ` | `local` | Evidence [E2, V] logged for =񯚦Ė¼򂰑ĩ: Fuzz empirical claim |
+| 2026-08-20T21:11:20.204610+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `IĚ󃧥Ĩv[` | `local` | Registered hypothesis IĚ󃧥Ĩv[: 򧕯òàg [Status: PROPOSED] |
+| 2026-08-20T21:11:20.207644+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `IĚ󃧥Ĩv[` | `local` | Evidence [E2, V] logged for IĚ󃧥Ĩv[: Fuzz empirical claim |
+| 2026-08-20T21:11:20.213056+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `[$ÓrĹ³ĽĈw,ú񋋸` | `local` | Registered hypothesis [$ÓrĹ³ĽĈw,ú񋋸: í [Status: PROPOSED] |
+| 2026-08-20T21:11:20.215734+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `[$ÓrĹ³ĽĈw,ú񋋸` | `local` | Evidence [E2, V] logged for [$ÓrĹ³ĽĈw,ú񋋸: Fuzz empirical claim |
+| 2026-08-20T21:11:20.222434+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `ÂĶP򩧈ôİªì` | `local` | Registered hypothesis ÂĶP򩧈ôİªì: öÏÒkBÈ󒤔 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.225185+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `ÂĶP򩧈ôİªì` | `local` | Evidence [E2, V] logged for ÂĶP򩧈ôİªì: Fuzz empirical claim |
+| 2026-08-20T21:11:20.230530+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `ÂĶP򩧈ôİªì` | `local` | Registered hypothesis ÂĶP򩧈ôİªì: öÏÒkBÈ󒤔 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.233237+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `ÂĶP򩧈ôİªì` | `local` | Evidence [E2, V] logged for ÂĶP򩧈ôİªì: Fuzz empirical claim |
+| 2026-08-20T21:11:20.238695+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `ÂĶP򩧈ôİªì` | `local` | Registered hypothesis ÂĶP򩧈ôİªì: Àó [Status: PROPOSED] |
+| 2026-08-20T21:11:20.242609+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `ÂĶP򩧈ôİªì` | `local` | Evidence [E2, V] logged for ÂĶP򩧈ôİªì: Fuzz empirical claim |
+| 2026-08-20T21:11:20.247755+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `ÂĶP򩧈ôİªì` | `local` | Registered hypothesis ÂĶP򩧈ôİªì: Àó [Status: PROPOSED] |
+| 2026-08-20T21:11:20.250411+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `ÂĶP򩧈ôİªì` | `local` | Evidence [E2, V] logged for ÂĶP򩧈ôİªì: Fuzz empirical claim |
+| 2026-08-20T21:11:20.255645+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `ÂĶP򩧈ôİªì` | `local` | Registered hypothesis ÂĶP򩧈ôİªì: ÂĶP򩧈ôİªì [Status: PROPOSED] |
+| 2026-08-20T21:11:20.258294+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `ÂĶP򩧈ôİªì` | `local` | Evidence [E2, V] logged for ÂĶP򩧈ôİªì: Fuzz empirical claim |
+| 2026-08-20T21:11:20.264590+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `ÂĶP򩧈ôİªì` | `local` | Registered hypothesis ÂĶP򩧈ôİªì: ÂĶP򩧈ôİªì [Status: PROPOSED] |
+| 2026-08-20T21:11:20.267287+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `ÂĶP򩧈ôİªì` | `local` | Evidence [E2, V] logged for ÂĶP򩧈ôİªì: Fuzz empirical claim |
+| 2026-08-20T21:11:20.272711+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `ÂĶP򩧈ôİªì` | `local` | Registered hypothesis ÂĶP򩧈ôİªì: ÂĶP򩧈ôİªì [Status: PROPOSED] |
+| 2026-08-20T21:11:20.275343+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `ÂĶP򩧈ôİªì` | `local` | Evidence [E2, V] logged for ÂĶP򩧈ôİªì: Fuzz empirical claim |
+| 2026-08-20T21:11:20.281341+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č` | `local` | Registered hypothesis ֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č: l [Status: PROPOSED] |
+| 2026-08-20T21:11:20.284111+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č` | `local` | Evidence [E2, V] logged for ֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č: Fuzz empirical claim |
+| 2026-08-20T21:11:20.289416+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č` | `local` | Registered hypothesis ֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č: l [Status: PROPOSED] |
+| 2026-08-20T21:11:20.292323+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č` | `local` | Evidence [E2, V] logged for ֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č: Fuzz empirical claim |
+| 2026-08-20T21:11:20.297682+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č` | `local` | Registered hypothesis ֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č: l [Status: PROPOSED] |
+| 2026-08-20T21:11:20.300405+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č` | `local` | Evidence [E2, V] logged for ֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č: Fuzz empirical claim |
+| 2026-08-20T21:11:20.307062+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č` | `local` | Registered hypothesis ֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č: 񰓮󄷎 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.309756+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č` | `local` | Evidence [E2, V] logged for ֋v󵾪²Ð@Ĉ󡄕󳆺Ìăīĺ󎘣Č: Fuzz empirical claim |
+| 2026-08-20T21:11:20.315025+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `񰓮󄷎` | `local` | Registered hypothesis 񰓮󄷎: 񰓮󄷎 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.317722+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `񰓮󄷎` | `local` | Evidence [E2, V] logged for 񰓮󄷎: Fuzz empirical claim |
+| 2026-08-20T21:11:20.324044+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `񰓮󄷎` | `local` | Registered hypothesis 񰓮󄷎: 񰓮󄷎 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.326839+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `񰓮󄷎` | `local` | Evidence [E2, V] logged for 񰓮󄷎: Fuzz empirical claim |
+| 2026-08-20T21:11:20.332178+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `B` | `local` | Registered hypothesis B: Ê􏗉¾¾ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.335092+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `B` | `local` | Evidence [E2, V] logged for B: Fuzz empirical claim |
+| 2026-08-20T21:11:20.340483+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `B` | `local` | Registered hypothesis B: Ê􏗉¾¾ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.344031+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `B` | `local` | Evidence [E2, V] logged for B: Fuzz empirical claim |
+| 2026-08-20T21:11:20.349296+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `B` | `local` | Registered hypothesis B: Ê􏗉¾¾ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.352062+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `B` | `local` | Evidence [E2, V] logged for B: Fuzz empirical claim |
+| 2026-08-20T21:11:20.357375+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `0` | `local` | Registered hypothesis 0: Ê􏗉¾¾ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.360129+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `0` | `local` | Evidence [E2, V] logged for 0: Fuzz empirical claim |
+| 2026-08-20T21:11:20.366464+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `0` | `local` | Registered hypothesis 0: Ê􏗉¾¾ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.369287+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `0` | `local` | Evidence [E2, V] logged for 0: Fuzz empirical claim |
+| 2026-08-20T21:11:20.374934+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `8饼` | `local` | Registered hypothesis 8饼: t0¸򓸩 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.377602+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `8饼` | `local` | Evidence [E2, V] logged for 8饼: Fuzz empirical claim |
+| 2026-08-20T21:11:20.382739+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `8饼` | `local` | Registered hypothesis 8饼: t0¸򓸩 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.386290+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `8饼` | `local` | Evidence [E2, V] logged for 8饼: Fuzz empirical claim |
+| 2026-08-20T21:11:20.392071+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `8饼` | `local` | Registered hypothesis 8饼: t0¸򓸩 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.394696+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `8饼` | `local` | Evidence [E2, V] logged for 8饼: Fuzz empirical claim |
+| 2026-08-20T21:11:20.399783+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `0` | `local` | Registered hypothesis 0: t0¸򓸩 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.402520+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `0` | `local` | Evidence [E2, V] logged for 0: Fuzz empirical claim |
+| 2026-08-20T21:11:20.408859+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `0` | `local` | Registered hypothesis 0: t0¸򓸩 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.411592+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `0` | `local` | Evidence [E2, V] logged for 0: Fuzz empirical claim |
+| 2026-08-20T21:11:20.416733+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `0` | `local` | Registered hypothesis 0: t0¸򓸩 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.419413+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `0` | `local` | Evidence [E2, V] logged for 0: Fuzz empirical claim |
+| 2026-08-20T21:11:20.426574+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `0` | `local` | Registered hypothesis 0: t0¸򓸩 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.429284+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `0` | `local` | Evidence [E2, V] logged for 0: Fuzz empirical claim |
+| 2026-08-20T21:11:20.434492+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `󉾱hıĚ󜖋=` | `local` | Registered hypothesis 󉾱hıĚ󜖋=: 𘠕l񎁶ÔÉ/®񢮰; [Status: PROPOSED] |
+| 2026-08-20T21:11:20.437261+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `󉾱hıĚ󜖋=` | `local` | Evidence [E2, V] logged for 󉾱hıĚ󜖋=: Fuzz empirical claim |
+| 2026-08-20T21:11:20.442446+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `󉾱hıĚ󜖋=` | `local` | Registered hypothesis 󉾱hıĚ󜖋=: 𘠕l񎁶ÔÉ/®񢮰; [Status: PROPOSED] |
+| 2026-08-20T21:11:20.445072+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `󉾱hıĚ󜖋=` | `local` | Evidence [E2, V] logged for 󉾱hıĚ󜖋=: Fuzz empirical claim |
+| 2026-08-20T21:11:20.451189+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `󉾱hıĚ󜖋=` | `local` | Registered hypothesis 󉾱hıĚ󜖋=: q [Status: PROPOSED] |
+| 2026-08-20T21:11:20.453977+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `󉾱hıĚ󜖋=` | `local` | Evidence [E2, V] logged for 󉾱hıĚ󜖋=: Fuzz empirical claim |
+| 2026-08-20T21:11:20.459141+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `ýÅ` | `local` | Registered hypothesis ýÅ: q [Status: PROPOSED] |
+| 2026-08-20T21:11:20.461795+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `ýÅ` | `local` | Evidence [E2, V] logged for ýÅ: Fuzz empirical claim |
+| 2026-08-20T21:11:20.467904+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `ýÅ` | `local` | Registered hypothesis ýÅ: ýÅ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.470754+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `ýÅ` | `local` | Evidence [E2, V] logged for ýÅ: Fuzz empirical claim |
+| 2026-08-20T21:11:20.475873+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `q` | `local` | Registered hypothesis q: ýÅ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.478474+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `q` | `local` | Evidence [E2, V] logged for q: Fuzz empirical claim |
+| 2026-08-20T21:11:20.483647+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `q` | `local` | Registered hypothesis q: ýÅ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.487388+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `q` | `local` | Evidence [E2, V] logged for q: Fuzz empirical claim |
+| 2026-08-20T21:11:20.492677+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `Íą¦bT;􃇃` | `local` | Registered hypothesis Íą¦bT;􃇃: ^ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.495286+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `Íą¦bT;􃇃` | `local` | Evidence [E2, V] logged for Íą¦bT;􃇃: Fuzz empirical claim |
+| 2026-08-20T21:11:20.500407+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `Íą¦bT;􃇃` | `local` | Registered hypothesis Íą¦bT;􃇃: Íą¦bT;􃇃 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.503104+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `Íą¦bT;􃇃` | `local` | Evidence [E2, V] logged for Íą¦bT;􃇃: Fuzz empirical claim |
+| 2026-08-20T21:11:20.509431+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `Íą¦bT;􃇃` | `local` | Registered hypothesis Íą¦bT;􃇃: Íą¦bT;􃇃 [Status: PROPOSED] |
+| 2026-08-20T21:11:20.512103+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `Íą¦bT;􃇃` | `local` | Evidence [E2, V] logged for Íą¦bT;􃇃: Fuzz empirical claim |
+| 2026-08-20T21:11:20.517330+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `Íą¦bT;􃇃` | `local` | Registered hypothesis Íą¦bT;􃇃: 7򳖏%ô𐻥rñ¼ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.520053+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `Íą¦bT;􃇃` | `local` | Evidence [E2, V] logged for Íą¦bT;􃇃: Fuzz empirical claim |
+| 2026-08-20T21:11:20.525225+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `Íą¦bT;􃇃` | `local` | Registered hypothesis Íą¦bT;􃇃: 7򳖏%ô𐻥rñ¼ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.527918+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `Íą¦bT;􃇃` | `local` | Evidence [E2, V] logged for Íą¦bT;􃇃: Fuzz empirical claim |
+| 2026-08-20T21:11:20.534114+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `0` | `local` | Registered hypothesis 0: 7򳖏%ô𐻥rñ¼ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.536827+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `0` | `local` | Evidence [E2, V] logged for 0: Fuzz empirical claim |
+| 2026-08-20T21:11:20.542097+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `0` | `local` | Registered hypothesis 0: 7򳖏%ô𐻥rñ¼ [Status: PROPOSED] |
+| 2026-08-20T21:11:20.544709+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `0` | `local` | Evidence [E2, V] logged for 0: Fuzz empirical claim |
+| 2026-08-20T21:11:20.549899+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `ó򐼙×µ` | `local` | Registered hypothesis ó򐼙×µ: 󆏜ö@'񛠕H [Status: PROPOSED] |
+| 2026-08-20T21:11:20.553706+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `ó򐼙×µ` | `local` | Evidence [E2, V] logged for ó򐼙×µ: Fuzz empirical claim |
+| 2026-08-20T21:11:21.045341+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Direct Log-LightGBM baseline performs robustly under RMSLE [Status: PROPOSED] |
+| 2026-08-20T21:11:21.050303+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Direct Log-LightGBM [Status: PROPOSED] |
+| 2026-08-20T21:11:21.052307+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H1` | `local` | Evidence [E3, V] logged for H1: Validation RMSLE measured 1.6915 on 250k holdout users |
+| 2026-08-20T21:11:21.056814+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `HA` | `local` | Registered hypothesis HA: A [Status: PROPOSED] |
+| 2026-08-20T21:11:21.058857+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `HB` | `local` | Registered hypothesis HB: B [Status: PROPOSED] |
+| 2026-08-20T21:11:21.061083+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `HC` | `local` | Registered hypothesis HC: Child [Status: PROPOSED] |
+| 2026-08-20T21:11:21.063127+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `HC` | `local` | Evidence [E3, V] logged for HC: target achieved |
+| 2026-08-20T21:11:21.065802+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `HC` | `local` | Registered hypothesis HC: Edited child [Status: CONFIRMED] |
+| 2026-08-20T21:11:21.067528+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `HC` | `local` | Registered hypothesis HC: Edited again [Status: CONFIRMED] |
+| 2026-08-20T21:11:21.071102+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `HF` | `local` | Registered hypothesis HF: HF [Status: PROPOSED] |
+| 2026-08-20T21:11:21.073122+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `HB` | `local` | Registered hypothesis HB: HB [Status: PROPOSED] |
+| 2026-08-20T21:11:21.074558+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `HF` | `local` | Evidence [E3, V] logged for HF: a non-falsifying result |
+| 2026-08-20T21:11:21.076951+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `HB` | `local` | Evidence [E3, V] logged for HB: a non-falsifying result |
+| 2026-08-20T21:11:21.080959+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: Kanerva SDM Prototype Memory [Status: PROPOSED] |
+| 2026-08-20T21:11:21.084601+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: Adaptive SDM Read/Write policy [Status: PROPOSED] |
+| 2026-08-20T21:11:21.086668+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H3` | `local` | Registered hypothesis H3: SDM-guided execution router [Status: PROPOSED] |
+| 2026-08-20T21:11:21.090897+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H1` | `local` | Falsification of H1 cascaded to block dependent hypotheses: H2, H3 |
+| 2026-08-20T21:11:21.088490+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H1` | `local` | Evidence [E3, V] logged for H1: SDM recall hit@1 = 0.000 vs exact kNN hit@1 = 1.000 across all epsilon sweeps -> FALSIFIED! Blocked 2 child hypotheses. |
+| 2026-08-20T21:11:21.094482+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: CatBoost GPU optimization with Haar Wavelet features [Status: PROPOSED] |
+| 2026-08-20T21:11:21.098576+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H11` | `local` | Registered hypothesis H11: LightGBM CPU with lag aggregations [Status: PROPOSED] |
+| 2026-08-20T21:11:21.104394+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H1` | `local` | Registered hypothesis H1: CatBoost + Lags [Status: PROPOSED] |
+| 2026-08-20T21:11:21.106833+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H2` | `local` | Registered hypothesis H2: LightGBM + Wavelets [Status: PROPOSED] |
+| 2026-08-20T21:11:21.110848+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H100` | `local` | Registered hypothesis H100: Root mechanism [Status: PROPOSED] |
+| 2026-08-20T21:11:21.112914+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H101` | `local` | Registered hypothesis H101: Child 1 [Status: PROPOSED] |
+| 2026-08-20T21:11:21.116445+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H102` | `local` | Registered hypothesis H102: Child 2 [Status: PROPOSED] |
+| 2026-08-20T21:11:21.117995+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H100` | `local` | Evidence [E2, V] logged for H100: Passed local smoke test |
+| 2026-08-20T21:11:21.122932+00:00 | `System-DAG` | **CASCADING_BLOCK** | `H100` | `local` | Falsification of H100 cascaded to block dependent hypotheses: H101, H102 |
+| 2026-08-20T21:11:21.120827+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H100` | `local` | Evidence [E4, V] logged for H100: Data leak caused false regression -> FALSIFIED! Blocked 2 child hypotheses. |
+| 2026-08-20T21:11:21.125538+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H100` | `local` | Registered hypothesis H100: Root mechanism [Status: IN_PROGRESS] |
+| 2026-08-20T21:11:21.128015+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H101` | `local` | Registered hypothesis H101: Child 1 [Status: PROPOSED] |
+| 2026-08-20T21:11:21.129871+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H102` | `local` | Registered hypothesis H102: Child 2 [Status: PROPOSED] |
+| 2026-08-20T21:11:21.131059+00:00 | `System-DAG` | **CASCADING_UNBLOCK** | `H100` | `local` | Unfalsification of H100 cascaded to unblock dependent hypotheses: H101, H102 |
+| 2026-08-20T21:11:21.124571+00:00 | `Lead-PI` | **RETRACT_EVIDENCE** | `H100` | `local` | Retracted evidence [ev_bug] for H100: Bug discovered in validation pipeline split -> UNBLOCKED 2 child hypotheses: H101, H102 |
+| 2026-08-20T21:11:21.141704+00:00 | `Lead-PI` | **BULK_INGEST** | — | `local` | Bulk ingested 3 hypotheses and 2 evidence claims. |
+| 2026-08-20T21:11:21.156426+00:00 | `Lead-PI` | **REGISTER_HYPOTHESIS** | `H10` | `local` | Registered hypothesis H10: Root model [Status: CONFIRMED] |
+| 2026-08-20T21:11:21.159593+00:00 | `Lead-PI` | **LOG_EVIDENCE** | `H10` | `local` | Evidence [E3, V] logged for H10: Loss = 0.62 validated |
+| 2026-08-20T21:11:21.165272+00:00 | `Lead-PI` | **BULK_INGEST** | — | `local` | Bulk ingested 1 hypotheses and 1 evidence claims. |
+| 2026-08-20 21:11:21 | `Lead-PI` | **FALSIFY** | `H3` | `local` | SDM memory rejected vs kNN [E3, V] |

@@ -37,7 +37,7 @@ def test_fuzz_store_arbitrary_hypothesis_and_evidence(
             a_priori_mechanism=mechanism,
             falsification_criteria=falsification,
             entities=[Entity(type="TestType", value="TestVal")],
-            tags=["fuzz", "test"]
+            tags=["fuzz", "test"],
         )
         store.register_hypothesis(h)
 
@@ -55,7 +55,7 @@ def test_fuzz_store_arbitrary_hypothesis_and_evidence(
             metric_name="MetricA",
             metric_value=metric_val,
             delta_vs_baseline=delta_val,
-            falsification_triggered=False
+            falsification_triggered=False,
         )
         store.log_evidence(claim)
 

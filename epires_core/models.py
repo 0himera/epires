@@ -22,21 +22,21 @@ class SourceConfidence(str, Enum):
 
 
 class HypothesisStatus(str, Enum):
-    PROPOSED = "PROPOSED"          # Registered E0
-    IN_PROGRESS = "IN_PROGRESS"    # Currently being tested E1-E3
-    CONFIRMED = "CONFIRMED"        # Successfully verified at target level
-    FALSIFIED = "FALSIFIED"        # Popperian falsification criteria met
-    BLOCKED = "BLOCKED"            # Invalidation cascaded from parent hypothesis failure
-    REFINED = "REFINED"            # Superseded by a more precise hypothesis
+    PROPOSED = "PROPOSED"  # Registered E0
+    IN_PROGRESS = "IN_PROGRESS"  # Currently being tested E1-E3
+    CONFIRMED = "CONFIRMED"  # Successfully verified at target level
+    FALSIFIED = "FALSIFIED"  # Popperian falsification criteria met
+    BLOCKED = "BLOCKED"  # Invalidation cascaded from parent hypothesis failure
+    REFINED = "REFINED"  # Superseded by a more precise hypothesis
 
 
 class RelationType(str, Enum):
-    DEPENDS_ON = "DEPENDS_ON"      # Child hypothesis requires parent premise
-    FALSIFIES = "FALSIFIES"        # Experiment or finding refutes hypothesis
-    REFINES = "REFINES"            # Hypothesis provides higher precision over parent
-    BLOCKS = "BLOCKS"              # Negative result prevents downstream work
-    PRODUCES = "PRODUCES"          # Experiment produces evidence or artifact
-    GATED_BY = "GATED_BY"          # Hypothesis requires passing a specific statistical gate
+    DEPENDS_ON = "DEPENDS_ON"  # Child hypothesis requires parent premise
+    FALSIFIES = "FALSIFIES"  # Experiment or finding refutes hypothesis
+    REFINES = "REFINES"  # Hypothesis provides higher precision over parent
+    BLOCKS = "BLOCKS"  # Negative result prevents downstream work
+    PRODUCES = "PRODUCES"  # Experiment produces evidence or artifact
+    GATED_BY = "GATED_BY"  # Hypothesis requires passing a specific statistical gate
 
 
 class Entity(BaseModel):

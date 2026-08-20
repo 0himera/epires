@@ -35,7 +35,7 @@ def parse_markdown_findings(content: str) -> Tuple[List[HypothesisNode], List[Ev
     # -------------------------------------------------------------------------
     bullet_pattern = re.compile(
         r"^[\*\-\+]\s+\*\*(?P<tag>[HF]\d+[a-z0-9_\-\.]*|\bHypothesis\s+[A-Za-z0-9_\-\.]+)(?P<label>[^\*:]*)\*\*(?:\s*\([^\)]*\))?\s*[:\-–—]\s*(?P<body>.+?)(?=(?:^[\*\-\+]\s+\*\*|^#{1,4}\s+|\Z))",
-        re.MULTILINE | re.DOTALL
+        re.MULTILINE | re.DOTALL,
     )
 
     bullet_matches = list(bullet_pattern.finditer(content))
@@ -69,7 +69,9 @@ def parse_markdown_findings(content: str) -> Tuple[List[HypothesisNode], List[Ev
                 conf = SourceConfidence.D
 
             # Extract Status from label / body
-            is_rejected = bool(re.search(r"\b(?:REJECTED|FALSIFIED|FAILED|NEGATIVE|REJECT)\b", full_text, re.IGNORECASE))
+            is_rejected = bool(
+                re.search(r"\b(?:REJECTED|FALSIFIED|FAILED|NEGATIVE|REJECT)\b", full_text, re.IGNORECASE)
+            )
             is_promoted = bool(re.search(r"\b(?:PROMOTED|CONFIRMED|VALIDATED|PASSED|PASS)\b", full_text, re.IGNORECASE))
             is_prereg = bool(re.search(r"\b(?:PREREGISTERED|PREREGISTRATION|DESIGN|SPEC)\b", full_text, re.IGNORECASE))
 
@@ -80,18 +82,24 @@ def parse_markdown_findings(content: str) -> Tuple[List[HypothesisNode], List[Ev
                 status = HypothesisStatus.CONFIRMED
             elif is_prereg:
                 status = HypothesisStatus.PROPOSED
-            elif bool(re.search(r"\b(?:CONDITIONAL|IN_PROGRESS|TESTING|AUDIT|OPERATIONAL)\b", full_text, re.IGNORECASE)):
+            elif bool(
+                re.search(r"\b(?:CONDITIONAL|IN_PROGRESS|TESTING|AUDIT|OPERATIONAL)\b", full_text, re.IGNORECASE)
+            ):
                 status = HypothesisStatus.IN_PROGRESS
 
             # Extract Falsification Criteria & Source
-            fals_m = re.search(r"(?:Falsification|Falsify|Refutation)\s*[:\-–—]\s*([^\n\.]+)", clean_body, re.IGNORECASE)
+            fals_m = re.search(
+                r"(?:Falsification|Falsify|Refutation)\s*[:\-–—]\s*([^\n\.]+)", clean_body, re.IGNORECASE
+            )
             falsification = fals_m.group(1).strip() if fals_m else "Empirical validation regression vs baseline"
 
             source_m = re.search(r"(?:Source|Sources)\s*[:\-–—]\s*([^\n\.]+)", clean_body, re.IGNORECASE)
             citation = source_m.group(1).strip() if source_m else ""
 
             # Check if this bullet is an empirical Result / Observation
-            is_result_bullet = bool(re.search(r"\b(?:result|observation|public-LB|outcome|pilot|smoke|amendment)\b", label, re.IGNORECASE))
+            is_result_bullet = bool(
+                re.search(r"\b(?:result|observation|public-LB|outcome|pilot|smoke|amendment)\b", label, re.IGNORECASE)
+            )
 
             # Extract title / summary
             clean_label = re.sub(r"\[[^\]]+\]", "", label).strip(" —-–:")
@@ -100,9 +108,15 @@ def parse_markdown_findings(content: str) -> Tuple[List[HypothesisNode], List[Ev
 
             # Parent dependencies
             parents: List[str] = []
-            parents_m = re.search(r"(?:Depends\s+On|Parents|Dependencies|Base)\s*[:\-–—]\s*([^\n]+)", clean_body, re.IGNORECASE)
+            parents_m = re.search(
+                r"(?:Depends\s+On|Parents|Dependencies|Base)\s*[:\-–—]\s*([^\n]+)", clean_body, re.IGNORECASE
+            )
             if parents_m:
-                parents = [p.strip() for p in re.findall(r"[HF]\d+[a-z0-9_\-\.]*", parents_m.group(1), re.IGNORECASE) if p.strip() and p.strip() != h_id]
+                parents = [
+                    p.strip()
+                    for p in re.findall(r"[HF]\d+[a-z0-9_\-\.]*", parents_m.group(1), re.IGNORECASE)
+                    if p.strip() and p.strip() != h_id
+                ]
             else:
                 # Infer parents mentioned in text like "blend of H43" or "supersedes H90"
                 refs = re.findall(r"\b([HF]\d+[a-z0-9_\-\.]*)\b", full_text)
@@ -136,20 +150,25 @@ def parse_markdown_findings(content: str) -> Tuple[List[HypothesisNode], List[Ev
 
             # If it's a result bullet or has numerical metric evidence, register an EvidenceClaim
             if is_result_bullet or is_rejected or is_promoted:
-                metric_val_m = re.search(r"(?:RMSLE|Loss|Score|delta|weights)?\s*(?:[:=–—]\s*|\s+)([-+]?\d*\.\d+(?:[eE][-+]?\d+)?)", clean_body)
+                metric_val_m = re.search(
+                    r"(?:RMSLE|Loss|Score|delta|weights)?\s*(?:[:=–—]\s*|\s+)([-+]?\d*\.\d+(?:[eE][-+]?\d+)?)",
+                    clean_body,
+                )
                 metric_val = float(metric_val_m.group(1)) if metric_val_m else None
 
-                evidence_list.append(EvidenceClaim(
-                    id=f"ev_{h_id}_{idx + 1}",
-                    hypothesis_id=h_id,
-                    evidence_level=ev_level,
-                    source_confidence=conf,
-                    claim=clean_body[:250],
-                    metric_name="RMSLE" if "RMSLE" in clean_body else ("metric" if metric_val else None),
-                    metric_value=metric_val,
-                    falsification_triggered=is_rejected,
-                    citation_or_path=citation,
-                ))
+                evidence_list.append(
+                    EvidenceClaim(
+                        id=f"ev_{h_id}_{idx + 1}",
+                        hypothesis_id=h_id,
+                        evidence_level=ev_level,
+                        source_confidence=conf,
+                        claim=clean_body[:250],
+                        metric_name="RMSLE" if "RMSLE" in clean_body else ("metric" if metric_val else None),
+                        metric_value=metric_val,
+                        falsification_triggered=is_rejected,
+                        citation_or_path=citation,
+                    )
+                )
 
         return list(hypotheses_map.values()), evidence_list
 
@@ -158,12 +177,12 @@ def parse_markdown_findings(content: str) -> Tuple[List[HypothesisNode], List[Ev
     # -------------------------------------------------------------------------
     h_pattern = re.compile(
         r"^(?:#{1,4})\s+(?:\[(?P<status_tag>PROPOSED|CONFIRMED|FALSIFIED|BLOCKED|IN_PROGRESS|REFINED)\]\s+)?(?:(?:Hypothesis|Гипотеза)\s+(?P<id_hypo>[A-Za-z0-9_\-\.]+)|(?P<id_h>[HF][-_]?[A-Za-z0-9_\-\.]+))(?:\s*[:\-–—]\s*|\s+)(?P<title>.+)$",
-        re.MULTILINE | re.IGNORECASE
+        re.MULTILINE | re.IGNORECASE,
     )
 
     matches = list(h_pattern.finditer(content))
     for i, match in enumerate(matches):
-        raw_id = (match.group("id_hypo") or match.group("id_h") or f"H-{i+1}").strip()
+        raw_id = (match.group("id_hypo") or match.group("id_h") or f"H-{i + 1}").strip()
         h_id = raw_id if raw_id.upper().startswith(("H", "F")) else f"H-{raw_id}"
         title = match.group("title").strip()
         raw_status = match.group("status_tag")
@@ -174,22 +193,30 @@ def parse_markdown_findings(content: str) -> Tuple[List[HypothesisNode], List[Ev
         clean_body = re.sub(r"\*\*|\*|__|_", "", body)
 
         mechanism_match = re.search(
-            r"(?:a\s+priori|mechanism|theoretical\s+basis|rationale|theory)\s*[:\-–—]\s*(.+)",
-            clean_body, re.IGNORECASE
+            r"(?:a\s+priori|mechanism|theoretical\s+basis|rationale|theory)\s*[:\-–—]\s*(.+)", clean_body, re.IGNORECASE
         )
         mechanism = mechanism_match.group(1).strip() if mechanism_match else "Extracted from research documentation."
 
         falsification_match = re.search(
             r"(?:falsification|falsify|falsification\s+criteria|refutation\s+criteria|threshold)\s*[:\-–—]\s*(.+)",
-            clean_body, re.IGNORECASE
+            clean_body,
+            re.IGNORECASE,
         )
-        falsification = falsification_match.group(1).strip() if falsification_match else "Empirical validation failure or delta >= 0.0"
+        falsification = (
+            falsification_match.group(1).strip()
+            if falsification_match
+            else "Empirical validation failure or delta >= 0.0"
+        )
 
-        level_match = re.search(r"(?:target\s+level|level|evidence\s+level)\s*[:\-–—]\s*(E[0-5])", clean_body, re.IGNORECASE)
+        level_match = re.search(
+            r"(?:target\s+level|level|evidence\s+level)\s*[:\-–—]\s*(E[0-5])", clean_body, re.IGNORECASE
+        )
         target_level = EvidenceLevel(level_match.group(1).upper()) if level_match else EvidenceLevel.E3
 
         parents: List[str] = []
-        parents_match = re.search(r"(?:depends\s+on|parents|dependencies|base)\s*[:\-–—]\s*(.+)", clean_body, re.IGNORECASE)
+        parents_match = re.search(
+            r"(?:depends\s+on|parents|dependencies|base)\s*[:\-–—]\s*(.+)", clean_body, re.IGNORECASE
+        )
         if parents_match:
             raw_parents = parents_match.group(1).strip()
             parents = [p.strip() for p in re.findall(r"[HF][A-Za-z0-9_\-\.]+", raw_parents) if p.strip()]
@@ -235,15 +262,16 @@ def parse_markdown_findings(content: str) -> Tuple[List[HypothesisNode], List[Ev
         hypotheses_map[h_id] = h_node
 
         evidence_matches = re.finditer(
-            r"(?:evidence|result|observation|metric)\s*[:\-–—]\s*(?P<claim>[^\n]+)",
-            clean_body, re.IGNORECASE
+            r"(?:evidence|result|observation|metric)\s*[:\-–—]\s*(?P<claim>[^\n]+)", clean_body, re.IGNORECASE
         )
         for ev_idx, ev_m in enumerate(evidence_matches):
             claim_text = ev_m.group("claim").strip()
             metric_val_m = re.search(r"(?:=\s*|:\s*)([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)", claim_text)
             metric_val = float(metric_val_m.group(1)) if metric_val_m else None
 
-            is_falsified = status == HypothesisStatus.FALSIFIED or bool(re.search(r"fail|falsif", claim_text, re.IGNORECASE))
+            is_falsified = status == HypothesisStatus.FALSIFIED or bool(
+                re.search(r"fail|falsif", claim_text, re.IGNORECASE)
+            )
             ev_claim = EvidenceClaim(
                 id=f"ev_{h_id}_{ev_idx + 1}",
                 hypothesis_id=h_id,
@@ -269,7 +297,7 @@ def export_graph_bundle(store: EpiresStore, project_name: str = "epires") -> Dic
             "source_id": r.source_id,
             "target_id": r.target_id,
             "relation_type": r.relation_type.value,
-            "metadata": r.metadata
+            "metadata": r.metadata,
         }
         for r in store.list_relations()
     ]
@@ -303,10 +331,7 @@ def export_graph_bundle(store: EpiresStore, project_name: str = "epires") -> Dic
 
 
 def import_graph_bundle(
-    store: EpiresStore,
-    bundle: Dict[str, Any],
-    upsert: bool = True,
-    dry_run: bool = False
+    store: EpiresStore, bundle: Dict[str, Any], upsert: bool = True, dry_run: bool = False
 ) -> Dict[str, Any]:
     """Import a versioned bundle into Epires SQLite store."""
     if bundle.get("schema_version") not in {"epires.v1", "atlas.v1"}:
@@ -318,10 +343,7 @@ def import_graph_bundle(
     hypotheses: List[HypothesisNode] = []
     for raw in raw_hypotheses:
         if isinstance(raw, dict):
-            entities = [
-                Entity(**e) if isinstance(e, dict) else e
-                for e in raw.get("entities", [])
-            ]
+            entities = [Entity(**e) if isinstance(e, dict) else e for e in raw.get("entities", [])]
             raw_copy = dict(raw)
             raw_copy["entities"] = entities
             hypotheses.append(HypothesisNode(**raw_copy))
@@ -339,19 +361,11 @@ def import_graph_bundle(
             "hypotheses_ids": [h.id for h in hypotheses],
         }
 
-    return store.bulk_import(
-        hypotheses=hypotheses,
-        evidence=evidence,
-        upsert=upsert,
-        emit_summary_trace=True
-    )
+    return store.bulk_import(hypotheses=hypotheses, evidence=evidence, upsert=upsert, emit_summary_trace=True)
 
 
 def ingest_file(
-    store: EpiresStore,
-    file_path: Union[str, Path],
-    dry_run: bool = False,
-    upsert: bool = True
+    store: EpiresStore, file_path: Union[str, Path], dry_run: bool = False, upsert: bool = True
 ) -> Dict[str, Any]:
     """Universal ingestion entrypoint for .md, .json, and .jsonl files."""
     path = Path(file_path).resolve()
@@ -398,6 +412,6 @@ def ingest_file(
                 "dry_run": True,
                 "hypotheses_count": len(hypotheses),
                 "evidence_count": len(evidence),
-                "hypotheses": [{"id": h.id, "title": h.title, "status": h.status.value} for h in hypotheses]
+                "hypotheses": [{"id": h.id, "title": h.title, "status": h.status.value} for h in hypotheses],
             }
         return store.bulk_import(hypotheses=hypotheses, evidence=evidence, upsert=upsert)

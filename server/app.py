@@ -29,6 +29,7 @@ from tools.web_search import ParallelWebSearcher
 
 class WebSocketHub:
     """Manages active browser WebSocket connections for real-time delta pushes."""
+
     def __init__(self) -> None:
         self.active_connections: List[WebSocket] = []
 
@@ -62,7 +63,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     app = FastAPI(
         title="Epires Research Engine",
         version="0.1.0",
-        description="Epistemic Research Engine: VSA Hypergraph, Hypothesis Falsification DAG & Automated Tracing"
+        description="Epistemic Research Engine: VSA Hypergraph, Hypothesis Falsification DAG & Automated Tracing",
     )
 
     app.add_middleware(
@@ -147,7 +148,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
             "status": "ok",
             "hypotheses_total": len(hypotheses),
             "status_distribution": status_counts,
-            "traces_total": len(store.list_traces(limit=1000))
+            "traces_total": len(store.list_traces(limit=1000)),
         }
 
     @app.get("/version")
@@ -162,7 +163,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
             "version": f"{mtime}_{len(h_list)}_{len(t_list)}",
             "db_mtime": mtime,
             "hypotheses_count": len(h_list),
-            "traces_count": len(t_list)
+            "traces_count": len(t_list),
         }
 
     @app.websocket("/ws")
@@ -186,13 +187,15 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     def atlas_snapshot() -> Dict[str, Any]:
         """Return the current research graph and its persisted evidence ledger."""
         records = atlas_records()
-        return atlas_envelope({
-            "summary": records["summary"],
-            "hypotheses": records["hypotheses"],
-            "relations": records["relations"],
-            "evidence": records["evidence"],
-            "experiments": records["experiments"],
-        })
+        return atlas_envelope(
+            {
+                "summary": records["summary"],
+                "hypotheses": records["hypotheses"],
+                "relations": records["relations"],
+                "evidence": records["evidence"],
+                "experiments": records["experiments"],
+            }
+        )
 
     @app.get("/atlas/stratigraphy")
     def atlas_stratigraphy() -> Dict[str, Any]:
@@ -204,39 +207,46 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
         records = atlas_records()
         events: List[Dict[str, Any]] = []
         for hypothesis in records["hypotheses"]:
-            events.append({
-                "kind": "hypothesis",
-                "timestamp": hypothesis.created_at,
-                "id": hypothesis.id,
-                "hypothesis_id": hypothesis.id,
-                "status": hypothesis.status.value,
-                "evidence_level": hypothesis.current_evidence_level.value,
-                "title": hypothesis.title,
-            })
+            events.append(
+                {
+                    "kind": "hypothesis",
+                    "timestamp": hypothesis.created_at,
+                    "id": hypothesis.id,
+                    "hypothesis_id": hypothesis.id,
+                    "status": hypothesis.status.value,
+                    "evidence_level": hypothesis.current_evidence_level.value,
+                    "title": hypothesis.title,
+                }
+            )
         for evidence in records["evidence"]:
-            events.append({
-                "kind": "evidence",
-                "timestamp": evidence.timestamp,
-                "id": evidence.id,
-                "hypothesis_id": evidence.hypothesis_id,
-                "evidence_level": evidence.evidence_level.value,
-                "source_confidence": evidence.source_confidence.value,
-                "falsification_triggered": evidence.falsification_triggered,
-                "metric_name": evidence.metric_name,
-                "metric_value": evidence.metric_value,
-                "claim": evidence.claim,
-            })
+            events.append(
+                {
+                    "kind": "evidence",
+                    "timestamp": evidence.timestamp,
+                    "id": evidence.id,
+                    "hypothesis_id": evidence.hypothesis_id,
+                    "evidence_level": evidence.evidence_level.value,
+                    "source_confidence": evidence.source_confidence.value,
+                    "falsification_triggered": evidence.falsification_triggered,
+                    "metric_name": evidence.metric_name,
+                    "metric_value": evidence.metric_value,
+                    "claim": evidence.claim,
+                }
+            )
         for trace in records["traces"]:
-            events.append({
-                "kind": "trace",
-                "timestamp": trace.timestamp,
-                "id": trace.id,
-                "hypothesis_id": trace.h_tag,
-                "action": trace.action,
-                "agent_role": trace.agent_role,
-                "summary": trace.summary,
-                "details": trace.details,
-            })
+            events.append(
+                {
+                    "kind": "trace",
+                    "timestamp": trace.timestamp,
+                    "id": trace.id,
+                    "hypothesis_id": trace.h_tag,
+                    "action": trace.action,
+                    "agent_role": trace.agent_role,
+                    "summary": trace.summary,
+                    "details": trace.details,
+                }
+            )
+
         def chronological_key(event: Dict[str, Any]) -> tuple[int, datetime, str, str]:
             """Sort ISO-8601 timestamps by instant, retaining malformed legacy rows."""
             raw = event["timestamp"] or ""
@@ -249,15 +259,17 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
                 return (1, datetime.max.replace(tzinfo=timezone.utc), event["kind"], str(event["id"]))
 
         events.sort(key=chronological_key)
-        return atlas_envelope({
-            "summary": {
-                "events_total": len(events),
-                "hypotheses_total": len(records["hypotheses"]),
-                "evidence_total": len(records["evidence"]),
-                "traces_total": len(records["traces"]),
-            },
-            "events": events,
-        })
+        return atlas_envelope(
+            {
+                "summary": {
+                    "events_total": len(events),
+                    "hypotheses_total": len(records["hypotheses"]),
+                    "evidence_total": len(records["evidence"]),
+                    "traces_total": len(records["traces"]),
+                },
+                "events": events,
+            }
+        )
 
     @app.get("/atlas/coverage")
     def atlas_coverage(
@@ -307,25 +319,29 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
         for combo in itertools.product(*value_sets) if all(value_sets) else []:
             hypothesis_ids = sorted(combo_hypotheses.get(combo, []))
             count = len(hypothesis_ids)
-            cells.append({
-                "combination": dict(zip(requested_dimensions, combo)),
-                "hypothesis_ids": hypothesis_ids,
-                "hypothesis_count": count,
-                "presence": "PRESENT" if count else "ABSENT",
-            })
+            cells.append(
+                {
+                    "combination": dict(zip(requested_dimensions, combo)),
+                    "hypothesis_ids": hypothesis_ids,
+                    "hypothesis_count": count,
+                    "presence": "PRESENT" if count else "ABSENT",
+                }
+            )
         present = sum(cell["presence"] == "PRESENT" for cell in cells)
-        return atlas_envelope({
-            "basis": "hypothesis_entities",
-            "dimensions": requested_dimensions,
-            "dimension_values": dimension_values,
-            "cells": cells,
-            "summary": {
-                "hypotheses_considered": len(hypotheses),
-                "possible_cells": len(cells),
-                "present_cells": present,
-                "absent_cells": len(cells) - present,
-            },
-        })
+        return atlas_envelope(
+            {
+                "basis": "hypothesis_entities",
+                "dimensions": requested_dimensions,
+                "dimension_values": dimension_values,
+                "cells": cells,
+                "summary": {
+                    "hypotheses_considered": len(hypotheses),
+                    "possible_cells": len(cells),
+                    "present_cells": present,
+                    "absent_cells": len(cells) - present,
+                },
+            }
+        )
 
     def get_artifacts_dir() -> Optional[Path]:
         conf = EpiresProjectConfig.load()
@@ -355,86 +371,106 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
             for p in sorted(art_dir.glob("**/*")):
                 if p.is_file() and not p.name.startswith("."):
                     rel_path = str(p.relative_to(art_dir))
-                    fs_artifacts.append({
-                        "name": p.name,
-                        "path": rel_path,
-                        "size_bytes": p.stat().st_size,
-                        "mtime": p.stat().st_mtime,
-                    })
+                    fs_artifacts.append(
+                        {
+                            "name": p.name,
+                            "path": rel_path,
+                            "size_bytes": p.stat().st_size,
+                            "mtime": p.stat().st_mtime,
+                        }
+                    )
 
         for evidence in records["evidence"]:
-            links.append({
-                "source_type": "evidence",
-                "source_id": evidence.id,
-                "target_type": "hypothesis",
-                "target_id": evidence.hypothesis_id,
-                "relation": "EVIDENCES",
-            })
+            links.append(
+                {
+                    "source_type": "evidence",
+                    "source_id": evidence.id,
+                    "target_type": "hypothesis",
+                    "target_id": evidence.hypothesis_id,
+                    "relation": "EVIDENCES",
+                }
+            )
             if evidence.citation_or_path:
-                links.append({
-                    "source_type": "evidence",
-                    "source_id": evidence.id,
-                    "target_type": "citation",
-                    "target_id": evidence.citation_or_path,
-                    "relation": "CITES",
-                })
+                links.append(
+                    {
+                        "source_type": "evidence",
+                        "source_id": evidence.id,
+                        "target_type": "citation",
+                        "target_id": evidence.citation_or_path,
+                        "relation": "CITES",
+                    }
+                )
             if evidence.artifact_hash:
-                links.append({
-                    "source_type": "evidence",
-                    "source_id": evidence.id,
-                    "target_type": "artifact",
-                    "target_id": evidence.artifact_hash,
-                    "relation": "HAS_ARTIFACT",
-                })
+                links.append(
+                    {
+                        "source_type": "evidence",
+                        "source_id": evidence.id,
+                        "target_type": "artifact",
+                        "target_id": evidence.artifact_hash,
+                        "relation": "HAS_ARTIFACT",
+                    }
+                )
         for experiment in records["experiments"]:
-            links.append({
-                "source_type": "experiment",
-                "source_id": experiment.id,
-                "target_type": "hypothesis",
-                "target_id": experiment.hypothesis_id,
-                "relation": "TESTS",
-            })
-            links.append({
-                "source_type": "experiment",
-                "source_id": experiment.id,
-                "target_type": "script",
-                "target_id": experiment.script_path,
-                "relation": "USES_SCRIPT",
-            })
+            links.append(
+                {
+                    "source_type": "experiment",
+                    "source_id": experiment.id,
+                    "target_type": "hypothesis",
+                    "target_id": experiment.hypothesis_id,
+                    "relation": "TESTS",
+                }
+            )
+            links.append(
+                {
+                    "source_type": "experiment",
+                    "source_id": experiment.id,
+                    "target_type": "script",
+                    "target_id": experiment.script_path,
+                    "relation": "USES_SCRIPT",
+                }
+            )
             if experiment.commit_hash:
-                links.append({
-                    "source_type": "experiment",
-                    "source_id": experiment.id,
-                    "target_type": "commit",
-                    "target_id": experiment.commit_hash,
-                    "relation": "AT_COMMIT",
-                })
+                links.append(
+                    {
+                        "source_type": "experiment",
+                        "source_id": experiment.id,
+                        "target_type": "commit",
+                        "target_id": experiment.commit_hash,
+                        "relation": "AT_COMMIT",
+                    }
+                )
             for artifact_path in experiment.artifact_paths:
-                links.append({
-                    "source_type": "experiment",
-                    "source_id": experiment.id,
-                    "target_type": "artifact",
-                    "target_id": artifact_path,
-                    "relation": "PRODUCES",
-                })
+                links.append(
+                    {
+                        "source_type": "experiment",
+                        "source_id": experiment.id,
+                        "target_type": "artifact",
+                        "target_id": artifact_path,
+                        "relation": "PRODUCES",
+                    }
+                )
         for relation in records["relations"]:
-            links.append({
-                "source_type": "hypothesis",
-                "source_id": relation.source_id,
-                "target_type": "hypothesis",
-                "target_id": relation.target_id,
-                "relation": relation.relation_type.value,
-                "metadata": relation.metadata,
-            })
+            links.append(
+                {
+                    "source_type": "hypothesis",
+                    "source_id": relation.source_id,
+                    "target_type": "hypothesis",
+                    "target_id": relation.target_id,
+                    "relation": relation.relation_type.value,
+                    "metadata": relation.metadata,
+                }
+            )
         for trace in records["traces"]:
             if trace.h_tag:
-                links.append({
-                    "source_type": "trace",
-                    "source_id": str(trace.id),
-                    "target_type": "hypothesis",
-                    "target_id": trace.h_tag,
-                    "relation": "ABOUT",
-                })
+                links.append(
+                    {
+                        "source_type": "trace",
+                        "source_id": str(trace.id),
+                        "target_type": "hypothesis",
+                        "target_id": trace.h_tag,
+                        "relation": "ABOUT",
+                    }
+                )
 
         db_artifacts = set()
         for ev in records["evidence"]:
@@ -446,19 +482,23 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
             for ap in exp.artifact_paths:
                 db_artifacts.add(ap)
 
-        total_artifacts_count = max(len(fs_artifacts), len(db_artifacts), len(set(a["path"] for a in fs_artifacts) | db_artifacts))
+        total_artifacts_count = max(
+            len(fs_artifacts), len(db_artifacts), len(set(a["path"] for a in fs_artifacts) | db_artifacts)
+        )
 
-        return atlas_envelope({
-            "basis": "persisted_store_records",
-            "artifact_count": total_artifacts_count,
-            "artifact_files": fs_artifacts,
-            "hypotheses": records["hypotheses"],
-            "evidence": records["evidence"],
-            "experiments": records["experiments"],
-            "relations": records["relations"],
-            "traces": records["traces"],
-            "links": links,
-        })
+        return atlas_envelope(
+            {
+                "basis": "persisted_store_records",
+                "artifact_count": total_artifacts_count,
+                "artifact_files": fs_artifacts,
+                "hypotheses": records["hypotheses"],
+                "evidence": records["evidence"],
+                "experiments": records["experiments"],
+                "relations": records["relations"],
+                "traces": records["traces"],
+                "links": links,
+            }
+        )
 
     @app.get("/artifacts")
     def list_artifacts() -> Dict[str, Any]:
@@ -469,12 +509,14 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
             for p in sorted(art_dir.glob("**/*")):
                 if p.is_file() and not p.name.startswith("."):
                     rel_path = str(p.relative_to(art_dir))
-                    files.append({
-                        "name": p.name,
-                        "path": rel_path,
-                        "size_bytes": p.stat().st_size,
-                        "mtime": p.stat().st_mtime,
-                    })
+                    files.append(
+                        {
+                            "name": p.name,
+                            "path": rel_path,
+                            "size_bytes": p.stat().st_size,
+                            "mtime": p.stat().st_mtime,
+                        }
+                    )
         return {"artifacts": files, "count": len(files)}
 
     @app.get("/artifacts/{artifact_path:path}")
@@ -526,7 +568,9 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     @app.post("/experiments", response_model=ExperimentNode)
     async def register_experiment(exp: ExperimentNode) -> ExperimentNode:
         saved = store.register_experiment(exp)
-        await ws_hub.broadcast({"event": "EXPERIMENT_REGISTERED", "experiment_id": saved.id, "hypothesis_id": saved.hypothesis_id})
+        await ws_hub.broadcast(
+            {"event": "EXPERIMENT_REGISTERED", "experiment_id": saved.id, "hypothesis_id": saved.hypothesis_id}
+        )
         return saved
 
     @app.get("/experiments", response_model=List[ExperimentNode])
@@ -539,17 +583,16 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     @app.post("/evidence")
     async def log_evidence(ev: EvidenceClaim) -> Dict[str, Any]:
         saved_ev, blocked_children = store.log_evidence(ev)
-        await ws_hub.broadcast({
-            "event": "EVIDENCE_LOGGED",
-            "evidence_id": saved_ev.id,
-            "hypothesis_id": saved_ev.hypothesis_id,
-            "falsification_triggered": saved_ev.falsification_triggered,
-            "blocked_children": blocked_children
-        })
-        return {
-            "evidence": saved_ev,
-            "blocked_children": blocked_children
-        }
+        await ws_hub.broadcast(
+            {
+                "event": "EVIDENCE_LOGGED",
+                "evidence_id": saved_ev.id,
+                "hypothesis_id": saved_ev.hypothesis_id,
+                "falsification_triggered": saved_ev.falsification_triggered,
+                "blocked_children": blocked_children,
+            }
+        )
+        return {"evidence": saved_ev, "blocked_children": blocked_children}
 
     @app.get("/evidence/{evidence_id}")
     def get_evidence_detail(evidence_id: str) -> EvidenceClaim:
@@ -563,27 +606,27 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     async def retract_evidence(
         evidence_id: str,
         reason: str = Query(default="Retracted erroneous evidence claim"),
-        agent_role: str = Query(default="Lead-PI")
+        agent_role: str = Query(default="Lead-PI"),
     ) -> Dict[str, Any]:
         retracted_ev, unblocked_children = store.retract_evidence(
-            evidence_id=evidence_id,
-            reason=reason,
-            agent_role=agent_role
+            evidence_id=evidence_id, reason=reason, agent_role=agent_role
         )
         if not retracted_ev:
             raise HTTPException(status_code=404, detail=f"Evidence {evidence_id} not found")
         h = store.get_hypothesis(retracted_ev.hypothesis_id)
-        await ws_hub.broadcast({
-            "event": "EVIDENCE_RETRACTED",
-            "evidence_id": evidence_id,
-            "hypothesis_id": retracted_ev.hypothesis_id,
-            "unblocked_children": unblocked_children
-        })
+        await ws_hub.broadcast(
+            {
+                "event": "EVIDENCE_RETRACTED",
+                "evidence_id": evidence_id,
+                "hypothesis_id": retracted_ev.hypothesis_id,
+                "unblocked_children": unblocked_children,
+            }
+        )
         return {
             "retracted_evidence": retracted_ev,
             "hypothesis": h,
             "unblocked_children": unblocked_children,
-            "reason": reason
+            "reason": reason,
         }
 
     # -------------------------------------------------------------------------
@@ -592,10 +635,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     @app.post("/search")
     def associative_search(sq: SearchQuery) -> List[Dict[str, Any]]:
         results = store.search(sq)
-        return [
-            {"hypothesis": h, "similarity_score": score}
-            for h, score in results
-        ]
+        return [{"hypothesis": h, "similarity_score": score} for h, score in results]
 
     @app.post("/gaps")
     def find_gaps(gq: GapQuery) -> List[Dict[str, Any]]:
@@ -620,7 +660,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
             summary=entry.summary,
             h_tag=entry.h_tag,
             agent_role=entry.agent_role,
-            details=entry.details
+            details=entry.details,
         )
 
     # -------------------------------------------------------------------------

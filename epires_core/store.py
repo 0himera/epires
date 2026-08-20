@@ -31,7 +31,7 @@ class EpiresStore:
         self,
         db_path: str | Path = ".epires/hypotheses.db",
         vsa_dim: int = 10000,
-        trace_md_path: Optional[str | Path] = "docs/agent-trace.md"
+        trace_md_path: Optional[str | Path] = "docs/agent-trace.md",
     ):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -138,8 +138,7 @@ class EpiresStore:
 
         with self._get_connection() as conn:
             rows = conn.execute(
-                "SELECT source_id, target_id FROM relations WHERE relation_type = ?",
-                (RelationType.DEPENDS_ON.value,)
+                "SELECT source_id, target_id FROM relations WHERE relation_type = ?", (RelationType.DEPENDS_ON.value,)
             ).fetchall()
 
         adj: Dict[str, List[str]] = {}
@@ -170,10 +169,7 @@ class EpiresStore:
     # Hypotheses
     # -------------------------------------------------------------------------
     def register_hypothesis(
-        self,
-        h: HypothesisNode,
-        allow_status_override: bool = False,
-        emit_trace: bool = True
+        self, h: HypothesisNode, allow_status_override: bool = False, emit_trace: bool = True
     ) -> HypothesisNode:
         # Check DAG cycle safety
         self._check_dag_cycle(h.id, h.parent_ids)
@@ -193,18 +189,17 @@ class EpiresStore:
                 pass
             elif existing.status in {HypothesisStatus.BLOCKED, HypothesisStatus.REFINED}:
                 h.status = existing.status
-            elif (
-                existing.status == HypothesisStatus.CONFIRMED
-                and h.status in {HypothesisStatus.PROPOSED, HypothesisStatus.IN_PROGRESS}
-            ):
+            elif existing.status == HypothesisStatus.CONFIRMED and h.status in {
+                HypothesisStatus.PROPOSED,
+                HypothesisStatus.IN_PROGRESS,
+            }:
                 h.status = existing.status
             elif existing.status == HypothesisStatus.IN_PROGRESS and h.status == HypothesisStatus.PROPOSED:
                 h.status = existing.status
 
         # Get existing relations for encoding
         relations = [
-            RelationEdge(source_id=h.id, target_id=pid, relation_type=RelationType.DEPENDS_ON)
-            for pid in h.parent_ids
+            RelationEdge(source_id=h.id, target_id=pid, relation_type=RelationType.DEPENDS_ON) for pid in h.parent_ids
         ]
         evidence_claims = self.get_evidence_for_hypothesis(h.id)
 
@@ -213,7 +208,8 @@ class EpiresStore:
         vec_bytes = vec.tobytes()
 
         with self._get_connection() as conn:
-            conn.execute("""
+            conn.execute(
+                """
             INSERT INTO hypotheses (
                 id, title, a_priori_mechanism, falsification_criteria,
                 target_evidence_level, current_evidence_level, status,
@@ -232,20 +228,34 @@ class EpiresStore:
                 tags_json=excluded.tags_json,
                 vector_blob=excluded.vector_blob,
                 updated_at=excluded.updated_at
-            """, (
-                h.id, h.title, h.a_priori_mechanism, h.falsification_criteria,
-                h.target_evidence_level.value, h.current_evidence_level.value, h.status.value,
-                json.dumps(h.parent_ids), json.dumps([e.model_dump() for e in h.entities]),
-                json.dumps(h.tags), vec_bytes, h.created_at, h.updated_at
-            ))
+            """,
+                (
+                    h.id,
+                    h.title,
+                    h.a_priori_mechanism,
+                    h.falsification_criteria,
+                    h.target_evidence_level.value,
+                    h.current_evidence_level.value,
+                    h.status.value,
+                    json.dumps(h.parent_ids),
+                    json.dumps([e.model_dump() for e in h.entities]),
+                    json.dumps(h.tags),
+                    vec_bytes,
+                    h.created_at,
+                    h.updated_at,
+                ),
+            )
 
             # Sync FTS5 index
             try:
                 conn.execute("DELETE FROM hypotheses_fts WHERE id = ?", (h.id,))
-                conn.execute("""
+                conn.execute(
+                    """
                 INSERT INTO hypotheses_fts (id, title, a_priori_mechanism, falsification_criteria, tags)
                 VALUES (?, ?, ?, ?, ?)
-                """, (h.id, h.title, h.a_priori_mechanism, h.falsification_criteria, " ".join(h.tags)))
+                """,
+                    (h.id, h.title, h.a_priori_mechanism, h.falsification_criteria, " ".join(h.tags)),
+                )
             except Exception:
                 pass
 
@@ -255,20 +265,25 @@ class EpiresStore:
                 (h.id, RelationType.DEPENDS_ON.value),
             )
             for pid in h.parent_ids:
-                conn.execute("""
+                conn.execute(
+                    """
                 INSERT OR IGNORE INTO relations (source_id, target_id, relation_type, metadata_json)
                 VALUES (?, ?, ?, ?)
-                """, (h.id, pid, RelationType.DEPENDS_ON.value, json.dumps({})))
+                """,
+                    (h.id, pid, RelationType.DEPENDS_ON.value, json.dumps({})),
+                )
 
         if emit_trace:
-            self.log_trace(TraceEntry(
-                timestamp=now,
-                action="REGISTER_HYPOTHESIS",
-                agent_role="Lead-PI",
-                h_tag=h.id,
-                summary=f"Registered hypothesis {h.id}: {h.title} [Status: {h.status.value}]",
-                details={"a_priori": h.a_priori_mechanism, "falsification": h.falsification_criteria}
-            ))
+            self.log_trace(
+                TraceEntry(
+                    timestamp=now,
+                    action="REGISTER_HYPOTHESIS",
+                    agent_role="Lead-PI",
+                    h_tag=h.id,
+                    summary=f"Registered hypothesis {h.id}: {h.title} [Status: {h.status.value}]",
+                    details={"a_priori": h.a_priori_mechanism, "falsification": h.falsification_criteria},
+                )
+            )
         return h
 
     def update_hypothesis(
@@ -282,7 +297,7 @@ class EpiresStore:
         parent_ids: Optional[List[str]] = None,
         entities: Optional[List[Entity]] = None,
         tags: Optional[List[str]] = None,
-        agent_role: str = "Lead-PI"
+        agent_role: str = "Lead-PI",
     ) -> Optional[HypothesisNode]:
         """Explicitly update properties and/or status of an existing hypothesis."""
         h = self.get_hypothesis(h_id)
@@ -307,14 +322,16 @@ class EpiresStore:
             h.tags = tags
 
         saved = self.register_hypothesis(h, allow_status_override=True, emit_trace=False)
-        self.log_trace(TraceEntry(
-            timestamp=self._now(),
-            action="UPDATE_HYPOTHESIS",
-            agent_role=agent_role,
-            h_tag=h.id,
-            summary=f"Updated hypothesis {h.id} -> Status: {h.status.value}, Target: {h.target_evidence_level.value}",
-            details={"title": h.title, "status": h.status.value}
-        ))
+        self.log_trace(
+            TraceEntry(
+                timestamp=self._now(),
+                action="UPDATE_HYPOTHESIS",
+                agent_role=agent_role,
+                h_tag=h.id,
+                summary=f"Updated hypothesis {h.id} -> Status: {h.status.value}, Target: {h.target_evidence_level.value}",
+                details={"title": h.title, "status": h.status.value},
+            )
+        )
         return saved
 
     def bulk_import(
@@ -323,7 +340,7 @@ class EpiresStore:
         evidence: List[EvidenceClaim],
         upsert: bool = True,
         emit_summary_trace: bool = True,
-        agent_role: str = "Lead-PI"
+        agent_role: str = "Lead-PI",
     ) -> Dict[str, Any]:
         """Fast bulk import of hypotheses and evidence in a single transaction."""
         now = self._now()
@@ -344,14 +361,16 @@ class EpiresStore:
             ingested_ev += 1
 
         if emit_summary_trace and (ingested_h > 0 or ingested_ev > 0):
-            self.log_trace(TraceEntry(
-                timestamp=now,
-                action="BULK_INGEST",
-                agent_role=agent_role,
-                h_tag="",
-                summary=f"Bulk ingested {ingested_h} hypotheses and {ingested_ev} evidence claims.",
-                details={"hypotheses_count": ingested_h, "evidence_count": ingested_ev}
-            ))
+            self.log_trace(
+                TraceEntry(
+                    timestamp=now,
+                    action="BULK_INGEST",
+                    agent_role=agent_role,
+                    h_tag="",
+                    summary=f"Bulk ingested {ingested_h} hypotheses and {ingested_ev} evidence claims.",
+                    details={"hypotheses_count": ingested_h, "evidence_count": ingested_ev},
+                )
+            )
 
         return {
             "hypotheses_ingested": ingested_h,
@@ -370,7 +389,9 @@ class EpiresStore:
     def list_hypotheses(self, status: Optional[HypothesisStatus] = None) -> List[HypothesisNode]:
         with self._get_connection() as conn:
             if status:
-                rows = conn.execute("SELECT * FROM hypotheses WHERE status = ? ORDER BY id ASC", (status.value,)).fetchall()
+                rows = conn.execute(
+                    "SELECT * FROM hypotheses WHERE status = ? ORDER BY id ASC", (status.value,)
+                ).fetchall()
             else:
                 rows = conn.execute("SELECT * FROM hypotheses ORDER BY id ASC").fetchall()
             return [self._row_to_hypothesis(r) for r in rows]
@@ -411,21 +432,36 @@ class EpiresStore:
             # Check duplicate ID for strict append-only immutability
             existing = conn.execute("SELECT id FROM evidence WHERE id = ?", (ev.id,)).fetchone()
             if existing:
-                raise ValueError(f"Evidence claim '{ev.id}' already exists in ledger. Evidence records are immutable and append-only.")
+                raise ValueError(
+                    f"Evidence claim '{ev.id}' already exists in ledger. Evidence records are immutable and append-only."
+                )
 
-            conn.execute("""
+            conn.execute(
+                """
             INSERT INTO evidence (
                 id, hypothesis_id, evidence_level, source_confidence,
                 claim, metric_name, metric_value, delta_vs_baseline,
                 ci_95_lower, ci_95_upper, falsification_triggered,
                 citation_or_path, artifact_hash, timestamp
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                ev.id, ev.hypothesis_id, ev.evidence_level.value, ev.source_confidence.value,
-                ev.claim, ev.metric_name, ev.metric_value, ev.delta_vs_baseline,
-                ev.ci_95_lower, ev.ci_95_upper, 1 if ev.falsification_triggered else 0,
-                ev.citation_or_path, ev.artifact_hash, ev.timestamp
-            ))
+            """,
+                (
+                    ev.id,
+                    ev.hypothesis_id,
+                    ev.evidence_level.value,
+                    ev.source_confidence.value,
+                    ev.claim,
+                    ev.metric_name,
+                    ev.metric_value,
+                    ev.delta_vs_baseline,
+                    ev.ci_95_lower,
+                    ev.ci_95_upper,
+                    1 if ev.falsification_triggered else 0,
+                    ev.citation_or_path,
+                    ev.artifact_hash,
+                    ev.timestamp,
+                ),
+            )
 
         h = self.get_hypothesis(ev.hypothesis_id)
         if h:
@@ -449,15 +485,26 @@ class EpiresStore:
                 self.register_hypothesis(h, allow_status_override=True, emit_trace=False)
 
         if emit_trace:
-            self.log_trace(TraceEntry(
-                timestamp=now,
-                action="LOG_EVIDENCE",
-                agent_role="Lead-PI",
-                h_tag=ev.hypothesis_id,
-                summary=f"Evidence [{ev.evidence_level.value}, {ev.source_confidence.value}] logged for {ev.hypothesis_id}: {ev.claim}"
-                        + (f" -> FALSIFIED! Blocked {len(blocked_children)} child hypotheses." if ev.falsification_triggered else ""),
-                details={"metric": ev.metric_name, "value": ev.metric_value, "delta": ev.delta_vs_baseline, "falsified": ev.falsification_triggered}
-            ))
+            self.log_trace(
+                TraceEntry(
+                    timestamp=now,
+                    action="LOG_EVIDENCE",
+                    agent_role="Lead-PI",
+                    h_tag=ev.hypothesis_id,
+                    summary=f"Evidence [{ev.evidence_level.value}, {ev.source_confidence.value}] logged for {ev.hypothesis_id}: {ev.claim}"
+                    + (
+                        f" -> FALSIFIED! Blocked {len(blocked_children)} child hypotheses."
+                        if ev.falsification_triggered
+                        else ""
+                    ),
+                    details={
+                        "metric": ev.metric_name,
+                        "value": ev.metric_value,
+                        "delta": ev.delta_vs_baseline,
+                        "falsified": ev.falsification_triggered,
+                    },
+                )
+            )
         return ev, blocked_children
 
     def _cascade_falsification(self, falsified_h_id: str) -> List[str]:
@@ -465,7 +512,8 @@ class EpiresStore:
         blocked: List[str] = []
         with self._get_connection() as conn:
             # Recursive query to find all downstream dependent hypotheses
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
             WITH RECURSIVE downstream AS (
                 SELECT source_id AS child_id FROM relations
                 WHERE target_id = ? AND relation_type = 'DEPENDS_ON'
@@ -475,36 +523,41 @@ class EpiresStore:
                 WHERE r.relation_type = 'DEPENDS_ON'
             )
             SELECT child_id FROM downstream;
-            """, (falsified_h_id,))
+            """,
+                (falsified_h_id,),
+            )
             rows = cursor.fetchall()
             for r in rows:
                 child_id = r["child_id"]
-                child_status = conn.execute(
-                    "SELECT status FROM hypotheses WHERE id = ?", (child_id,)
-                ).fetchone()
+                child_status = conn.execute("SELECT status FROM hypotheses WHERE id = ?", (child_id,)).fetchone()
                 # A separately falsified child remains FALSIFIED; do not
                 # replace one terminal scientific result with another label.
                 if child_status and child_status["status"] == HypothesisStatus.FALSIFIED.value:
                     continue
                 conn.execute(
                     "UPDATE hypotheses SET status = ?, updated_at = ? WHERE id = ?",
-                    (HypothesisStatus.BLOCKED.value, self._now(), child_id)
+                    (HypothesisStatus.BLOCKED.value, self._now(), child_id),
                 )
-                conn.execute("""
+                conn.execute(
+                    """
                 INSERT OR IGNORE INTO relations (source_id, target_id, relation_type, metadata_json)
                 VALUES (?, ?, ?, ?)
-                """, (falsified_h_id, child_id, RelationType.BLOCKS.value, json.dumps({"reason": "parent_falsified"})))
+                """,
+                    (falsified_h_id, child_id, RelationType.BLOCKS.value, json.dumps({"reason": "parent_falsified"})),
+                )
                 blocked.append(child_id)
 
         if blocked:
-            self.log_trace(TraceEntry(
-                timestamp=self._now(),
-                action="CASCADING_BLOCK",
-                agent_role="System-DAG",
-                h_tag=falsified_h_id,
-                summary=f"Falsification of {falsified_h_id} cascaded to block dependent hypotheses: {', '.join(blocked)}",
-                details={"blocked_hypotheses": blocked}
-            ))
+            self.log_trace(
+                TraceEntry(
+                    timestamp=self._now(),
+                    action="CASCADING_BLOCK",
+                    agent_role="System-DAG",
+                    h_tag=falsified_h_id,
+                    summary=f"Falsification of {falsified_h_id} cascaded to block dependent hypotheses: {', '.join(blocked)}",
+                    details={"blocked_hypotheses": blocked},
+                )
+            )
         return blocked
 
     def get_evidence(self, evidence_id: str) -> Optional[EvidenceClaim]:
@@ -514,10 +567,7 @@ class EpiresStore:
             return self._row_to_evidence(row) if row else None
 
     def retract_evidence(
-        self,
-        evidence_id: str,
-        reason: str,
-        agent_role: str = "Lead-PI"
+        self, evidence_id: str, reason: str, agent_role: str = "Lead-PI"
     ) -> Tuple[Optional[EvidenceClaim], List[str]]:
         """Retracts an erroneous evidence record, recalculates the parent hypothesis's evidence level
 
@@ -545,7 +595,7 @@ class EpiresStore:
             else:
                 h.current_evidence_level = EvidenceLevel.E0
 
-            was_falsified = (h.status == HypothesisStatus.FALSIFIED)
+            was_falsified = h.status == HypothesisStatus.FALSIFIED
             has_remaining_falsification = any(ev.falsification_triggered for ev in remaining_evidence)
 
             if has_remaining_falsification:
@@ -565,15 +615,21 @@ class EpiresStore:
             if was_falsified and not has_remaining_falsification:
                 unblocked_children = self._cascade_unblock(hypothesis_id)
 
-        self.log_trace(TraceEntry(
-            timestamp=now,
-            action="RETRACT_EVIDENCE",
-            agent_role=agent_role,
-            h_tag=hypothesis_id or "",
-            summary=f"Retracted evidence [{evidence_id}] for {hypothesis_id}: {reason}"
-                    + (f" -> UNBLOCKED {len(unblocked_children)} child hypotheses: {', '.join(unblocked_children)}" if unblocked_children else ""),
-            details={"evidence_id": evidence_id, "reason": reason, "unblocked": unblocked_children}
-        ))
+        self.log_trace(
+            TraceEntry(
+                timestamp=now,
+                action="RETRACT_EVIDENCE",
+                agent_role=agent_role,
+                h_tag=hypothesis_id or "",
+                summary=f"Retracted evidence [{evidence_id}] for {hypothesis_id}: {reason}"
+                + (
+                    f" -> UNBLOCKED {len(unblocked_children)} child hypotheses: {', '.join(unblocked_children)}"
+                    if unblocked_children
+                    else ""
+                ),
+                details={"evidence_id": evidence_id, "reason": reason, "unblocked": unblocked_children},
+            )
+        )
 
         return target_ev, unblocked_children
 
@@ -587,11 +643,12 @@ class EpiresStore:
             # Remove BLOCKS relations originating from this unblocked parent
             conn.execute(
                 "DELETE FROM relations WHERE source_id = ? AND relation_type = ?",
-                (unblocked_h_id, RelationType.BLOCKS.value)
+                (unblocked_h_id, RelationType.BLOCKS.value),
             )
 
             # Query all downstream candidates that depend on unblocked_h_id
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
             WITH RECURSIVE downstream AS (
                 SELECT source_id AS child_id FROM relations
                 WHERE target_id = ? AND relation_type = 'DEPENDS_ON'
@@ -601,7 +658,9 @@ class EpiresStore:
                 WHERE r.relation_type = 'DEPENDS_ON'
             )
             SELECT DISTINCT child_id FROM downstream;
-            """, (unblocked_h_id,))
+            """,
+                (unblocked_h_id,),
+            )
             candidates = [r["child_id"] for r in cursor.fetchall()]
 
         # Process candidates
@@ -636,20 +695,24 @@ class EpiresStore:
                 unblocked.append(child_id)
 
         if unblocked:
-            self.log_trace(TraceEntry(
-                timestamp=self._now(),
-                action="CASCADING_UNBLOCK",
-                agent_role="System-DAG",
-                h_tag=unblocked_h_id,
-                summary=f"Unfalsification of {unblocked_h_id} cascaded to unblock dependent hypotheses: {', '.join(unblocked)}",
-                details={"unblocked_hypotheses": unblocked}
-            ))
+            self.log_trace(
+                TraceEntry(
+                    timestamp=self._now(),
+                    action="CASCADING_UNBLOCK",
+                    agent_role="System-DAG",
+                    h_tag=unblocked_h_id,
+                    summary=f"Unfalsification of {unblocked_h_id} cascaded to unblock dependent hypotheses: {', '.join(unblocked)}",
+                    details={"unblocked_hypotheses": unblocked},
+                )
+            )
 
         return unblocked
 
     def get_evidence_for_hypothesis(self, h_id: str) -> List[EvidenceClaim]:
         with self._get_connection() as conn:
-            rows = conn.execute("SELECT * FROM evidence WHERE hypothesis_id = ? ORDER BY timestamp ASC", (h_id,)).fetchall()
+            rows = conn.execute(
+                "SELECT * FROM evidence WHERE hypothesis_id = ? ORDER BY timestamp ASC", (h_id,)
+            ).fetchall()
             return [self._row_to_evidence(r) for r in rows]
 
     @staticmethod
@@ -693,8 +756,7 @@ class EpiresStore:
                 ).fetchall()
             else:
                 rows = conn.execute(
-                    "SELECT * FROM relations WHERE relation_type = ? "
-                    "ORDER BY source_id ASC, target_id ASC",
+                    "SELECT * FROM relations WHERE relation_type = ? ORDER BY source_id ASC, target_id ASC",
                     (relation_type.value,),
                 ).fetchall()
             return [
@@ -713,7 +775,8 @@ class EpiresStore:
         exp.created_at = exp.created_at or now
 
         with self._get_connection() as conn:
-            conn.execute("""
+            conn.execute(
+                """
             INSERT INTO experiments (
                 id, hypothesis_id, name, script_path, commit_hash,
                 parameters_json, metrics_json, artifact_paths_json, created_at
@@ -725,21 +788,31 @@ class EpiresStore:
                 parameters_json=excluded.parameters_json,
                 metrics_json=excluded.metrics_json,
                 artifact_paths_json=excluded.artifact_paths_json
-            """, (
-                exp.id, exp.hypothesis_id, exp.name, exp.script_path, exp.commit_hash,
-                json.dumps(exp.parameters), json.dumps(exp.metrics),
-                json.dumps(exp.artifact_paths), exp.created_at
-            ))
+            """,
+                (
+                    exp.id,
+                    exp.hypothesis_id,
+                    exp.name,
+                    exp.script_path,
+                    exp.commit_hash,
+                    json.dumps(exp.parameters),
+                    json.dumps(exp.metrics),
+                    json.dumps(exp.artifact_paths),
+                    exp.created_at,
+                ),
+            )
 
         if emit_trace:
-            self.log_trace(TraceEntry(
-                timestamp=now,
-                action="REGISTER_EXPERIMENT",
-                agent_role="Lead-PI",
-                h_tag=exp.hypothesis_id,
-                summary=f"Registered experiment {exp.id} for {exp.hypothesis_id}: {exp.name}",
-                details={"script": exp.script_path, "metrics": exp.metrics, "commit": exp.commit_hash}
-            ))
+            self.log_trace(
+                TraceEntry(
+                    timestamp=now,
+                    action="REGISTER_EXPERIMENT",
+                    agent_role="Lead-PI",
+                    h_tag=exp.hypothesis_id,
+                    summary=f"Registered experiment {exp.id} for {exp.hypothesis_id}: {exp.name}",
+                    details={"script": exp.script_path, "metrics": exp.metrics, "commit": exp.commit_hash},
+                )
+            )
 
         return exp
 
@@ -803,7 +876,7 @@ class EpiresStore:
                         match_query = " OR ".join([f'"{w}"*' for w in words])
                         fts_rows = conn.execute(
                             "SELECT id, rank FROM hypotheses_fts WHERE hypotheses_fts MATCH ? ORDER BY rank LIMIT 50",
-                            (match_query,)
+                            (match_query,),
                         ).fetchall()
                         for r in fts_rows:
                             fts_matches[r["id"]] = max(0.5, 1.0 / (1.0 + abs(float(r["rank"]))))
@@ -813,9 +886,7 @@ class EpiresStore:
         # 2. VSA query hypervector
         terms = sq.query.split() if sq.query else []
         q_vec = self.encoder.encode_query(
-            text_terms=terms,
-            entities=sq.entities or [],
-            status=sq.status.value if sq.status else None
+            text_terms=terms, entities=sq.entities or [], status=sq.status.value if sq.status else None
         )
 
         sims = self.vsa.batch_similarity(q_vec, matrix)
@@ -829,7 +900,7 @@ class EpiresStore:
         combined_scores.sort(key=lambda x: x[1], reverse=True)
 
         results: List[Tuple[HypothesisNode, float]] = []
-        for h_id, score in combined_scores[:sq.limit]:
+        for h_id, score in combined_scores[: sq.limit]:
             h = self.get_hypothesis(h_id)
             if h:
                 results.append((h, float(score)))
@@ -837,7 +908,7 @@ class EpiresStore:
 
     def find_gaps(self, gq: GapQuery) -> List[Dict[str, Any]]:
         """Finds under-explored or untested entity combinations (White Spots / Gaps in research).
-        
+
         Distinguishes mere conceptual hypotheses from empirically tested combinations.
         """
         all_h = self.list_hypotheses()
@@ -847,8 +918,18 @@ class EpiresStore:
 
         # Cache evidence and experiment counts per hypothesis
         with self._get_connection() as conn:
-            ev_counts = {r["hypothesis_id"]: r["c"] for r in conn.execute("SELECT hypothesis_id, COUNT(*) as c FROM evidence GROUP BY hypothesis_id").fetchall()}
-            exp_counts = {r["hypothesis_id"]: r["c"] for r in conn.execute("SELECT hypothesis_id, COUNT(*) as c FROM experiments GROUP BY hypothesis_id").fetchall()}
+            ev_counts = {
+                r["hypothesis_id"]: r["c"]
+                for r in conn.execute(
+                    "SELECT hypothesis_id, COUNT(*) as c FROM evidence GROUP BY hypothesis_id"
+                ).fetchall()
+            }
+            exp_counts = {
+                r["hypothesis_id"]: r["c"]
+                for r in conn.execute(
+                    "SELECT hypothesis_id, COUNT(*) as c FROM experiments GROUP BY hypothesis_id"
+                ).fetchall()
+            }
 
         for h in all_h:
             ent_map: Dict[str, str] = {
@@ -871,6 +952,7 @@ class EpiresStore:
 
         # Compute Cartesian product of seen dimension values
         import itertools
+
         all_combos = list(itertools.product(*[list(dimension_values[d]) for d in gq.dimensions]))
 
         gaps: List[Dict[str, Any]] = []
@@ -878,12 +960,14 @@ class EpiresStore:
             tested_count = tested_combinations.get(combo, 0)
             hypo_count = hypothesized_combinations.get(combo, 0)
             if tested_count < gq.min_tested:
-                gaps.append({
-                    "combination": {dim: val for dim, val in zip(gq.dimensions, combo)},
-                    "tested_count": tested_count,
-                    "hypothesized_count": hypo_count,
-                    "status": "UNTESTED" if tested_count == 0 else "UNDER_TESTED"
-                })
+                gaps.append(
+                    {
+                        "combination": {dim: val for dim, val in zip(gq.dimensions, combo)},
+                        "tested_count": tested_count,
+                        "hypothesized_count": hypo_count,
+                        "status": "UNTESTED" if tested_count == 0 else "UNDER_TESTED",
+                    }
+                )
         return gaps
 
     # -------------------------------------------------------------------------
@@ -893,10 +977,20 @@ class EpiresStore:
         now = self._now()
         entry.timestamp = entry.timestamp or now
         with self._get_connection() as conn:
-            conn.execute("""
+            conn.execute(
+                """
             INSERT INTO traces (timestamp, action, agent_role, h_tag, summary, details_json)
             VALUES (?, ?, ?, ?, ?, ?)
-            """, (entry.timestamp, entry.action, entry.agent_role, entry.h_tag, entry.summary, json.dumps(entry.details)))
+            """,
+                (
+                    entry.timestamp,
+                    entry.action,
+                    entry.agent_role,
+                    entry.h_tag,
+                    entry.summary,
+                    json.dumps(entry.details),
+                ),
+            )
 
         # Append to docs/agent-trace.md for real-time Markdown synchronization
         if self.trace_md_path and self.trace_md_path.parent.exists():
@@ -931,7 +1025,8 @@ class EpiresStore:
                     h_tag=r["h_tag"],
                     summary=r["summary"],
                     details=json.loads(r["details_json"]),
-                ) for r in reversed(rows)
+                )
+                for r in reversed(rows)
             ]
 
     def export_mermaid_dag(self) -> str:
@@ -963,7 +1058,9 @@ class EpiresStore:
             }.get(h.status, "proposed")
 
             title_clean = h.title.replace('"', "'")
-            lines.append(f'  {h.id}["{h.id}: {title_clean}<br/>[{h.current_evidence_level.value} | {h.status.value}]"]:::{status_style}')
+            lines.append(
+                f'  {h.id}["{h.id}: {title_clean}<br/>[{h.current_evidence_level.value} | {h.status.value}]"]:::{status_style}'
+            )
 
         for edge in edges:
             rel = edge["relation_type"]

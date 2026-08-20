@@ -62,7 +62,7 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
             c_cfg.pass_check(
                 f"Project: '{cfg.project_name}' | Domain: '{cfg.domain}' | Metric: '{cfg.primary_metric}'",
                 domain=cfg.domain,
-                metric=cfg.primary_metric
+                metric=cfg.primary_metric,
             )
         except Exception as e:
             c_cfg.fail_check(f"Malformed config.json: {e}")
@@ -87,7 +87,7 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
                 c_db.pass_check(
                     f"Database OK ({len(hypotheses)} hypotheses, {len(evidence)} evidence records, {len(traces)} traces)",
                     hypotheses_count=len(hypotheses),
-                    evidence_count=len(evidence)
+                    evidence_count=len(evidence),
                 )
             else:
                 c_db.fail_check(f"SQLite PRAGMA integrity check failed: {res}")
@@ -125,8 +125,7 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
         ]
         registered_count = len(tool_names)
         c_mcp.pass_check(
-            f"MCP Server active with {registered_count} tools registered and ready for agents.",
-            tools=tool_names
+            f"MCP Server active with {registered_count} tools registered and ready for agents.", tools=tool_names
         )
     except Exception as e:
         c_mcp.fail_check(f"Failed to instantiate MCP server: {e}")
@@ -157,7 +156,9 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
     if detected_clients:
         c_clients.pass_check(f"Detected: {', '.join(detected_clients)}")
     else:
-        c_clients.warn_check("No IDE MCP configs detected in workspace. Run 'epires init' or 'epires setup <ide>' to configure.")
+        c_clients.warn_check(
+            "No IDE MCP configs detected in workspace. Run 'epires init' or 'epires setup <ide>' to configure."
+        )
     checks.append(c_clients)
 
     # 6. Parallel Web Search API
@@ -166,7 +167,9 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
     if api_key:
         c_web.pass_check("Parallel API key configured (Multi-query search active)")
     else:
-        c_web.warn_check("Parallel API key not configured (Native agent search fallback will be used). Run 'epires login' to set key.")
+        c_web.warn_check(
+            "Parallel API key not configured (Native agent search fallback will be used). Run 'epires login' to set key."
+        )
     checks.append(c_web)
 
     return checks

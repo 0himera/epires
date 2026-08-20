@@ -32,7 +32,7 @@ def get_expected_descendants(dag_adj: Dict[str, List[str]], root_id: str) -> Set
 @given(
     num_nodes=st.integers(min_value=3, max_value=20),
     edge_density=st.floats(min_value=0.1, max_value=0.5),
-    falsify_index=st.integers(min_value=0, max_value=19)
+    falsify_index=st.integers(min_value=0, max_value=19),
 )
 def test_fuzz_dag_cascading_falsification(num_nodes: int, edge_density: float, falsify_index: int):
     """Property: Falsifying any node in an arbitrary DAG blocks ALL and ONLY its downstream descendants."""
@@ -59,7 +59,7 @@ def test_fuzz_dag_cascading_falsification(num_nodes: int, edge_density: float, f
                 a_priori_mechanism="Theoretical mechanism",
                 falsification_criteria="Numerical failure",
                 parent_ids=parents,
-                status=HypothesisStatus.PROPOSED
+                status=HypothesisStatus.PROPOSED,
             )
             store.register_hypothesis(h)
 
@@ -73,7 +73,7 @@ def test_fuzz_dag_cascading_falsification(num_nodes: int, edge_density: float, f
             evidence_level=EvidenceLevel.E3,
             source_confidence=SourceConfidence.V,
             claim=f"Falsification triggered for {target_node}",
-            falsification_triggered=True
+            falsification_triggered=True,
         )
         _, returned_blocked = store.log_evidence(claim)
 

@@ -23,7 +23,7 @@ class BipolarVSA:
 
     def generate_vector(self, key: str | None = None) -> np.ndarray:
         """Generates a random bipolar vector (+1 or -1) of dimension self.dim.
-        
+
         If `key` is provided, generates a deterministic vector by hashing the key.
         """
         if key is not None:
@@ -46,7 +46,7 @@ class BipolarVSA:
 
     def bind(self, v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
         """Binds two bipolar vectors using element-wise multiplication.
-        
+
         Binding preserves orthogonality to both operands and is reversible:
         bind(bind(a, b), b) == a.
         """
@@ -54,14 +54,14 @@ class BipolarVSA:
 
     def permute(self, v: np.ndarray, shifts: int = 1) -> np.ndarray:
         """Permutes a bipolar vector using cyclic shift (np.roll).
-        
+
         Used to encode directional relationships (e.g. source -> relation -> target).
         """
         return np.roll(v, shifts)
 
     def bundle(self, vectors: Sequence[np.ndarray]) -> np.ndarray:
         """Bundles multiple bipolar vectors using majority voting.
-        
+
         The resulting vector is similar to all constituent vectors in the bundle.
         """
         if not vectors:
@@ -76,7 +76,7 @@ class BipolarVSA:
         bundled = np.sign(summed).astype(np.int8)
 
         # Break ties (where sign is 0) deterministically using pseudo-random selection
-        ties = (bundled == 0)
+        ties = bundled == 0
         if np.any(ties):
             num_ties = np.sum(ties)
             tie_choices = np.where(np.arange(num_ties) % 2 == 0, 1, -1).astype(np.int8)
@@ -86,7 +86,7 @@ class BipolarVSA:
 
     def similarity(self, v1: np.ndarray, v2: np.ndarray) -> float:
         """Calculates cosine similarity between two bipolar vectors.
-        
+
         For bipolar vectors in {-1, 1}^D, this is dot(v1, v2) / D, bounded in [-1.0, 1.0].
         """
         dot_product = np.dot(v1.astype(np.float32), v2.astype(np.float32))
@@ -94,7 +94,7 @@ class BipolarVSA:
 
     def batch_similarity(self, query: np.ndarray, matrix: np.ndarray) -> np.ndarray:
         """Calculates similarities between a query vector (D,) and a matrix of vectors (N, D).
-        
+
         Returns an array of shape (N,) with similarity values.
         """
         if matrix.ndim == 1:

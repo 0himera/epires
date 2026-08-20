@@ -9,7 +9,7 @@ from epires_core.vsa import BipolarVSA
 @given(
     dim=st.integers(min_value=100, max_value=2000),
     key1=st.text(min_size=1, max_size=100),
-    key2=st.text(min_size=1, max_size=100)
+    key2=st.text(min_size=1, max_size=100),
 )
 def test_fuzz_vsa_bind_exact_reversibility(dim: int, key1: str, key2: str):
     """Property: For any vectors a and b, bind(bind(a, b), b) == a."""
@@ -29,7 +29,7 @@ def test_fuzz_vsa_bind_exact_reversibility(dim: int, key1: str, key2: str):
 @given(
     dim=st.integers(min_value=500, max_value=2000),
     num_vectors=st.integers(min_value=1, max_value=20),
-    shifts=st.integers(min_value=-10, max_value=10)
+    shifts=st.integers(min_value=-10, max_value=10),
 )
 def test_fuzz_vsa_bundle_and_permute(dim: int, num_vectors: int, shifts: int):
     """Property: Bundling any collection of vectors produces a valid bipolar vector."""
@@ -49,7 +49,7 @@ def test_fuzz_vsa_bundle_and_permute(dim: int, num_vectors: int, shifts: int):
 @given(
     dim=st.integers(min_value=100, max_value=2000),
     key_a=st.text(min_size=1, max_size=50),
-    key_b=st.text(min_size=1, max_size=50)
+    key_b=st.text(min_size=1, max_size=50),
 )
 def test_fuzz_vsa_similarity_bounds(dim: int, key_a: str, key_b: str):
     """Property: Cosine similarity is always bounded strictly in [-1.0, 1.0]."""

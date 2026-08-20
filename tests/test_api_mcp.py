@@ -39,7 +39,7 @@ def test_fastapi_endpoints():
             "status": "PROPOSED",
             "parent_ids": [],
             "entities": [{"type": "Feature", "value": "FFT"}],
-            "tags": ["fft"]
+            "tags": ["fft"],
         }
         post_resp = client.post("/hypotheses", json=h_data)
         assert post_resp.status_code == 200
@@ -60,7 +60,7 @@ def test_fastapi_endpoints():
             "metric_name": "RMSLE",
             "metric_value": 1.72,
             "falsification_triggered": False,
-            "citation_or_path": "artifacts/fft.parquet"
+            "citation_or_path": "artifacts/fft.parquet",
         }
         ev_resp = client.post("/evidence", json=ev_data)
         assert ev_resp.status_code == 200
@@ -178,10 +178,12 @@ def test_mcp_server_tools():
         assert res3["hypothesis"]["target_evidence_level"] == "E4"
 
         # Test bulk import via MCP
-        bulk_payload = json.dumps([
-            {"id": "H-BULK-1", "title": "Bulk 1", "a_priori_mechanism": "m", "falsification_criteria": "f"},
-            {"id": "H-BULK-2", "title": "Bulk 2", "a_priori_mechanism": "m", "falsification_criteria": "f"}
-        ])
+        bulk_payload = json.dumps(
+            [
+                {"id": "H-BULK-1", "title": "Bulk 1", "a_priori_mechanism": "m", "falsification_criteria": "f"},
+                {"id": "H-BULK-2", "title": "Bulk 2", "a_priori_mechanism": "m", "falsification_criteria": "f"},
+            ]
+        )
         bulk_res = json.loads(bulk_imp(hypotheses_json=bulk_payload))
         assert bulk_res["hypotheses_ingested"] == 2
 
@@ -197,8 +199,7 @@ def test_mcp_entity_pairs_are_persisted_and_validated():
             db_path=str(Path(tmpdir) / "test_mcp_entities.db"),
             trace_md=str(Path(tmpdir) / "trace.md"),
         )
-        register = next(tool.fn for tool in mcp._tool_manager.list_tools()
-                        if tool.name == "epires_register_hypothesis")
+        register = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_register_hypothesis")
         register(
             id="H-ENT",
             title="Entity pair test",
@@ -208,8 +209,7 @@ def test_mcp_entity_pairs_are_persisted_and_validated():
             entity_values=["CatBoost", "FFT"],
         )
         # The closure's store is private, so query through the MCP graph tool.
-        query = next(tool.fn for tool in mcp._tool_manager.list_tools()
-                     if tool.name == "epires_query_graph")
+        query = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_query_graph")
         result = json.loads(query(h_id="H-ENT"))
         assert result["hypothesis"]["entities"] == [
             {"type": "Model", "value": "CatBoost"},
@@ -237,29 +237,39 @@ def test_dag_cycle_prevention():
         store = EpiresStore(db_path=db_path)
 
         # 1. Register H1
-        store.register_hypothesis(HypothesisNode(
-            id="H1", title="Hypo 1", a_priori_mechanism="m1", falsification_criteria="f1", parent_ids=[]
-        ))
+        store.register_hypothesis(
+            HypothesisNode(id="H1", title="Hypo 1", a_priori_mechanism="m1", falsification_criteria="f1", parent_ids=[])
+        )
 
         # 2. Register H2 depending on H1
-        store.register_hypothesis(HypothesisNode(
-            id="H2", title="Hypo 2", a_priori_mechanism="m2", falsification_criteria="f2", parent_ids=["H1"]
-        ))
+        store.register_hypothesis(
+            HypothesisNode(
+                id="H2", title="Hypo 2", a_priori_mechanism="m2", falsification_criteria="f2", parent_ids=["H1"]
+            )
+        )
 
         # 3. Attempting to make H1 depend on H2 must raise ValueError (Cycle!)
         try:
-            store.register_hypothesis(HypothesisNode(
-                id="H1", title="Hypo 1 updated", a_priori_mechanism="m1", falsification_criteria="f1", parent_ids=["H2"]
-            ))
+            store.register_hypothesis(
+                HypothesisNode(
+                    id="H1",
+                    title="Hypo 1 updated",
+                    a_priori_mechanism="m1",
+                    falsification_criteria="f1",
+                    parent_ids=["H2"],
+                )
+            )
             raise AssertionError("Store allowed directed cycle in DAG!")
         except ValueError as exc:
             assert "cycle detected" in str(exc).lower()
 
         # 4. Self-dependency must also be blocked
         try:
-            store.register_hypothesis(HypothesisNode(
-                id="H3", title="Hypo 3", a_priori_mechanism="m3", falsification_criteria="f3", parent_ids=["H3"]
-            ))
+            store.register_hypothesis(
+                HypothesisNode(
+                    id="H3", title="Hypo 3", a_priori_mechanism="m3", falsification_criteria="f3", parent_ids=["H3"]
+                )
+            )
             raise AssertionError("Store allowed self-dependency cycle in DAG!")
         except ValueError as exc:
             assert "cycle detected" in str(exc).lower()
@@ -274,4 +284,3 @@ def test_artifact_security_sandbox():
         # Directory escape attempt
         resp = client.get("/artifacts/../../etc/passwd")
         assert resp.status_code in [403, 404]
-

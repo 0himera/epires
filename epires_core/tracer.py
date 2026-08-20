@@ -19,12 +19,7 @@ class AutoTracer:
 
     def _get_git_commit(self) -> str:
         try:
-            res = subprocess.run(
-                ["git", "rev-parse", "--short", "HEAD"],
-                capture_output=True,
-                text=True,
-                check=False
-            )
+            res = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=False)
             return res.stdout.strip() or "uncommitted"
         except Exception:
             return "no-git"
@@ -54,12 +49,7 @@ class AutoTracer:
         details_dict = details or {}
 
         entry = TraceEntry(
-            timestamp=now,
-            action=action,
-            agent_role=agent_role,
-            h_tag=h_tag,
-            summary=summary,
-            details=details_dict
+            timestamp=now, action=action, agent_role=agent_role, h_tag=h_tag, summary=summary, details=details_dict
         )
 
         # 1. Save to SQLite Store
@@ -83,7 +73,7 @@ class AutoTracer:
             "> Automated operational ledger for multisession persistence, evidence promotion, "
             "and cascading falsification audits.\n\n",
             "| Timestamp (UTC) | Role | Action | H-Tag | Summary |\n",
-            "|---|---|---|---|---|\n"
+            "|---|---|---|---|---|\n",
         ]
         for t in traces:
             h_col = f"`{t.h_tag}`" if t.h_tag else "—"

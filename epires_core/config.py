@@ -66,7 +66,8 @@ def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
     ignore_parts = {".git", ".venv", "__pycache__", ".epires", ".pytest_cache"}
 
     user_files = [
-        f for f in root.glob("**/*")
+        f
+        for f in root.glob("**/*")
         if f.is_file()
         and not any(p in f.parts for p in ignore_parts)
         and f.name not in {".gitignore", "agent-trace.md"}
@@ -80,7 +81,7 @@ def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
             "detected_stack": "Clean Workspace",
             "candidate_doc_files": [],
             "candidate_trace_files": [],
-            "suggested_metric": "Primary Metric (e.g. Accuracy / Loss / Sharpe / RMSLE)"
+            "suggested_metric": "Primary Metric (e.g. Accuracy / Loss / Sharpe / RMSLE)",
         }
 
     # Detect stack
@@ -108,13 +109,51 @@ def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
             # Read snippet for domain classification
             try:
                 content_snippet = f.read_text(encoding="utf-8", errors="ignore")[:3000].lower()
-                if any(w in content_snippet for w in ["trading", "perp", "orderbook", "order flow", "funding rate", "microstructure", "sharpe", "avellaneda"]):
+                if any(
+                    w in content_snippet
+                    for w in [
+                        "trading",
+                        "perp",
+                        "orderbook",
+                        "order flow",
+                        "funding rate",
+                        "microstructure",
+                        "sharpe",
+                        "avellaneda",
+                    ]
+                ):
                     domain_hints.append("Quantitative Trading / Market Microstructure")
-                elif any(w in content_snippet for w in ["gmv", "forecasting", "time-series", "rmsle", "tweedie", "catboost", "lightgbm", "tabular"]):
+                elif any(
+                    w in content_snippet
+                    for w in [
+                        "gmv",
+                        "forecasting",
+                        "time-series",
+                        "rmsle",
+                        "tweedie",
+                        "catboost",
+                        "lightgbm",
+                        "tabular",
+                    ]
+                ):
                     domain_hints.append("Temporal Forecasting / Tabular ML")
-                elif any(w in content_snippet for w in ["reinforcement learning", "marl", "self-play", "posg", "multi-agent", "ppo", "q-learning", "game theory"]):
+                elif any(
+                    w in content_snippet
+                    for w in [
+                        "reinforcement learning",
+                        "marl",
+                        "self-play",
+                        "posg",
+                        "multi-agent",
+                        "ppo",
+                        "q-learning",
+                        "game theory",
+                    ]
+                ):
                     domain_hints.append("Multi-Agent Reinforcement Learning / Game Theory")
-                elif any(w in content_snippet for w in ["physics", "quantum", "material", "molecular", "pde", "hamiltonian"]):
+                elif any(
+                    w in content_snippet for w in ["physics", "quantum", "material", "molecular", "pde", "hamiltonian"]
+                ):
                     domain_hints.append("Computational Physics & Materials")
             except Exception:
                 pass
@@ -125,9 +164,13 @@ def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
         detected_domain = "General Scientific & Quantitative Research"
 
     suggested_metric = (
-        "RMSLE" if "Forecasting" in detected_domain
-        else ("Sharpe Ratio" if "Trading" in detected_domain
-        else ("Reward / WinRate" if "Reinforcement" in detected_domain else "Objective Score"))
+        "RMSLE"
+        if "Forecasting" in detected_domain
+        else (
+            "Sharpe Ratio"
+            if "Trading" in detected_domain
+            else ("Reward / WinRate" if "Reinforcement" in detected_domain else "Objective Score")
+        )
     )
 
     return {
@@ -137,5 +180,5 @@ def detect_project_profile(project_dir: str | Path = ".") -> Dict[str, Any]:
         "detected_stack": " / ".join(stack) or "Custom",
         "candidate_doc_files": candidate_docs[:10],
         "candidate_trace_files": candidate_traces[:5],
-        "suggested_metric": suggested_metric
+        "suggested_metric": suggested_metric,
     }

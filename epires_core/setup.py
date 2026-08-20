@@ -44,6 +44,7 @@ The Lead-PI NEVER WRITES implementation code. Coding is strictly delegated to su
 import re
 import shutil
 
+
 def _clean_jsonc_and_load(text: str) -> Dict[str, Any]:
     """Strips JSONC single-line/block comments and trailing commas before parsing."""
     # Strip block comments /* ... */
@@ -102,14 +103,12 @@ def setup_cursor(project_dir: str | Path = ".") -> List[Path]:
 
     # 1. .cursor/mcp.json
     mcp_file = root / ".cursor" / "mcp.json"
+
     def update_cursor_mcp(d: Dict[str, Any]):
         if "mcpServers" not in d or not isinstance(d["mcpServers"], dict):
             d["mcpServers"] = {}
-        d["mcpServers"]["epires"] = {
-            "command": "epires",
-            "args": ["mcp"],
-            "cwd": str(root)
-        }
+        d["mcpServers"]["epires"] = {"command": "epires", "args": ["mcp"], "cwd": str(root)}
+
     _merge_json(mcp_file, update_cursor_mcp)
     configured.append(mcp_file)
 
@@ -119,7 +118,7 @@ def setup_cursor(project_dir: str | Path = ".") -> List[Path]:
     rules_file.write_text(
         "---\ndescription: Epires Auto-Research Harness Lead-PI Protocol\nglobs: *\nalwaysApply: true\n---\n\n"
         + get_skill_content(),
-        encoding="utf-8"
+        encoding="utf-8",
     )
     configured.append(rules_file)
 
@@ -139,14 +138,12 @@ def setup_claude_code(project_dir: str | Path = ".") -> List[Path]:
 
     # 1. .mcp.json
     mcp_file = root / ".mcp.json"
+
     def update_claude_mcp(d: Dict[str, Any]):
         if "mcpServers" not in d or not isinstance(d["mcpServers"], dict):
             d["mcpServers"] = {}
-        d["mcpServers"]["epires"] = {
-            "command": "epires",
-            "args": ["mcp"],
-            "cwd": str(root)
-        }
+        d["mcpServers"]["epires"] = {"command": "epires", "args": ["mcp"], "cwd": str(root)}
+
     _merge_json(mcp_file, update_claude_mcp)
     configured.append(mcp_file)
 
@@ -177,11 +174,7 @@ def setup_opencode(project_dir: str | Path = ".") -> List[Path]:
             d["mcp"] = {}
 
         # Exact OpenCode local server schema
-        d["mcp"]["epires"] = {
-            "type": "local",
-            "command": ["epires", "mcp"],
-            "enabled": True
-        }
+        d["mcp"]["epires"] = {"type": "local", "command": ["epires", "mcp"], "enabled": True}
 
     # 1. Project-root opencode.json
     opencode_root = root / "opencode.json"
@@ -214,14 +207,12 @@ def setup_codex(project_dir: str | Path = ".") -> List[Path]:
 
     # 2. Legacy fallback .codex/mcp.json
     mcp_file = root / ".codex" / "mcp.json"
+
     def update_codex_mcp(d: Dict[str, Any]):
         if "mcpServers" not in d or not isinstance(d["mcpServers"], dict):
             d["mcpServers"] = {}
-        d["mcpServers"]["epires"] = {
-            "command": "epires",
-            "args": ["mcp"],
-            "cwd": str(root)
-        }
+        d["mcpServers"]["epires"] = {"command": "epires", "args": ["mcp"], "cwd": str(root)}
+
     _merge_json(mcp_file, update_codex_mcp)
     configured.append(mcp_file)
 
@@ -241,14 +232,12 @@ def setup_antigravity(project_dir: str | Path = ".") -> List[Path]:
 
     # 1. .gemini/mcp.json
     mcp_file = root / ".gemini" / "mcp.json"
+
     def update_agy_mcp(d: Dict[str, Any]):
         if "mcpServers" not in d or not isinstance(d["mcpServers"], dict):
             d["mcpServers"] = {}
-        d["mcpServers"]["epires"] = {
-            "command": "epires",
-            "args": ["mcp"],
-            "cwd": str(root)
-        }
+        d["mcpServers"]["epires"] = {"command": "epires", "args": ["mcp"], "cwd": str(root)}
+
     _merge_json(mcp_file, update_agy_mcp)
     configured.append(mcp_file)
 
