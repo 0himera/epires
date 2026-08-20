@@ -241,12 +241,24 @@ def setup_flow(target_ide: str = "all", project_dir: str = ".") -> None:
     print("==========================================================\n")
 
 
+from . import __version__
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="epires",
         description="Epires: Epistemic Auto-Research Harness"
     )
+    parser.add_argument(
+        "-v", "--version",
+        action="version",
+        version=f"epires {__version__}",
+        help="Show Epires version and exit."
+    )
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
+
+    # Version
+    subparsers.add_parser("version", help="Print Epires version and exit")
 
     # Init
     init_parser = subparsers.add_parser("init", help="Initialize Epires in the current project")
@@ -466,6 +478,9 @@ def main():
             }.get(h.status.value, "⚪")
             print(f"{status_icon} [{h.id}] {h.title} (Level: {h.current_evidence_level.value}, Status: {h.status.value})")
         print("================================================================\n")
+
+    elif args.command == "version":
+        print(f"epires {__version__}")
 
     elif args.command == "dag":
         root = find_project_root()

@@ -48,4 +48,7 @@ __all__ = [
     "HypergraphEncoder",
     "EpiresStore",
     "AutoTracer",
+    "__version__",
 ]
+
+__version__ = "0.3.1.1"

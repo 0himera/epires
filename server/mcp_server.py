@@ -41,6 +41,7 @@ from epires_core.models import (
     SearchQuery,
     SourceConfidence,
 )
+from epires_core import __version__
 from epires_core.schema import get_canonical_schema
 from epires_core.store import EpiresStore
 from epires_core.tracer import AutoTracer
@@ -63,7 +64,7 @@ def create_mcp_server(
         p_key = get_parallel_api_key()
         hypotheses = store.list_hypotheses()
         return json.dumps({
-            "version": "0.3.1",
+            "version": __version__,
             "db_path": str(db_path),
             "total_hypotheses": len(hypotheses),
             "parallel_auth": bool(p_key),
