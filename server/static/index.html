@@ -14,9 +14,9 @@
   <canvas id="noise-canvas" class="noise-overlay" aria-hidden="true"></canvas>
 
   <div class="print-container">
-    <!-- Top Editorial Header: 3-Zone Balanced Architecture (100% Dynamic) -->
+    <!-- Top Editorial Header: 3-Zone Balanced Architecture -->
     <header class="print-header">
-      <!-- Zone 1 (Left): Project Title & Semantic Breadcrumbs -->
+      <!-- Zone 1 (Left): Project Domain & Clean Semantic Breadcrumbs -->
       <div class="header-left">
         <h1 class="editorial-headline" id="hdr-project-domain">
           <!-- Dynamically populated from config.domain -->
@@ -30,35 +30,37 @@
         </div>
       </div>
 
-      <!-- Zone 2 (Center): Project Passport Capsule (100% Dynamic) -->
+      <!-- Zone 2 (Center): Clean Project Target & Phase Panel -->
       <div class="header-center-passport">
-        <div class="passport-card">
-          <div class="pass-row">
-            <span class="pass-lbl">OBJECTIVE</span>
-            <span class="pass-val" id="pass-objective">--</span>
-          </div>
-          <div class="pass-row">
-            <span class="pass-lbl">REGIME</span>
-            <span class="pass-val pass-highlight" id="pass-regime">--</span>
-          </div>
+        <div class="pass-metric-block">
+          <span class="pass-lbl">TARGET GOAL</span>
+          <span class="pass-val" id="pass-objective">--</span>
+        </div>
+        <div class="pass-divider"></div>
+        <div class="pass-metric-block">
+          <span class="pass-lbl">RESEARCH PHASE</span>
+          <span class="pass-val pass-highlight" id="pass-regime">--</span>
         </div>
       </div>
 
-      <!-- Zone 3 (Right): Status Cluster & Controls -->
+      <!-- Zone 3 (Right): Unified Height Status Cluster & Controls -->
       <div class="header-right">
-        <button class="cmd-k-btn" id="btn-open-search" title="Search Specimens (⌘K / Ctrl+K)">
+        <button class="hdr-ctrl-btn cmd-k-btn" id="btn-open-search" title="Search Specimens (⌘K / Ctrl+K)">
           <span class="cmd-k-hint">SEARCH</span>
           <kbd class="kbd-pill">⌘K</kbd>
         </button>
 
-        <button class="theme-toggle-btn" id="btn-theme-toggle" title="Toggle Paper / Noir theme">
+        <button class="hdr-ctrl-btn theme-toggle-btn" id="btn-theme-toggle" title="Toggle Paper / Noir theme">
           <span id="theme-label">PAPER</span>
         </button>
 
-        <button class="sync-action-btn" id="btn-refresh" title="Sync live state from SQLite">
-          <span class="sync-dot" id="sync-status-dot"></span>
-          <span id="sync-status-text">SYNC LIVE</span>
-        </button>
+        <div class="sync-cluster">
+          <button class="hdr-ctrl-btn sync-action-btn" id="btn-refresh" title="Sync live state from SQLite">
+            <span class="sync-dot" id="sync-status-dot"></span>
+            <span>SYNC</span>
+          </button>
+          <span class="sync-timestamp" id="sync-time-text">--:--</span>
+        </div>
       </div>
     </header>
 

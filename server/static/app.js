@@ -62,7 +62,7 @@
     themeLabel: document.getElementById('theme-label'),
     btnRefresh: document.getElementById('btn-refresh'),
     syncStatusDot: document.getElementById('sync-status-dot'),
-    syncStatusText: document.getElementById('sync-status-text'),
+    syncTimeText: document.getElementById('sync-time-text'),
     kpiTotal: document.getElementById('kpi-total'),
     kpiConfirmed: document.getElementById('kpi-confirmed'),
     kpiInProgress: document.getElementById('kpi-in-progress'),
@@ -283,7 +283,6 @@
   async function fetchAllData() {
     try {
       if (dom.syncStatusDot) dom.syncStatusDot.className = 'sync-dot spinning';
-      if (dom.syncStatusText) dom.syncStatusText.textContent = 'SYNCING';
 
       const [configRes, hypoRes, tracesRes, gapsRes] = await Promise.all([
         fetch('/config').then(r => r.json()).catch(() => ({})),
@@ -311,18 +310,18 @@
         renderInspector(state.selectedHypothesisId);
       }
 
-      // Record sync time
+      // Record stable sync time
       const now = new Date();
       state.lastSyncTime = now.toTimeString().substring(0, 5);
       if (dom.syncStatusDot) dom.syncStatusDot.className = 'sync-dot';
-      if (dom.syncStatusText) dom.syncStatusText.textContent = `SYNCED ${state.lastSyncTime}`;
+      if (dom.syncTimeText) dom.syncTimeText.textContent = state.lastSyncTime;
 
       // Update badge counts on tabs
       if (dom.tabBadgeTraces) dom.tabBadgeTraces.textContent = state.traces.length;
       if (dom.tabBadgeGaps) dom.tabBadgeGaps.textContent = state.gaps.length;
     } catch (err) {
       console.error('Epires fetch error:', err);
-      if (dom.syncStatusText) dom.syncStatusText.textContent = 'SYNC ERR';
+      if (dom.syncStatusDot) dom.syncStatusDot.className = 'sync-dot';
     }
   }
 
@@ -366,7 +365,7 @@
       }
     }
 
-    // 2. Zone 2: Project Passport Capsule (100% Dynamic)
+    // 2. Zone 2: Project Passport Capsule (Clean Typography, No Cramped Strings)
     if (dom.passObjective) {
       if (conf.primary_metric) {
         const goal = conf.metric_goal ? `${conf.metric_goal.toUpperCase()} ` : '';
@@ -374,7 +373,7 @@
       } else if (conf.task_description) {
         dom.passObjective.textContent = conf.task_description;
       } else {
-        dom.passObjective.textContent = 'Hypothesis Exploration & Validation';
+        dom.passObjective.textContent = 'Hypothesis Validation';
       }
     }
 
