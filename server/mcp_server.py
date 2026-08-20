@@ -36,6 +36,8 @@ from epires_core.models import (
     GapQuery,
     HypothesisNode,
     HypothesisStatus,
+    RelationEdge,
+    RelationType,
     SearchQuery,
     SourceConfidence,
 )
@@ -64,7 +66,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
                 "db_path": str(db_path),
                 "total_hypotheses": len(hypotheses),
                 "parallel_auth": bool(p_key),
-                "tools_count": 18,
+                "tools_count": 20,
                 "status": "ready",
             },
             indent=2,
@@ -263,6 +265,62 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         if not updated:
             return f"Hypothesis '{id}' not found."
         return f"Successfully updated hypothesis '{updated.id}': Status is {updated.status.value}, Target: {updated.target_evidence_level.value}."
+
+    @mcp.tool()
+    def epires_add_relation(
+        source_id: str,
+        target_id: str,
+        relation_type: str = "REFINES",
+        metadata: Optional[Union[Dict[str, Any], str]] = None,
+    ) -> str:
+        """Create a semantic graph relation between hypotheses, experiments, or evidence.
+
+        Supported relation_type values:
+        - DEPENDS_ON: Target depends on source premise (strict DAG dependency)
+        - SUPERSEDES: Source hypothesis replaces/improves upon target
+        - CONFLICTS_WITH: Source and target are competing/mutually exclusive
+        - REFINES: Source provides higher precision / parameter specialization over target
+        - BLOCKS: Source negative result blocks target from execution
+        - FALSIFIES: Source evidence/experiment falsifies target
+        - PRODUCES: Source experiment produces target artifact/evidence
+        - GATED_BY: Source hypothesis requires passing target statistical gate
+        """
+        meta_dict: Dict[str, Any] = {}
+        if isinstance(metadata, dict):
+            meta_dict = metadata
+        elif isinstance(metadata, str):
+            try:
+                meta_dict = json.loads(metadata)
+            except Exception:
+                meta_dict = {"raw": metadata}
+
+        rel_enum = RelationType(relation_type.upper())
+        edge = RelationEdge(
+            source_id=source_id,
+            target_id=target_id,
+            relation_type=rel_enum,
+            metadata=meta_dict,
+        )
+        saved = store.add_relation(edge)
+        return f"Successfully linked {saved.source_id} ==[{saved.relation_type.value}]==> {saved.target_id}"
+
+    @mcp.tool()
+    def epires_list_relations(relation_type: Optional[str] = None) -> str:
+        """List persisted graph relation edges, optionally filtered by relation type."""
+        rel_enum = RelationType(relation_type.upper()) if relation_type else None
+        relations = store.list_relations(relation_type=rel_enum)
+        return json.dumps(
+            [
+                {
+                    "source_id": r.source_id,
+                    "target_id": r.target_id,
+                    "relation_type": r.relation_type.value,
+                    "metadata": r.metadata,
+                }
+                for r in relations
+            ],
+            indent=2,
+        )
 
     @mcp.tool()
     def epires_bulk_import(hypotheses_json: str, evidence_json: Optional[str] = None, upsert: bool = True) -> str:

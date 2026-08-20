@@ -113,8 +113,9 @@ def test_mcp_server_tools():
         mcp = create_mcp_server(db_path=db_path, trace_md=trace_path)
         assert mcp.name == "epires"
 
-        # Test tool manager has all 18 tools
+        # Test tool manager has all 20 tools
         tool_names = [tool.name for tool in mcp._tool_manager.list_tools()]
+        assert len(tool_names) == 20
         assert "epires_get_schema" in tool_names
         assert "epires_register_hypothesis" in tool_names
         assert "epires_register_experiment" in tool_names
@@ -122,6 +123,8 @@ def test_mcp_server_tools():
         assert "epires_log_evidence" in tool_names
         assert "epires_retract_evidence" in tool_names
         assert "epires_update_hypothesis" in tool_names
+        assert "epires_add_relation" in tool_names
+        assert "epires_list_relations" in tool_names
         assert "epires_bulk_import" in tool_names
         assert "epires_export_graph" in tool_names
         assert "epires_import_graph" in tool_names
@@ -138,12 +141,16 @@ def test_mcp_server_tools():
         get_schema = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_get_schema")
         schema_dict = json.loads(get_schema())
         assert schema_dict["title"] == "Epires Canonical Research Graph Schema"
+        assert "SUPERSEDES" in schema_dict["enums"]["RelationType"]
+        assert "CONFLICTS_WITH" in schema_dict["enums"]["RelationType"]
 
         # Test tools setup
         log_ev = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_log_evidence")
         register = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_register_hypothesis")
         retract = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_retract_evidence")
         update_h = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_update_hypothesis")
+        add_rel = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_add_relation")
+        list_rels = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_list_relations")
         bulk_imp = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_bulk_import")
         export_g = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_export_graph")
         reg_exp = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_register_experiment")
@@ -151,6 +158,19 @@ def test_mcp_server_tools():
 
         # 1. Register hypothesis first
         register(id="H-TEST-MCP", title="MCP test", a_priori_mechanism="math", falsification_criteria="loss > 1")
+        register(
+            id="H-TEST-ALT",
+            title="Alternative hypothesis",
+            a_priori_mechanism="math",
+            falsification_criteria="loss > 1",
+        )
+
+        # Test arbitrary relation creation via MCP
+        rel_msg = add_rel(source_id="H-TEST-ALT", target_id="H-TEST-MCP", relation_type="SUPERSEDES")
+        assert "SUPERSEDES" in rel_msg
+        rels_json = json.loads(list_rels(relation_type="SUPERSEDES"))
+        assert len(rels_json) >= 1
+        assert rels_json[0]["source_id"] == "H-TEST-ALT"
 
         # 2. Register experiment linked to hypothesis
         exp_res = reg_exp(hypothesis_id="H-TEST-MCP", name="Smoke run", script_path="train.py", metrics={"rmsle": 1.23})
@@ -191,6 +211,7 @@ def test_mcp_server_tools():
         bundle_out = json.loads(export_g(project_name="mcp-test"))
         assert bundle_out["schema_version"] == "epires.v1"
         assert bundle_out["counts"]["hypotheses"] >= 3
+        assert bundle_out["counts"]["relations"] >= 1
 
 
 def test_mcp_entity_pairs_are_persisted_and_validated():

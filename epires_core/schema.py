@@ -14,7 +14,16 @@ def get_canonical_schema() -> Dict[str, Any]:
             "EvidenceLevel": ["E0", "E1", "E2", "E3", "E4", "E5"],
             "HypothesisStatus": ["PROPOSED", "IN_PROGRESS", "CONFIRMED", "FALSIFIED", "BLOCKED", "REFINED"],
             "SourceConfidence": ["V", "P", "D"],
-            "RelationType": ["DEPENDS_ON", "SUPERSEDES", "REFINES", "BLOCKS", "CONFLICTS_WITH"],
+            "RelationType": [
+                "DEPENDS_ON",
+                "SUPERSEDES",
+                "CONFLICTS_WITH",
+                "REFINES",
+                "BLOCKS",
+                "FALSIFIES",
+                "PRODUCES",
+                "GATED_BY",
+            ],
         },
         "hypothesis_format": {
             "id": "H1 (string, required, unique node identifier)",

@@ -334,20 +334,64 @@ class EpiresStore:
         )
         return saved
 
+    def add_relation(
+        self,
+        edge: RelationEdge,
+        emit_trace: bool = True,
+    ) -> RelationEdge:
+        """Persists a graph relation edge between hypotheses, experiments, or evidence."""
+        # If relation is DEPENDS_ON, verify DAG cycle
+        if edge.relation_type == RelationType.DEPENDS_ON:
+            h = self.get_hypothesis(edge.source_id)
+            if h and edge.target_id not in h.parent_ids:
+                new_parents = list(set(h.parent_ids + [edge.target_id]))
+                self._check_dag_cycle(edge.source_id, new_parents)
+                h.parent_ids = new_parents
+                self.register_hypothesis(h, allow_status_override=True, emit_trace=False)
+                return edge
+
+        with self._get_connection() as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO relations (source_id, target_id, relation_type, metadata_json)
+                VALUES (?, ?, ?, ?)
+                """,
+                (edge.source_id, edge.target_id, edge.relation_type.value, json.dumps(edge.metadata)),
+            )
+
+        if emit_trace:
+            self.log_trace(
+                TraceEntry(
+                    timestamp=self._now(),
+                    action="ADD_RELATION",
+                    agent_role="Lead-PI",
+                    h_tag=edge.source_id,
+                    summary=f"Linked {edge.source_id} ==[{edge.relation_type.value}]==> {edge.target_id}",
+                    details={"metadata": edge.metadata},
+                )
+            )
+        return edge
+
     def bulk_import(
         self,
         hypotheses: List[HypothesisNode],
-        evidence: List[EvidenceClaim],
+        evidence: Optional[List[EvidenceClaim]] = None,
+        relations: Optional[List[RelationEdge]] = None,
+        experiments: Optional[List[ExperimentNode]] = None,
+        traces: Optional[List[TraceEntry]] = None,
         upsert: bool = True,
         emit_summary_trace: bool = True,
         agent_role: str = "Lead-PI",
     ) -> Dict[str, Any]:
-        """Fast bulk import of hypotheses and evidence in a single transaction."""
+        """Fast bulk import of hypotheses, evidence, relations, experiments, and traces in a single transaction."""
         now = self._now()
         ingested_h = 0
         ingested_ev = 0
+        ingested_rel = 0
+        ingested_exp = 0
+        ingested_tr = 0
 
-        # 1. Ingest hypotheses without emitting individual noisy traces
+        # 1. Ingest hypotheses
         for h in hypotheses:
             existing = self.get_hypothesis(h.id)
             if existing and not upsert:
@@ -356,27 +400,57 @@ class EpiresStore:
             ingested_h += 1
 
         # 2. Ingest evidence claims
-        for ev in evidence:
-            self.log_evidence(ev, emit_trace=False)
-            ingested_ev += 1
+        for ev in evidence or []:
+            try:
+                self.log_evidence(ev, emit_trace=False)
+                ingested_ev += 1
+            except ValueError:
+                if upsert:
+                    # If already exists in append-only ledger and upsert=True, keep existing
+                    pass
 
-        if emit_summary_trace and (ingested_h > 0 or ingested_ev > 0):
+        # 3. Ingest relations
+        for rel in relations or []:
+            self.add_relation(rel, emit_trace=False)
+            ingested_rel += 1
+
+        # 4. Ingest experiments
+        for exp in experiments or []:
+            self.register_experiment(exp, emit_trace=False)
+            ingested_exp += 1
+
+        # 5. Ingest traces
+        for tr in traces or []:
+            self.log_trace(tr)
+            ingested_tr += 1
+
+        if emit_summary_trace and (ingested_h > 0 or ingested_ev > 0 or ingested_rel > 0 or ingested_exp > 0):
             self.log_trace(
                 TraceEntry(
                     timestamp=now,
                     action="BULK_INGEST",
                     agent_role=agent_role,
                     h_tag="",
-                    summary=f"Bulk ingested {ingested_h} hypotheses and {ingested_ev} evidence claims.",
-                    details={"hypotheses_count": ingested_h, "evidence_count": ingested_ev},
+                    summary=f"Bulk ingested {ingested_h} hypotheses, {ingested_ev} evidence, {ingested_rel} relations, {ingested_exp} experiments.",
+                    details={
+                        "hypotheses_count": ingested_h,
+                        "evidence_count": ingested_ev,
+                        "relations_count": ingested_rel,
+                        "experiments_count": ingested_exp,
+                    },
                 )
             )
 
         return {
             "hypotheses_ingested": ingested_h,
             "evidence_ingested": ingested_ev,
+            "relations_ingested": ingested_rel,
+            "experiments_ingested": ingested_exp,
+            "traces_ingested": ingested_tr,
             "total_hypotheses": len(self.list_hypotheses()),
             "total_evidence": len(self.list_evidence()),
+            "total_relations": len(self.list_relations()),
+            "total_experiments": len(self.list_experiments()),
         }
 
     def get_hypothesis(self, h_id: str) -> Optional[HypothesisNode]:
@@ -1068,10 +1142,22 @@ class EpiresStore:
             tgt = edge["target_id"]
             if rel == RelationType.DEPENDS_ON.value:
                 lines.append(f"  {src} -->|depends_on| {tgt}")
+            elif rel == RelationType.SUPERSEDES.value:
+                lines.append(f"  {src} ==>|SUPERSEDES| {tgt}")
+            elif rel == RelationType.CONFLICTS_WITH.value:
+                lines.append(f"  {src} <-.->|CONFLICTS_WITH| {tgt}")
+            elif rel == RelationType.REFINES.value:
+                lines.append(f"  {src} -->|REFINES| {tgt}")
             elif rel == RelationType.BLOCKS.value:
                 lines.append(f"  {src} -.->|BLOCKS| {tgt}")
             elif rel == RelationType.FALSIFIES.value:
                 lines.append(f"  {src} ==>|FALSIFIES| {tgt}")
+            elif rel == RelationType.PRODUCES.value:
+                lines.append(f"  {src} -->|PRODUCES| {tgt}")
+            elif rel == RelationType.GATED_BY.value:
+                lines.append(f"  {src} -.->|GATED_BY| {tgt}")
+            else:
+                lines.append(f"  {src} -->|{rel}| {tgt}")
 
         lines.append("```")
         return "\n".join(lines)

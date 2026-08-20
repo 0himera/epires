@@ -111,6 +111,8 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
             "epires_log_evidence",
             "epires_retract_evidence",
             "epires_update_hypothesis",
+            "epires_add_relation",
+            "epires_list_relations",
             "epires_bulk_import",
             "epires_export_graph",
             "epires_import_graph",
@@ -124,9 +126,13 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
             "epires_system_status",
         ]
         registered_count = len(tool_names)
-        c_mcp.pass_check(
-            f"MCP Server active with {registered_count} tools registered and ready for agents.", tools=tool_names
-        )
+        missing = [t for t in expected_tools if t not in tool_names]
+        if missing:
+            c_mcp.warn_check(f"MCP Server missing expected tools: {', '.join(missing)}")
+        else:
+            c_mcp.pass_check(
+                f"MCP Server active with {registered_count} tools registered and ready for agents.", tools=tool_names
+            )
     except Exception as e:
         c_mcp.fail_check(f"Failed to instantiate MCP server: {e}")
     checks.append(c_mcp)

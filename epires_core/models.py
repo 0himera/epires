@@ -32,9 +32,11 @@ class HypothesisStatus(str, Enum):
 
 class RelationType(str, Enum):
     DEPENDS_ON = "DEPENDS_ON"  # Child hypothesis requires parent premise
-    FALSIFIES = "FALSIFIES"  # Experiment or finding refutes hypothesis
-    REFINES = "REFINES"  # Hypothesis provides higher precision over parent
+    SUPERSEDES = "SUPERSEDES"  # New hypothesis replaces/improves upon older hypothesis
+    CONFLICTS_WITH = "CONFLICTS_WITH"  # Mutually exclusive hypotheses / competing paradigms
+    REFINES = "REFINES"  # Hypothesis provides higher precision / parameter specialization
     BLOCKS = "BLOCKS"  # Negative result prevents downstream work
+    FALSIFIES = "FALSIFIES"  # Experiment or finding refutes hypothesis
     PRODUCES = "PRODUCES"  # Experiment produces evidence or artifact
     GATED_BY = "GATED_BY"  # Hypothesis requires passing a specific statistical gate
 

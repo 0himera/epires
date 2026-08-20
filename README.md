@@ -346,7 +346,7 @@ epires dag
 
 ## 6. Model Context Protocol (MCP) Specification
 
-Epires exposes 18 deterministic MCP tools for AI agents:
+Epires exposes 20 deterministic MCP tools for AI agents:
 
 | MCP Tool | Description |
 | :--- | :--- |
@@ -357,15 +357,17 @@ Epires exposes 18 deterministic MCP tools for AI agents:
 | `epires_log_evidence` | Logs empirical evidence, metrics, CI95, and cascades falsification |
 | `epires_retract_evidence` | Retracts erroneous evidence, recalculates evidence level, and cascades unblocking |
 | `epires_update_hypothesis` | Explicitly updates hypothesis status (REFINED, PAUSED), target level, tags, or text |
-| `epires_bulk_import` | Ingests a batch of hypotheses and evidence claims in a single fast transaction |
+| `epires_add_relation` | Links hypotheses, experiments, and evidence with semantic relations (SUPERSEDES, CONFLICTS_WITH, REFINES, BLOCKS, GATED_BY) |
+| `epires_list_relations` | Lists persisted graph relation edges, optionally filtered by relation type |
+| `epires_bulk_import` | Ingests a batch of hypotheses, evidence, relations, experiments, and traces in a single fast transaction |
 | `epires_export_graph` | Exports entire research memory to portable versioned JSON with SHA256 checksum |
-| `epires_import_graph` | Reproducibly imports research graph bundle from JSON |
+| `epires_import_graph` | Reproducibly imports research graph bundle from JSON with full entity fidelity |
 | `epires_query_graph` | Queries hypotheses by ID or status (CONFIRMED, FALSIFIED, BLOCKED) |
 | `epires_find_gaps` | Discovers untested combinations and research white spots in VSA hypergraph |
 | `epires_associative_search` | Hybrid full-text (SQLite FTS5) + VSA cosine similarity search across research memory |
 | `epires_parallel_web_search`| Multi-query parallel literature/web search via SDK `parallel-web 1.3.0` |
 | `epires_parallel_extract` | Structured full text/markdown extraction from specific URLs |
-| `epires_export_mermaid_dag` | Exports knowledge graph DAG into Mermaid Markdown |
+| `epires_export_mermaid_dag` | Exports knowledge graph DAG into Mermaid Markdown (with full relation type styling) |
 | `epires_record_trace` | Logs strategic rationale into SQLite traces and Markdown ledger |
 | `epires_system_status` | Returns harness version, database status, and search connectivity |
 

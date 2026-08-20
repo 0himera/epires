@@ -12,9 +12,13 @@ from .models import (
     Entity,
     EvidenceClaim,
     EvidenceLevel,
+    ExperimentNode,
     HypothesisNode,
     HypothesisStatus,
+    RelationEdge,
+    RelationType,
     SourceConfidence,
+    TraceEntry,
 )
 from .store import EpiresStore
 
@@ -333,12 +337,15 @@ def export_graph_bundle(store: EpiresStore, project_name: str = "epires") -> Dic
 def import_graph_bundle(
     store: EpiresStore, bundle: Dict[str, Any], upsert: bool = True, dry_run: bool = False
 ) -> Dict[str, Any]:
-    """Import a versioned bundle into Epires SQLite store."""
+    """Import a versioned bundle into Epires SQLite store with full fidelity across all entities."""
     if bundle.get("schema_version") not in {"epires.v1", "atlas.v1"}:
         raise ValueError(f"Unsupported bundle schema version: {bundle.get('schema_version')}")
 
     raw_hypotheses = bundle.get("hypotheses", [])
     raw_evidence = bundle.get("evidence", [])
+    raw_relations = bundle.get("relations", [])
+    raw_experiments = bundle.get("experiments", [])
+    raw_traces = bundle.get("traces", [])
 
     hypotheses: List[HypothesisNode] = []
     for raw in raw_hypotheses:
@@ -353,15 +360,48 @@ def import_graph_bundle(
         if isinstance(raw, dict):
             evidence.append(EvidenceClaim(**raw))
 
+    relations: List[RelationEdge] = []
+    for raw in raw_relations:
+        if isinstance(raw, dict):
+            relations.append(
+                RelationEdge(
+                    source_id=raw["source_id"],
+                    target_id=raw["target_id"],
+                    relation_type=RelationType(raw["relation_type"]),
+                    metadata=raw.get("metadata", {}),
+                )
+            )
+
+    experiments: List[ExperimentNode] = []
+    for raw in raw_experiments:
+        if isinstance(raw, dict):
+            experiments.append(ExperimentNode(**raw))
+
+    traces: List[TraceEntry] = []
+    for raw in raw_traces:
+        if isinstance(raw, dict):
+            traces.append(TraceEntry(**raw))
+
     if dry_run:
         return {
             "dry_run": True,
             "hypotheses_count": len(hypotheses),
             "evidence_count": len(evidence),
+            "relations_count": len(relations),
+            "experiments_count": len(experiments),
+            "traces_count": len(traces),
             "hypotheses_ids": [h.id for h in hypotheses],
         }
 
-    return store.bulk_import(hypotheses=hypotheses, evidence=evidence, upsert=upsert, emit_summary_trace=True)
+    return store.bulk_import(
+        hypotheses=hypotheses,
+        evidence=evidence,
+        relations=relations,
+        experiments=experiments,
+        traces=traces,
+        upsert=upsert,
+        emit_summary_trace=True,
+    )
 
 
 def ingest_file(

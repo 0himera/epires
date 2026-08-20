@@ -13,8 +13,11 @@ from epires_core.models import (
     Entity,
     EvidenceClaim,
     EvidenceLevel,
+    ExperimentNode,
     HypothesisNode,
     HypothesisStatus,
+    RelationEdge,
+    RelationType,
     SourceConfidence,
 )
 from epires_core.store import EpiresStore
@@ -104,7 +107,18 @@ def test_export_import_bundle_roundtrip():
             status=HypothesisStatus.CONFIRMED,
             entities=[Entity(type="Model", value="XGBoost")],
         )
+        h2 = HypothesisNode(
+            id="H11",
+            title="Refined model",
+            a_priori_mechanism="Theoretical convergence",
+            falsification_criteria="Loss > 1.0",
+            target_evidence_level=EvidenceLevel.E3,
+            status=HypothesisStatus.PROPOSED,
+            entities=[Entity(type="Model", value="XGBoost")],
+        )
         store1.register_hypothesis(h1)
+        store1.register_hypothesis(h2)
+
         store1.log_evidence(
             EvidenceClaim(
                 id="ev10",
@@ -115,23 +129,48 @@ def test_export_import_bundle_roundtrip():
             )
         )
 
+        # Add experiment and relation
+        store1.register_experiment(
+            ExperimentNode(
+                id="exp10",
+                hypothesis_id="H10",
+                name="XGB test run",
+                script_path="train.py",
+                metrics={"loss": 0.62},
+            )
+        )
+        store1.add_relation(
+            RelationEdge(
+                source_id="H11",
+                target_id="H10",
+                relation_type=RelationType.REFINES,
+            )
+        )
+
         # Export bundle
         bundle = export_graph_bundle(store=store1, project_name="roundtrip-test")
         assert bundle["schema_version"] == "epires.v1"
         assert bundle["checksum_sha256"]
-        assert bundle["counts"]["hypotheses"] == 1
+        assert bundle["counts"]["hypotheses"] == 2
         assert bundle["counts"]["evidence"] == 1
+        assert bundle["counts"]["relations"] == 1
+        assert bundle["counts"]["experiments"] == 1
 
         # Import into fresh store2
         db2_path = str(Path(tmpdir) / "db2.db")
         store2 = EpiresStore(db_path=db2_path)
         import_res = import_graph_bundle(store=store2, bundle=bundle, upsert=True)
 
-        assert import_res["hypotheses_ingested"] == 1
+        assert import_res["hypotheses_ingested"] == 2
         assert import_res["evidence_ingested"] == 1
+        assert import_res["relations_ingested"] == 1
+        assert import_res["experiments_ingested"] == 1
 
         h10_restored = store2.get_hypothesis("H10")
         assert h10_restored is not None
         assert h10_restored.title == "Root model"
         assert h10_restored.status == HypothesisStatus.CONFIRMED
         assert len(store2.list_evidence()) == 1
+        assert len(store2.list_experiments()) == 1
+        assert len(store2.list_relations()) == 1
+        assert store2.list_relations()[0].relation_type == RelationType.REFINES
