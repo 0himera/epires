@@ -134,19 +134,27 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
     # 5. MCP Client Configs in Workspace
     c_clients = DoctorCheck("IDE & Agent MCP Configs", "Detects client configuration files")
     detected_clients: List[str] = []
+    if (root / ".codex" / "mcp.json").exists():
+        detected_clients.append("Codex (.codex/mcp.json)")
     if (root / ".cursor" / "mcp.json").exists():
         detected_clients.append("Cursor (.cursor/mcp.json)")
     if (root / ".vscode" / "mcp.json").exists():
         detected_clients.append("VS Code (.vscode/mcp.json)")
-    if (Path.home() / ".claude.json").exists() or (root / "claude.json").exists():
-        detected_clients.append("Claude Code")
+    if (root / ".mcp.json").exists() or (root / "claude.json").exists():
+        detected_clients.append("Claude Code (.mcp.json)")
+    elif (Path.home() / ".claude.json").exists():
+        detected_clients.append("Claude Code (global ~/.claude.json)")
+    if (root / "opencode.json").exists() or (root / ".opencode" / "opencode.json").exists():
+        detected_clients.append("OpenCode (opencode.json)")
+    if (root / ".gemini" / "mcp.json").exists():
+        detected_clients.append("Antigravity (.gemini/mcp.json)")
     if (root / "AGENTS.md").exists():
         detected_clients.append("AGENTS.md Protocol")
 
     if detected_clients:
         c_clients.pass_check(f"Detected: {', '.join(detected_clients)}")
     else:
-        c_clients.warn_check("No IDE MCP configs detected in workspace. Run 'epires init' to configure Cursor/Claude/Codex.")
+        c_clients.warn_check("No IDE MCP configs detected in workspace. Run 'epires init' or 'epires setup <ide>' to configure.")
     checks.append(c_clients)
 
     # 6. Parallel Web Search API
