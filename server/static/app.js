@@ -405,41 +405,96 @@
   }
 
   // --------------------------------------------------------------------------
-  // Full-Screen Procedural Paper Grain Shader Canvas
+  // Bayer Ordered Dithering & Risograph Halftone Screen Hybrid Shader
   // --------------------------------------------------------------------------
+  const BAYER_8X8 = [
+     0, 32,  8, 40,  2, 34, 10, 42,
+    48, 16, 56, 24, 50, 18, 58, 26,
+    12, 44,  4, 36, 14, 46,  6, 38,
+    60, 28, 52, 20, 62, 30, 54, 22,
+     3, 35, 11, 43,  1, 33,  9, 41,
+    51, 19, 59, 27, 49, 17, 57, 25,
+    15, 47,  7, 39, 13, 45,  5, 37,
+    63, 31, 55, 23, 61, 29, 53, 21
+  ];
+
+  let renderDitherPattern = null;
+
   function initNoiseShader() {
     const canvas = dom.noiseCanvas;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      generateNoise();
-    }
+    // Create a 256x256 tileable Risograph / Bayer Dither pattern
+    const tileSize = 256;
+    const tileCanvas = document.createElement('canvas');
+    tileCanvas.width = tileSize;
+    tileCanvas.height = tileSize;
+    const tileCtx = tileCanvas.getContext('2d');
 
-    function generateNoise() {
-      const w = canvas.width;
-      const h = canvas.height;
-      if (w === 0 || h === 0) return;
-
-      const imgData = ctx.createImageData(w, h);
+    function buildPattern() {
+      const isNoir = document.documentElement.getAttribute('data-theme') === 'noir';
+      const imgData = tileCtx.createImageData(tileSize, tileSize);
       const data = imgData.data;
-      const len = data.length;
 
-      for (let i = 0; i < len; i += 4) {
-        const val = (Math.random() * 255) | 0;
-        data[i] = val;
-        data[i + 1] = val;
-        data[i + 2] = val;
-        data[i + 3] = 45;
+      // Ink tone: subtle archival carbon/indigo for paper, silver phosphor for noir
+      const r = isNoir ? 215 : 20;
+      const g = isNoir ? 228 : 28;
+      const b = isNoir ? 245 : 44;
+      const baseAlpha = isNoir ? 24 : 30;
+
+      for (let y = 0; y < tileSize; y++) {
+        for (let x = 0; x < tileSize; x++) {
+          const idx = (y * tileSize + x) * 4;
+
+          // 1. Bayer 8x8 Threshold Matrix
+          const bx = x % 8;
+          const by = y % 8;
+          const bayerThreshold = (BAYER_8X8[by * 8 + bx] + 0.5) / 64;
+
+          // 2. 45° Risograph Halftone Frequency Modulation
+          const u = (x + y) / 6.0;
+          const v = (x - y) / 6.0;
+          const halftone = (Math.sin(u * Math.PI) * Math.cos(v * Math.PI) + 1.0) * 0.5;
+
+          // 3. Risograph Organic Ink Emulsion Micro-Grain
+          const noise = ((Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1 + 1) * 0.5;
+
+          // 4. Hybrid Synthesis (Halftone Rosettes + Bayer Thresholding)
+          const risoIntensity = halftone * 0.58 + noise * 0.42;
+
+          if (risoIntensity > bayerThreshold * 0.90) {
+            data[idx] = r;
+            data[idx + 1] = g;
+            data[idx + 2] = b;
+            data[idx + 3] = Math.round(baseAlpha * (0.6 + noise * 0.8));
+          } else {
+            data[idx + 3] = 0;
+          }
+        }
       }
 
-      ctx.putImageData(imgData, 0, 0);
+      tileCtx.putImageData(imgData, 0, 0);
+      return ctx.createPattern(tileCanvas, 'repeat');
     }
 
-    window.addEventListener('resize', resize);
-    resize();
+    let pattern = buildPattern();
+
+    function render() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    renderDitherPattern = () => {
+      pattern = buildPattern();
+      render();
+    };
+
+    window.addEventListener('resize', render);
+    render();
   }
 
   // --------------------------------------------------------------------------
@@ -451,6 +506,9 @@
     localStorage.setItem('epires_theme', theme);
     if (dom.themeLabel) {
       dom.themeLabel.textContent = theme.toUpperCase();
+    }
+    if (renderDitherPattern) {
+      renderDitherPattern();
     }
   }
 
