@@ -1,6 +1,6 @@
 /**
  * EPIRES HYPERGRAPH ENGINE // CLIENT CONTROLLER
- * Monotone Swiss Editorial Paper Theme with Interactive Vector Dragging
+ * Monotone Swiss Editorial Paper Theme with Interactive Vector Dragging & 3D Dither Sphere Radar
  */
 
 (function () {
@@ -23,7 +23,8 @@
     draggingNode: null,
     dragNodeStart: { mouseX: 0, mouseY: 0, nodeX: 0, nodeY: 0 },
     hasMovedNode: false,
-    pollingInterval: null
+    pollingInterval: null,
+    sphereAngle: { x: 0.4, y: 0.6 }
   };
 
   const NODE_WIDTH = 240;
@@ -35,6 +36,8 @@
   const dom = {
     svg: document.getElementById('dag-svg'),
     canvasContainer: document.getElementById('canvas-container'),
+    caliperCoords: document.getElementById('caliper-coords'),
+    sphereCanvas: document.getElementById('dither-sphere-canvas'),
     projectName: document.getElementById('project-name'),
     projectMetric: document.getElementById('project-metric'),
     hdrProjectDomain: document.getElementById('hdr-project-domain'),
@@ -90,6 +93,67 @@
   function toggleTheme() {
     const nextTheme = state.theme === 'paper' ? 'noir' : 'paper';
     applyTheme(nextTheme);
+  }
+
+  // --------------------------------------------------------------------------
+  // 3D Dither Sphere Radar Renderer (Canvas)
+  // --------------------------------------------------------------------------
+  function initDitherSphere() {
+    const canvas = dom.sphereCanvas;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const radius = 22;
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    function renderSphere() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const isDark = document.documentElement.getAttribute('data-theme') === 'noir';
+      ctx.fillStyle = isDark ? '#ecebe6' : '#111216';
+
+      state.sphereAngle.x += 0.008;
+      state.sphereAngle.y += 0.005;
+
+      const numRings = 7;
+      const pointsPerRing = 16;
+
+      for (let i = 0; i < numRings; i++) {
+        const phi = (Math.PI * (i + 1)) / (numRings + 1) - Math.PI / 2;
+        const ringRadius = radius * Math.cos(phi);
+        const y0 = radius * Math.sin(phi);
+
+        for (let j = 0; j < pointsPerRing; j++) {
+          const theta = (2 * Math.PI * j) / pointsPerRing;
+          let x = ringRadius * Math.cos(theta);
+          let y = y0;
+          let z = ringRadius * Math.sin(theta);
+
+          // Rotate Y
+          const cosY = Math.cos(state.sphereAngle.x);
+          const sinY = Math.sin(state.sphereAngle.x);
+          const x1 = x * cosY - z * sinY;
+          const z1 = x * sinY + z * cosY;
+
+          // Rotate X
+          const cosX = Math.cos(state.sphereAngle.y);
+          const sinX = Math.sin(state.sphereAngle.y);
+          const y2 = y * cosX - z1 * sinX;
+          const z2 = y * sinX + z1 * cosX;
+
+          // Orthographic projection + Dither dot size
+          if (z2 > -5) {
+            const screenX = cx + x1;
+            const screenY = cy + y2;
+            const size = z2 > 5 ? 1.4 : 0.8;
+            ctx.fillRect(screenX, screenY, size, size);
+          }
+        }
+      }
+
+      requestAnimationFrame(renderSphere);
+    }
+
+    renderSphere();
   }
 
   // --------------------------------------------------------------------------
@@ -181,7 +245,6 @@
   // Topological DAG Layout Algorithm
   // --------------------------------------------------------------------------
   function initializeLayoutIfEmpty(nodes) {
-    // Only layout nodes that don't have a preserved position
     const nodeMap = new Map();
     nodes.forEach(n => nodeMap.set(n.id, { ...n, layer: 0 }));
 
@@ -302,7 +365,7 @@
       const truncatedTitle = node.title.length > 32 ? node.title.substring(0, 30) + '…' : node.title;
 
       gNode.innerHTML = `
-        <!-- Main Card Plate -->
+        <!-- Main Card Plate with Edge Filter -->
         <rect class="node-plate" width="${NODE_WIDTH}" height="${NODE_HEIGHT}" rx="2" ry="2" />
 
         <!-- Corner Hatch Accent -->
@@ -451,7 +514,7 @@
 
     dom.insId.textContent = node.id;
     dom.insStatus.textContent = node.status;
-    dom.insStatus.className = `spec-state ${node.status}`;
+    dom.insStatus.className = `spec-state ink-stamp ${node.status}`;
     dom.insLevel.textContent = `LEVEL ${node.current_evidence_level || 'E0'}`;
     dom.insTitle.textContent = node.title;
     dom.insMechanism.textContent = node.a_priori_mechanism || 'No mathematical mechanism registered.';
@@ -569,10 +632,19 @@
   }
 
   // --------------------------------------------------------------------------
-  // Viewport Pan & Zoom (Canvas Background Only)
+  // Viewport Pan, Zoom & Caliper Coordinate Tracking
   // --------------------------------------------------------------------------
   function setupPanZoom() {
     const container = dom.canvasContainer;
+
+    container.addEventListener('mousemove', (e) => {
+      const rect = container.getBoundingClientRect();
+      const rawX = (e.clientX - rect.left - state.transform.x) / state.transform.scale;
+      const rawY = (e.clientY - rect.top - state.transform.y) / state.transform.scale;
+      if (dom.caliperCoords) {
+        dom.caliperCoords.textContent = `X: ${Math.round(rawX)} | Y: ${Math.round(rawY)}`;
+      }
+    });
 
     container.addEventListener('mousedown', (e) => {
       // Only pan canvas if clicked directly on background (not a node)
@@ -631,6 +703,7 @@
   function init() {
     applyTheme(state.theme);
     setupPanZoom();
+    initDitherSphere();
 
     dom.btnThemeToggle.addEventListener('click', toggleTheme);
 

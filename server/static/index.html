@@ -13,29 +13,35 @@
   <!-- SVG Filter & Pattern Definitions -->
   <svg class="svg-defs-container" aria-hidden="true">
     <defs>
-      <!-- Risograph / Archival Paper Grain Filter via feTurbulence & feColorMatrix -->
+      <!-- Risograph Paper Grain Filter via feTurbulence & feColorMatrix -->
       <filter id="paper-grain-filter" x="0%" y="0%" width="100%" height="100%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" result="noise" />
-        <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.22 0" result="coloredNoise" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" result="noise" />
+        <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.28 0" result="coloredNoise" />
         <feComposite operator="in" in2="SourceGraphic" />
       </filter>
 
-      <!-- Crisp Edge Sharpness Filter via feConvolveMatrix -->
+      <!-- Letterpress Ink-Bleed Displacement Filter (feDisplacementMap) -->
+      <filter id="ink-bleed-stamp" x="-10%" y="-10%" width="120%" height="120%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="3" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.4" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+
+      <!-- Crisp Unsharp Mask / Sharpness Filter (feConvolveMatrix) -->
       <filter id="sharp-convolve">
         <feConvolveMatrix order="3" kernelMatrix="0 -0.5 0 -0.5 3 -0.5 0 -0.5 0" preserveAlpha="true" />
       </filter>
 
-      <!-- Bayer 1-Bit Dither Halftone Pattern for Tessellation & Accent Badges -->
+      <!-- Bayer 1-Bit Dither Halftone Pattern -->
       <pattern id="bayer-dither-pat" width="8" height="8" patternUnits="userSpaceOnUse">
-        <rect x="0" y="0" width="2" height="2" fill="currentColor" opacity="0.35" />
-        <rect x="4" y="2" width="2" height="2" fill="currentColor" opacity="0.55" />
-        <rect x="2" y="4" width="2" height="2" fill="currentColor" opacity="0.25" />
-        <rect x="6" y="6" width="2" height="2" fill="currentColor" opacity="0.7" />
+        <rect x="0" y="0" width="2" height="2" fill="currentColor" opacity="0.4" />
+        <rect x="4" y="2" width="2" height="2" fill="currentColor" opacity="0.6" />
+        <rect x="2" y="4" width="2" height="2" fill="currentColor" opacity="0.3" />
+        <rect x="6" y="6" width="2" height="2" fill="currentColor" opacity="0.75" />
       </pattern>
 
-      <!-- Fine 45-deg Litho Hatching -->
+      <!-- 45-deg Lithographic Hatching -->
       <pattern id="litho-hatch-pat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-        <line x1="0" y1="0" x2="0" y2="6" stroke="currentColor" stroke-width="1.2" opacity="0.35" />
+        <line x1="0" y1="0" x2="0" y2="6" stroke="currentColor" stroke-width="1.2" opacity="0.4" />
       </pattern>
     </defs>
   </svg>
@@ -48,7 +54,7 @@
     <header class="print-header">
       <div class="header-col-left">
         <div class="doc-code-row">
-          <span class="doc-stamp">EPIRES-VSA-2026</span>
+          <span class="doc-stamp ink-stamp">EPIRES-VSA-2026</span>
           <span class="arrow-glyph">↑</span>
           <span class="doc-sub" id="hdr-task-desc">Autonomous empirical discovery & hypothesis governance</span>
         </div>
@@ -58,6 +64,12 @@
       </div>
 
       <div class="header-col-right">
+        <!-- 3D Halftone / Dither Sphere Radar (from Reference 1 & 4) -->
+        <div class="sphere-radar-widget">
+          <canvas id="dither-sphere-canvas" width="64" height="64" title="Interactive VSA Hypervector Sphere"></canvas>
+          <span class="sphere-lbl">D=10^4</span>
+        </div>
+
         <div class="nested-wireframe-box">
           <div class="wf-inner">
             <div class="wf-row">
@@ -146,7 +158,7 @@
           <div class="bar-left">
             <span class="bar-tag">FIG. 1 //</span>
             <span class="bar-title">EPISTEMIC DEPENDENCY VECTOR GRAPH</span>
-            <span class="bar-hint">[ DRAG NODES FREELY TO REPOSITION ]</span>
+            <span class="bar-hint" id="caliper-coords">X: 000 | Y: 000</span>
           </div>
 
           <div class="bar-right">
@@ -166,11 +178,10 @@
         </div>
 
         <div class="svg-stage-viewport" id="canvas-container">
-          <!-- Ambient Dithered Tessellation Crystal Graphic (Directly from Middle Sheet) -->
+          <!-- Ambient Dithered Tessellation Lattice (Middle Sheet Reference) -->
           <div class="dithered-tessellation-bg">
             <svg viewBox="0 0 240 240" class="tessellation-svg">
-              <!-- Geometric Voronoi / Diamond Crystal Lattice with Dither Fill -->
-              <g stroke="currentColor" stroke-width="0.8" opacity="0.25">
+              <g stroke="currentColor" stroke-width="0.8" opacity="0.32">
                 <polygon points="120,30 150,55 120,80 90,55" fill="url(#bayer-dither-pat)" />
                 <polygon points="150,55 180,80 150,105 120,80" fill="url(#litho-hatch-pat)" />
                 <polygon points="90,55 120,80 90,105 60,80" fill="none" />
@@ -226,14 +237,14 @@
             <div class="specimen-header-card">
               <div class="spec-top">
                 <span class="spec-id" id="ins-id">VSAR-004</span>
-                <span class="spec-state" id="ins-status">IN_PROGRESS</span>
+                <span class="spec-state ink-stamp" id="ins-status">IN_PROGRESS</span>
                 <span class="spec-level" id="ins-level">LEVEL E0</span>
               </div>
               <h2 class="spec-headline" id="ins-title">Error-feedback delta rule on hypervectors</h2>
             </div>
 
             <!-- Cause -> Condition -> Result Plate (Inspired by Ref 4) -->
-            <div class="cybernetic-circuit-plate">
+            <div class="cybernetic-circuit-plate ink-stamp">
               <div class="circuit-node">
                 <span class="c-lbl">CAUSE [ 因 ]</span>
                 <span class="c-val" id="ins-cause">VSA Superposition</span>

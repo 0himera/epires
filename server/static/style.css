@@ -1,6 +1,6 @@
 /* ==========================================================================
    EPIRES EDITORIAL PAPER & SWISS BRUTALIST DESIGN SYSTEM
-   With Authentic Risograph / Halftone Dithering & Tactile Grain Texture
+   With Authentic Risograph / Halftone Dithering, Tactile Grain, & Letterpress Ink Bleed
    ========================================================================== */
 
 :root {
@@ -112,6 +112,11 @@ body.editorial-body {
   pointer-events: none;
 }
 
+/* Letterpress Ink Bleed Filter on Stamps */
+.ink-stamp {
+  filter: url(#ink-bleed-stamp);
+}
+
 /* Tactile Grain & Micro-Noise Overlay (feTurbulence) */
 .paper-grain-texture {
   position: absolute;
@@ -131,18 +136,6 @@ body.editorial-body {
   opacity: 0.45;
 }
 
-.halftone-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: radial-gradient(var(--rule-faint) 1px, transparent 0);
-  background-size: 16px 16px;
-  pointer-events: none;
-  z-index: 0;
-}
-
 .print-container {
   position: relative;
   z-index: 1;
@@ -158,11 +151,11 @@ body.editorial-body {
   display: flex;
   justify-content: space-between;
   align-items: stretch;
-  padding: 16px 24px;
+  padding: 14px 24px;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--rule-crisp);
   flex-shrink: 0;
-  gap: 24px;
+  gap: 20px;
 }
 
 .header-col-left {
@@ -198,7 +191,7 @@ body.editorial-body {
 
 .editorial-headline {
   font-family: var(--font-sans);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.035em;
   color: var(--ink-primary);
@@ -208,7 +201,32 @@ body.editorial-body {
 .header-col-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+}
+
+/* Sphere Radar Widget (Ref 1 & Ref 4) */
+.sphere-radar-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-plate);
+  border: 1px solid var(--rule-crisp);
+  padding: 4px 8px;
+}
+
+#dither-sphere-canvas {
+  width: 48px;
+  height: 48px;
+  cursor: crosshair;
+}
+
+.sphere-lbl {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--ink-muted);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
 }
 
 /* Nested Wireframe Box */
@@ -523,10 +541,10 @@ body.editorial-body {
   height: 100%;
 }
 
-/* Ambient Dithered Tessellation (Directly inspired by Middle Sheet) */
+/* Ambient Dithered Tessellation (Middle Sheet) */
 .dithered-tessellation-bg {
   position: absolute;
-  bottom: 24px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
