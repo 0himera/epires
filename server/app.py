@@ -6,7 +6,7 @@ import itertools
 import math
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -24,6 +24,30 @@ from epires_core.models import (
 from epires_core.store import EpiresStore
 from epires_core.tracer import AutoTracer
 from tools.web_search import ParallelWebSearcher
+
+
+class WebSocketHub:
+    """Manages active browser WebSocket connections for real-time delta pushes."""
+    def __init__(self) -> None:
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, ws: WebSocket) -> None:
+        await ws.accept()
+        self.active_connections.append(ws)
+
+    def disconnect(self, ws: WebSocket) -> None:
+        if ws in self.active_connections:
+            self.active_connections.remove(ws)
+
+    async def broadcast(self, payload: Dict[str, Any]) -> None:
+        for ws in list(self.active_connections):
+            try:
+                await ws.send_json(payload)
+            except Exception:
+                self.disconnect(ws)
+
+
+ws_hub = WebSocketHub()
 
 
 class WebSearchRequest(BaseModel):
@@ -124,6 +148,35 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
             "status_distribution": status_counts,
             "traces_total": len(store.list_traces(limit=1000))
         }
+
+    @app.get("/version")
+    @app.get("/atlas/version")
+    def get_state_version() -> Dict[str, Any]:
+        """Lightweight fingerprint endpoint for ultra-low overhead polling check."""
+        p = Path(db_path)
+        mtime = p.stat().st_mtime if p.exists() else 0
+        h_list = store.list_hypotheses()
+        t_list = store.list_traces(limit=10)
+        return {
+            "version": f"{mtime}_{len(h_list)}_{len(t_list)}",
+            "db_mtime": mtime,
+            "hypotheses_count": len(h_list),
+            "traces_count": len(t_list)
+        }
+
+    @app.websocket("/ws")
+    async def websocket_endpoint(websocket: WebSocket) -> None:
+        """WebSocket for live zero-latency event streaming and instant delta notifications."""
+        await ws_hub.connect(websocket)
+        try:
+            while True:
+                data = await websocket.receive_text()
+                if data == "ping":
+                    await websocket.send_text("pong")
+        except WebSocketDisconnect:
+            ws_hub.disconnect(websocket)
+        except Exception:
+            ws_hub.disconnect(websocket)
 
     # -------------------------------------------------------------------------
     # Research Atlas projections (read-only, versioned for dashboard clients)

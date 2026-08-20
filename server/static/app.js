@@ -45,11 +45,13 @@
     relations: [],
     stratigraphy: [],
     coverage: {},
-    provenance: {},
     endpointStatus: {},
     evidenceByHypothesis: new Map(),
     fetchGeneration: 0,
-    inspectorGeneration: 0
+    inspectorGeneration: 0,
+    dataVersion: null,
+    lastGraphFingerprint: null,
+    wsConnected: false
   };
 
   // Dimensions for Organic Voronoi Pebble Facets
@@ -270,40 +272,44 @@
   }
 
   // --------------------------------------------------------------------------
-  // Procedural Organic Voronoi Pebble Geometry (6 Clean Facet Profiles)
+  // Procedural Organic Asymmetric Voronoi Pebble Geometry (Zero Fixed Templates)
   // --------------------------------------------------------------------------
+  function createDeterministicPRNG(seedStr) {
+    let h = 2166136261 >>> 0;
+    const s = String(seedStr || 'specimen');
+    for (let i = 0; i < s.length; i++) {
+      h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+    }
+    return function() {
+      h += h << 13; h ^= h >>> 7;
+      h += h << 3;  h ^= h >>> 17;
+      return (h >>> 0) / 4294967296;
+    };
+  }
+
   function getVoronoiPebbleGeometry(id, w = 270, h = 100) {
-    let hash = 0;
-    const str = String(id || '');
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
-    }
-    const variant = hash % 6;
+    const rand = createDeterministicPRNG(id);
+    // 8 asymmetrically perturbed boundary vertices with safe clearance
+    const points = [
+      // 1. Top-left shoulder
+      [18 + rand() * 20, 0 + rand() * 5],
+      // 2. Top-center crest (slanted)
+      [w * 0.44 + (rand() - 0.5) * 32, 0 + rand() * 4],
+      // 3. Top-right shoulder
+      [w - (18 + rand() * 22), 0 + rand() * 6],
+      // 4. Right flank apex
+      [w - rand() * 5, h * 0.46 + (rand() - 0.5) * 20],
+      // 5. Bottom-right corner
+      [w - (20 + rand() * 22), h - (rand() * 6)],
+      // 6. Bottom-center dip
+      [w * 0.54 + (rand() - 0.5) * 36, h - (rand() * 5)],
+      // 7. Bottom-left corner
+      [18 + rand() * 20, h - (rand() * 6)],
+      // 8. Left flank apex
+      [0 + rand() * 5, h * 0.52 + (rand() - 0.5) * 20]
+    ];
 
-    let rawOuter;
-    switch (variant) {
-      case 0: // Smooth Pebble Hexagon
-        rawOuter = [[28, 0], [w - 28, 0], [w, h * 0.48], [w - 24, h], [24, h], [0, h * 0.52]];
-        break;
-      case 1: // Organic Facet with Asymmetric Shoulder
-        rawOuter = [[18, 0], [w - 36, 0], [w, h * 0.38], [w - 18, h], [32, h], [0, h * 0.65]];
-        break;
-      case 2: // Elongated Voronoi Capsule-Diamond
-        rawOuter = [[34, 0], [w - 18, 0], [w, h * 0.6], [w - 32, h], [16, h], [0, h * 0.4]];
-        break;
-      case 3: // Slanted Crystallographic Pebble
-        rawOuter = [[30, 0], [w, 0], [w - 16, h * 0.5], [w - 30, h], [0, h], [16, h * 0.5]];
-        break;
-      case 4: // Soft Rounded Pentagonal Lobe
-        rawOuter = [[20, 0], [w - 20, 0], [w, h * 0.55], [w - 26, h], [12, h], [0, h * 0.45]];
-        break;
-      case 5: // Curved Isogrid Facet
-      default:
-        rawOuter = [[14, 0], [w - 30, 0], [w, h * 0.45], [w - 16, h], [24, h], [0, h * 0.55]];
-        break;
-    }
-
-    return createFilletedPolygonPath(rawOuter, 16);
+    return createFilletedPolygonPath(points, 16);
   }
 
   // --------------------------------------------------------------------------
@@ -578,6 +584,71 @@
       console.error('Epires fetch error:', err);
       setSyncState('error', err && err.message ? err.message : 'sync failed');
     }
+  }
+
+  // --------------------------------------------------------------------------
+  // Lightweight Conditional Sync (Ultra-Low Overhead Version Check)
+  // --------------------------------------------------------------------------
+  async function syncDataIfChanged(force = false) {
+    if (force) {
+      return fetchAllData();
+    }
+    try {
+      const vRes = await fetchEndpoint('/atlas/version');
+      if (vRes.available && vRes.data && vRes.data.version) {
+        if (vRes.data.version === state.dataVersion) {
+          // Version is identical, nothing changed on server!
+          const now = new Date();
+          state.lastSyncTime = now.toTimeString().substring(0, 5);
+          setSyncState('ready');
+          return;
+        }
+        state.dataVersion = vRes.data.version;
+      }
+      return fetchAllData();
+    } catch (_) {
+      return fetchAllData();
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Real-Time WebSocket Streaming Push Hub
+  // --------------------------------------------------------------------------
+  function initWebSocketSync() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    let ws = null;
+
+    function connect() {
+      try {
+        ws = new WebSocket(wsUrl);
+        ws.onopen = () => {
+          state.wsConnected = true;
+          console.log('[EPIRES] Real-time WebSocket channel active.');
+        };
+        ws.onmessage = (event) => {
+          if (event.data === 'pong') return;
+          syncDataIfChanged(true);
+        };
+        ws.onclose = () => {
+          state.wsConnected = false;
+          setTimeout(connect, 6000);
+        };
+        ws.onerror = () => {
+          if (ws) ws.close();
+        };
+      } catch (_) {
+        setTimeout(connect, 6000);
+      }
+    }
+    connect();
+
+    // Heartbeat ping every 25s to keep local tunnel/socket alive
+    setInterval(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send('ping');
+      }
+    }, 25000);
   }
 
   function hydrateSnapshotEvidence(snapshot) {
@@ -1072,8 +1143,46 @@
     return String(value).replace(/[^A-Za-z0-9_-]/g, char => `_${char.codePointAt(0).toString(16)}_`);
   }
 
+  function computeGraphFingerprint(nodes, relations, filter, levelFilter, ghosts, selectedId) {
+    const nodeStr = nodes.map(n => `${n.id}:${n.status}:${n.current_evidence_level}:${n.title}`).join(';');
+    const relStr = (relations || []).map(r => `${r.source_id}->${r.target_id}:${r.relation_type}`).join(';');
+    return `${filter}|${levelFilter}|${ghosts}|${selectedId}|${nodes.length}|${nodeStr}|${relStr}`;
+  }
+
   function renderDAG() {
     const svg = dom.svg;
+
+    let filteredNodes = state.hypotheses;
+    if (state.activeFilter !== 'ALL') {
+      filteredNodes = filteredNodes.filter(h => h.status === state.activeFilter);
+    }
+    if (state.activeLevelFilter) {
+      filteredNodes = filteredNodes.filter(h => (h.current_evidence_level || 'E0') === state.activeLevelFilter);
+    }
+
+    if (filteredNodes.length === 0 && !state.showGhosts) {
+      state.lastGraphFingerprint = null;
+      svg.innerHTML = `
+        <text x="50%" y="50%" text-anchor="middle" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="14">
+          [ No specimens matching filter: ${state.activeFilter}${state.activeLevelFilter ? ' / ' + state.activeLevelFilter : ''} ]
+        </text>
+      `;
+      return;
+    }
+
+    const currentFingerprint = computeGraphFingerprint(
+      filteredNodes,
+      state.relations,
+      state.activeFilter,
+      state.activeLevelFilter,
+      state.showGhosts,
+      state.selectedHypothesisId
+    );
+    if (state.lastGraphFingerprint === currentFingerprint && document.getElementById('dag-viewport')) {
+      return;
+    }
+    state.lastGraphFingerprint = currentFingerprint;
+
     svg.innerHTML = '';
 
     // Arrow markers
@@ -1087,23 +1196,6 @@
       </marker>
     `;
     svg.appendChild(defs);
-
-    let filteredNodes = state.hypotheses;
-    if (state.activeFilter !== 'ALL') {
-      filteredNodes = filteredNodes.filter(h => h.status === state.activeFilter);
-    }
-    if (state.activeLevelFilter) {
-      filteredNodes = filteredNodes.filter(h => (h.current_evidence_level || 'E0') === state.activeLevelFilter);
-    }
-
-    if (filteredNodes.length === 0 && !state.showGhosts) {
-      svg.innerHTML = `
-        <text x="50%" y="50%" text-anchor="middle" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="14">
-          [ No specimens matching filter: ${state.activeFilter}${state.activeLevelFilter ? ' / ' + state.activeLevelFilter : ''} ]
-        </text>
-      `;
-      return;
-    }
 
     initializeLayoutIfEmpty(state.hypotheses);
 
@@ -1168,12 +1260,17 @@
       const currentLevel = node.current_evidence_level || 'E0';
       const targetLevel = node.target_evidence_level || 'E3';
 
+      const statusRaw = String(node.status || 'PROPOSED').toLowerCase().replace('_', ' ');
+
       gNode.innerHTML = `
         <path class="node-plate" d="${pebblePath}" />
         <text class="node-id" x="24" y="24">${escapeSvgText(node.id)}</text>
         <text class="node-level" x="${NODE_WIDTH - 24}" y="24" text-anchor="end">${escapeSvgText(currentLevel)} / ${escapeSvgText(targetLevel)}</text>
         ${titleLinesSVG}
-        <text class="node-status-text" x="24" y="84">[ ${escapeSvgText(node.status || 'PROPOSED')} ]</text>
+        <g class="node-status-cluster" transform="translate(24, 82)">
+          <text class="node-status-dot" x="0" y="0">●</text>
+          <text class="node-status-text" x="9" y="0">${escapeSvgText(statusRaw)}</text>
+        </g>
       `;
 
       gNode.addEventListener('mousedown', (e) => {
@@ -1207,7 +1304,10 @@
           <path class="node-plate" d="${pebblePath}" />
           <text class="node-id" x="24" y="24">⚡ WHITE SPOT GAP</text>
           <text class="node-ghost-title" x="24" y="52">${escapeSvgText(gapTitle)}</text>
-          <text class="node-status-text" x="24" y="84">[ UNTESTED COMBINATION ]</text>
+          <g class="node-status-cluster" transform="translate(24, 82)">
+            <text class="node-status-dot" x="0" y="0">○</text>
+            <text class="node-status-text" x="9" y="0">untested</text>
+          </g>
         `;
         gViewport.appendChild(gGhost);
       });
@@ -1763,7 +1863,7 @@
       });
     }
 
-    dom.btnRefresh.addEventListener('click', fetchAllData);
+    dom.btnRefresh.addEventListener('click', () => syncDataIfChanged(true));
     dom.tracesSearch.addEventListener('input', renderTraces);
 
     // Command Palette Events
@@ -1816,12 +1916,15 @@
     window.selectHypothesis = selectHypothesis;
     window.flyToNode = flyToNode;
 
+    initWebSocketSync();
+
     fetchAllData().then(() => {
       autoFitCanvas();
       renderAtlasViews();
     });
 
-    setInterval(fetchAllData, 3000);
+    // 30-second low-overhead passive version sync
+    setInterval(() => syncDataIfChanged(false), 30000);
   }
 
   if (document.readyState === 'loading') {

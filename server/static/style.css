@@ -1115,45 +1115,27 @@ body.editorial-body {
 }
 
 .dag-node-group .node-plate {
-  fill: var(--svg-node-bg);
-  stroke: var(--svg-node-stroke);
-  stroke-width: 1.1px;
-  transition: stroke 0.15s ease, filter 0.15s ease, fill 0.15s ease;
-}
-
-.dag-node-group.falsified .node-plate,
-.dag-node-group.status-falsified .node-plate {
-  fill: var(--pastel-falsified-bg);
-  stroke: var(--pastel-falsified-border);
-}
-
-.dag-node-group.confirmed .node-plate,
-.dag-node-group.status-confirmed .node-plate {
-  fill: var(--pastel-confirmed-bg);
-  stroke: var(--pastel-confirmed-border);
-}
-
-.dag-node-group.in-progress .node-plate,
-.dag-node-group.status-in-progress .node-plate {
-  fill: var(--pastel-in-progress-bg);
-  stroke: var(--pastel-in-progress-border);
-}
-
-.dag-node-group.ghost-node .node-plate {
-  fill: transparent;
-  stroke: var(--pastel-in-progress-ink);
-  stroke-dasharray: 4 3;
+  fill: var(--bg-surface);
+  stroke: var(--rule-crisp);
+  stroke-width: 1px;
+  transition: stroke 0.15s ease, filter 0.15s ease;
 }
 
 .dag-node-group:hover .node-plate {
-  stroke: var(--svg-node-hover-stroke);
-  stroke-width: 1.5px;
+  stroke: var(--ink-primary);
+  stroke-width: 1.4px;
 }
 
 .dag-node-group.selected .node-plate {
   stroke: var(--ink-primary);
   stroke-width: 2px;
-  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.08));
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08));
+}
+
+.dag-node-group.ghost-node .node-plate {
+  fill: transparent;
+  stroke: var(--rule-crisp);
+  stroke-dasharray: 4 3;
 }
 
 .dag-node-group .node-id,
@@ -1177,10 +1159,20 @@ body.editorial-body {
   letter-spacing: 0.04em;
 }
 
+.dag-node-group .node-status-dot {
+  font-size: 8px;
+}
+
 .dag-node-group .node-status-text {
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.dag-node-group.status-falsified .node-status-dot,
+.dag-node-group.falsified .node-status-dot {
+  fill: var(--pastel-falsified-ink);
 }
 
 .dag-node-group.status-falsified .node-status-text,
@@ -1188,14 +1180,29 @@ body.editorial-body {
   fill: var(--pastel-falsified-ink);
 }
 
+.dag-node-group.status-confirmed .node-status-dot,
+.dag-node-group.confirmed .node-status-dot {
+  fill: var(--pastel-confirmed-ink);
+}
+
 .dag-node-group.status-confirmed .node-status-text,
 .dag-node-group.confirmed .node-status-text {
   fill: var(--pastel-confirmed-ink);
 }
 
+.dag-node-group.status-in-progress .node-status-dot,
+.dag-node-group.in-progress .node-status-dot {
+  fill: var(--pastel-in-progress-ink);
+}
+
 .dag-node-group.status-in-progress .node-status-text,
 .dag-node-group.in-progress .node-status-text {
   fill: var(--pastel-in-progress-ink);
+}
+
+.dag-node-group.status-proposed .node-status-dot,
+.dag-node-group.status-proposed .node-status-text {
+  fill: var(--ink-muted);
 }
 
 .dag-node-group .node-ghost-title {
