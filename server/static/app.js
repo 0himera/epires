@@ -54,9 +54,9 @@
     wsConnected: false
   };
 
-  // Dimensions for Organic Voronoi Pebble Facets
-  const NODE_WIDTH = 270;
-  const NODE_HEIGHT = 100;
+  // Dimensions for Organic Voronoi Pebble Facets (Generous Inner Typography Margin)
+  const NODE_WIDTH = 276;
+  const NODE_HEIGHT = 104;
   const GAP_X = 54;
   const GAP_Y = 96;
 
@@ -194,9 +194,9 @@
   // --------------------------------------------------------------------------
   const textMeasureCanvas = document.createElement('canvas');
   const textMeasureCtx = textMeasureCanvas.getContext('2d');
-  textMeasureCtx.font = '500 12px Inter, -apple-system, sans-serif';
+  textMeasureCtx.font = '500 11.5px Inter, -apple-system, sans-serif';
 
-  function formatBalancedTitleSVG(text, maxWidth = 220, startX = 24, startY = 46, maxLines = 2) {
+  function formatBalancedTitleSVG(text, maxWidth = 216, startX = 28, startY = 50, maxLines = 2) {
     const words = text.split(/\s+/);
     const lines = [];
     let curLine = '';
@@ -224,8 +224,8 @@
     }
 
     return lines.map((l, idx) => {
-      const y = startY + idx * 16;
-      return `<text x="${startX}" y="${y}" fill="var(--ink-primary)" font-family="Inter" font-size="12" font-weight="500">${escapeSvgText(l)}</text>`;
+      const y = startY + idx * 15;
+      return `<text x="${startX}" y="${y}" fill="var(--ink-primary)" font-family="Inter, -apple-system, sans-serif" font-size="11.5" font-weight="500">${escapeSvgText(l)}</text>`;
     }).join('');
   }
 
@@ -287,29 +287,29 @@
     };
   }
 
-  function getVoronoiPebbleGeometry(id, w = 270, h = 100) {
+  function getVoronoiPebbleGeometry(id, w = 276, h = 104) {
     const rand = createDeterministicPRNG(id);
-    // 8 asymmetrically perturbed boundary vertices with safe clearance
+    // 8 asymmetrically perturbed boundary vertices with strict safety clearance
     const points = [
       // 1. Top-left shoulder
-      [18 + rand() * 20, 0 + rand() * 5],
-      // 2. Top-center crest (slanted)
-      [w * 0.44 + (rand() - 0.5) * 32, 0 + rand() * 4],
+      [10 + rand() * 8, 0 + rand() * 3],
+      // 2. Top-center crest (asymmetric organic slant)
+      [w * 0.46 + (rand() - 0.5) * 28, 0 + rand() * 3],
       // 3. Top-right shoulder
-      [w - (18 + rand() * 22), 0 + rand() * 6],
+      [w - (10 + rand() * 8), 0 + rand() * 3],
       // 4. Right flank apex
-      [w - rand() * 5, h * 0.46 + (rand() - 0.5) * 20],
+      [w - rand() * 3, h * 0.48 + (rand() - 0.5) * 16],
       // 5. Bottom-right corner
-      [w - (20 + rand() * 22), h - (rand() * 6)],
+      [w - (10 + rand() * 8), h - (rand() * 3)],
       // 6. Bottom-center dip
-      [w * 0.54 + (rand() - 0.5) * 36, h - (rand() * 5)],
+      [w * 0.54 + (rand() - 0.5) * 28, h - (rand() * 3)],
       // 7. Bottom-left corner
-      [18 + rand() * 20, h - (rand() * 6)],
+      [10 + rand() * 8, h - (rand() * 3)],
       // 8. Left flank apex
-      [0 + rand() * 5, h * 0.52 + (rand() - 0.5) * 20]
+      [0 + rand() * 3, h * 0.52 + (rand() - 0.5) * 16]
     ];
 
-    return createFilletedPolygonPath(points, 16);
+    return createFilletedPolygonPath(points, 14);
   }
 
   // --------------------------------------------------------------------------
@@ -1256,7 +1256,7 @@
       gNode.dataset.id = node.id;
 
       const pebblePath = getVoronoiPebbleGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
-      const titleLinesSVG = formatBalancedTitleSVG(node.title, 218, 24, 48, 2);
+      const titleLinesSVG = formatBalancedTitleSVG(node.title, 216, 28, 50, 2);
       const currentLevel = node.current_evidence_level || 'E0';
       const targetLevel = node.target_evidence_level || 'E3';
 
@@ -1264,10 +1264,10 @@
 
       gNode.innerHTML = `
         <path class="node-plate" d="${pebblePath}" />
-        <text class="node-id" x="24" y="24">${escapeSvgText(node.id)}</text>
-        <text class="node-level" x="${NODE_WIDTH - 24}" y="24" text-anchor="end">${escapeSvgText(currentLevel)} / ${escapeSvgText(targetLevel)}</text>
+        <text class="node-id" x="28" y="27">${escapeSvgText(node.id)}</text>
+        <text class="node-level" x="${NODE_WIDTH - 28}" y="27" text-anchor="end">${escapeSvgText(currentLevel)} / ${escapeSvgText(targetLevel)}</text>
         ${titleLinesSVG}
-        <g class="node-status-cluster" transform="translate(24, 82)">
+        <g class="node-status-cluster" transform="translate(28, 86)">
           <text class="node-status-dot" x="0" y="0">●</text>
           <text class="node-status-text" x="9" y="0">${escapeSvgText(statusRaw)}</text>
         </g>
@@ -1298,13 +1298,13 @@
         gGhost.setAttribute('transform', `translate(${ghostX}, ${ghostY})`);
 
         const pebblePath = getVoronoiPebbleGeometry(ghostId, NODE_WIDTH, NODE_HEIGHT);
-        const gapTitle = JSON.stringify(gap.combination || gap).substring(0, 32);
+        const gapTitle = JSON.stringify(gap.combination || gap).substring(0, 30);
 
         gGhost.innerHTML = `
           <path class="node-plate" d="${pebblePath}" />
-          <text class="node-id" x="24" y="24">⚡ WHITE SPOT GAP</text>
-          <text class="node-ghost-title" x="24" y="52">${escapeSvgText(gapTitle)}</text>
-          <g class="node-status-cluster" transform="translate(24, 82)">
+          <text class="node-id" x="28" y="27">⚡ WHITE SPOT GAP</text>
+          <text class="node-ghost-title" x="28" y="52">${escapeSvgText(gapTitle)}</text>
+          <g class="node-status-cluster" transform="translate(28, 86)">
             <text class="node-status-dot" x="0" y="0">○</text>
             <text class="node-status-text" x="9" y="0">untested</text>
           </g>
