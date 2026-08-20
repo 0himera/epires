@@ -86,6 +86,7 @@
     btnZoomIn: document.getElementById('btn-zoom-in'),
     btnZoomOut: document.getElementById('btn-zoom-out'),
     btnZoomReset: document.getElementById('btn-zoom-reset'),
+    btnLayoutReset: document.getElementById('btn-layout-reset'),
     zoomLevelText: document.getElementById('zoom-level-text'),
     btnToggleGhosts: document.getElementById('btn-toggle-ghosts'),
     dagFilterGroup: document.getElementById('dag-filter-group'),
@@ -1076,57 +1077,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Organic Isogrid Topological Layout Algorithm
-  // --------------------------------------------------------------------------
-  function initializeLayoutIfEmpty(nodes) {
-    const nodeMap = new Map();
-    nodes.forEach(n => nodeMap.set(n.id, { ...n, layer: 0 }));
-
-    let changed = true;
-    let iterations = 0;
-    while (changed && iterations < 50) {
-      changed = false;
-      iterations++;
-      nodes.forEach(n => {
-        const item = nodeMap.get(n.id);
-        (n.parent_ids || []).forEach(pId => {
-          if (nodeMap.has(pId)) {
-            const pItem = nodeMap.get(pId);
-            if (item.layer <= pItem.layer) {
-              item.layer = pItem.layer + 1;
-              changed = true;
-            }
-          }
-        });
-      });
-    }
-
-    const layers = [];
-    nodeMap.forEach(n => {
-      while (layers.length <= n.layer) layers.push([]);
-      layers[n.layer].push(n);
-    });
-
-    layers.forEach((layerNodes, layerIdx) => {
-      const totalWidth = layerNodes.length * NODE_WIDTH + (layerNodes.length - 1) * GAP_X;
-      const staggerX = (layerIdx % 2 === 1) ? 28 : 0;
-      const startX = Math.max(60, 580 - totalWidth / 2) + staggerX;
-
-      layerNodes.forEach((node, nodeIdx) => {
-        if (!state.nodePositions.has(node.id)) {
-          state.nodePositions.set(node.id, {
-            x: startX + nodeIdx * (NODE_WIDTH + GAP_X),
-            y: 60 + layerIdx * (NODE_HEIGHT + GAP_Y),
-            width: NODE_WIDTH,
-            height: NODE_HEIGHT
-          });
-        }
-      });
-    });
-  }
-
-  // --------------------------------------------------------------------------
-  // SVG Organic Voronoi Pebble DAG Rendering
+  // SVG Organic Voronoi Pebble DAG Rendering & Relations
   // --------------------------------------------------------------------------
   const DAG_RELATION_TYPES = new Set(['DEPENDS_ON', 'BLOCKS', 'REFINES', 'FALSIFIES', 'PRODUCES', 'GATED_BY']);
 
@@ -1169,8 +1120,6 @@
   }
 
   function dagEdgeEndpoints(relation) {
-    // DEPENDS_ON is stored child -> prerequisite, but the atlas has always
-    // drawn prerequisites above their dependent child.
     if (relation.relation_type === 'DEPENDS_ON') {
       return { sourceId: relation.target_id, targetId: relation.source_id };
     }
@@ -1182,11 +1131,158 @@
     return `edge-${domIdPart(endpoints.sourceId)}-${domIdPart(endpoints.targetId)}-${domIdPart(relation.relation_type)}`;
   }
 
-  // External record IDs are data, not DOM syntax. Keep generated SVG IDs
-  // predictable while preventing punctuation in an imported ID from altering
-  // selectors or fragment references.
   function domIdPart(value) {
     return String(value).replace(/[^A-Za-z0-9_-]/g, char => `_${char.codePointAt(0).toString(16)}_`);
+  }
+
+  // --------------------------------------------------------------------------
+  // Local Storage Persistence for Node Positions
+  // --------------------------------------------------------------------------
+  const STORAGE_KEY_POSITIONS = 'epires_custom_node_positions';
+
+  function saveNodePositionsToStorage() {
+    try {
+      const obj = {};
+      state.nodePositions.forEach((pos, id) => {
+        obj[id] = { x: Math.round(pos.x), y: Math.round(pos.y) };
+      });
+      localStorage.setItem(STORAGE_KEY_POSITIONS, JSON.stringify(obj));
+    } catch (_) {}
+  }
+
+  function loadNodePositionsFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_POSITIONS);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Smart Balanced Topological Cluster Matrix Layout
+  // --------------------------------------------------------------------------
+  function initializeLayoutIfEmpty(nodes, forceRelayout = false) {
+    if (!nodes || nodes.length === 0) return;
+
+    const savedPositions = forceRelayout ? null : loadNodePositionsFromStorage();
+
+    // Check if we can reuse saved custom positions from localStorage
+    if (savedPositions && !forceRelayout) {
+      let hasAll = true;
+      nodes.forEach(n => {
+        if (!state.nodePositions.has(n.id)) {
+          if (savedPositions[n.id]) {
+            state.nodePositions.set(n.id, {
+              x: savedPositions[n.id].x,
+              y: savedPositions[n.id].y,
+              width: NODE_WIDTH,
+              height: NODE_HEIGHT
+            });
+          } else {
+            hasAll = false;
+          }
+        }
+      });
+      if (hasAll) return;
+    }
+
+    // 1. Build adjacency & degree maps
+    const relations = dagRelations();
+    const adj = new Map();
+    const inDegree = new Map();
+    const outDegree = new Map();
+    nodes.forEach(n => {
+      adj.set(n.id, []);
+      inDegree.set(n.id, 0);
+      outDegree.set(n.id, 0);
+    });
+
+    relations.forEach(r => {
+      const { sourceId, targetId } = dagEdgeEndpoints(r);
+      if (adj.has(sourceId) && inDegree.has(targetId)) {
+        adj.get(sourceId).push(targetId);
+        inDegree.set(targetId, inDegree.get(targetId) + 1);
+        outDegree.set(sourceId, outDegree.get(sourceId) + 1);
+      }
+    });
+
+    // 2. Separate into connected components with edges vs unlinked standalone nodes
+    const hasEdges = (id) => ((inDegree.get(id) || 0) > 0 || (outDegree.get(id) || 0) > 0);
+    const connectedNodes = nodes.filter(n => hasEdges(n.id));
+    const standaloneNodes = nodes.filter(n => !hasEdges(n.id));
+
+    let curY = 60;
+
+    // 3. Layout connected DAG subtrees
+    if (connectedNodes.length > 0) {
+      const nodeMap = new Map();
+      connectedNodes.forEach(n => nodeMap.set(n.id, { ...n, layer: 0 }));
+
+      let changed = true;
+      let iters = 0;
+      while (changed && iters < 20) {
+        changed = false;
+        iters++;
+        relations.forEach(r => {
+          const { sourceId, targetId } = dagEdgeEndpoints(r);
+          const srcItem = nodeMap.get(sourceId);
+          const tgtItem = nodeMap.get(targetId);
+          if (srcItem && tgtItem && tgtItem.layer <= srcItem.layer) {
+            tgtItem.layer = srcItem.layer + 1;
+            changed = true;
+          }
+        });
+      }
+
+      const layers = [];
+      nodeMap.forEach(n => {
+        while (layers.length <= n.layer) layers.push([]);
+        layers[n.layer].push(n);
+      });
+
+      const maxLayerCount = Math.max(...layers.map(l => l.length));
+      const stageCenterX = 60 + (Math.max(3, maxLayerCount) * (NODE_WIDTH + GAP_X)) / 2;
+
+      layers.forEach((layerNodes, layerIdx) => {
+        const layerW = layerNodes.length * NODE_WIDTH + (layerNodes.length - 1) * GAP_X;
+        const startX = Math.max(60, stageCenterX - layerW / 2);
+
+        layerNodes.forEach((node, nodeIdx) => {
+          if (forceRelayout || !state.nodePositions.has(node.id)) {
+            state.nodePositions.set(node.id, {
+              x: startX + nodeIdx * (NODE_WIDTH + GAP_X),
+              y: curY + layerIdx * (NODE_HEIGHT + GAP_Y),
+              width: NODE_WIDTH,
+              height: NODE_HEIGHT
+            });
+          }
+        });
+      });
+
+      curY += layers.length * (NODE_HEIGHT + GAP_Y) + 30;
+    }
+
+    // 4. Layout standalone nodes in a balanced compact grid (3-4 columns)
+    if (standaloneNodes.length > 0) {
+      const numCols = Math.min(4, Math.max(3, Math.ceil(Math.sqrt(standaloneNodes.length * 1.4))));
+
+      standaloneNodes.forEach((node, idx) => {
+        if (forceRelayout || !state.nodePositions.has(node.id)) {
+          const col = idx % numCols;
+          const row = Math.floor(idx / numCols);
+          state.nodePositions.set(node.id, {
+            x: 60 + col * (NODE_WIDTH + GAP_X),
+            y: curY + row * (NODE_HEIGHT + Math.round(GAP_Y * 0.75)),
+            width: NODE_WIDTH,
+            height: NODE_HEIGHT
+          });
+        }
+      });
+    }
+
+    saveNodePositionsToStorage();
   }
 
   function computeGraphFingerprint(nodes, relations, filter, levelFilter, ghosts, selectedId) {
@@ -1409,6 +1505,8 @@
 
     if (!state.hasMovedNode && state.draggingNode) {
       selectHypothesis(state.draggingNode);
+    } else if (state.hasMovedNode) {
+      saveNodePositionsToStorage();
     }
     state.draggingNode = null;
   }
@@ -1451,16 +1549,16 @@
     const containerW = dom.canvasContainer.clientWidth || 900;
     const containerH = dom.canvasContainer.clientHeight || 600;
 
-    const contentW = maxX - minX + 120;
-    const contentH = maxY - minY + 120;
+    const contentW = maxX - minX + 100;
+    const contentH = maxY - minY + 100;
 
     const scaleX = containerW / contentW;
     const scaleY = containerH / contentH;
-    const scale = Math.max(0.35, Math.min(1.15, Math.min(scaleX, scaleY)));
+    const scale = Math.max(0.45, Math.min(1.05, Math.min(scaleX, scaleY)));
 
     state.transform.scale = scale;
-    state.transform.x = (containerW - (maxX - minX) * scale) / 2 - minX * scale;
-    state.transform.y = Math.max(40, (containerH - (maxY - minY) * scale) / 2 - minY * scale);
+    state.transform.x = Math.round((containerW - (maxX - minX) * scale) / 2 - minX * scale);
+    state.transform.y = Math.round(Math.max(30, (containerH - (maxY - minY) * scale) / 2 - minY * scale));
 
     updateTransform();
     renderDAG();
@@ -1768,6 +1866,15 @@
     });
 
     dom.btnZoomReset.addEventListener('click', autoFitCanvas);
+
+    if (dom.btnLayoutReset) {
+      dom.btnLayoutReset.addEventListener('click', () => {
+        state.nodePositions.clear();
+        try { localStorage.removeItem(STORAGE_KEY_POSITIONS); } catch (_) {}
+        initializeLayoutIfEmpty(state.hypotheses, true);
+        autoFitCanvas();
+      });
+    }
   }
 
   function updateTransform() {
