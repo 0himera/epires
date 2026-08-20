@@ -286,6 +286,27 @@ def main():
     # Mermaid
     subparsers.add_parser("dag", help="Print Mermaid diagram of hypothesis DAG")
 
+    # Doctor
+    subparsers.add_parser("doctor", help="Run comprehensive diagnostic checks on MCP, SQLite, and configuration")
+
+    # Ingest
+    ingest_parser = subparsers.add_parser("ingest", help="Bulk import hypotheses & evidence from Markdown, JSON, or JSONL")
+    ingest_parser.add_argument("file", help="Path to findings.md, hypotheses.json, or experiments.jsonl")
+    ingest_parser.add_argument("--dry-run", action="store_true", help="Preview extracted records without modifying database")
+    ingest_parser.add_argument("--upsert", action="store_true", default=True, help="Update existing hypotheses if present (default: True)")
+    ingest_parser.add_argument("--no-upsert", action="store_false", dest="upsert", help="Do not overwrite existing hypotheses")
+
+    # Export
+    export_parser = subparsers.add_parser("export", help="Export research graph to portable JSON bundle with SHA256 checksum")
+    export_parser.add_argument("--out", "-o", default=None, help="Output file path (default: stdout or research-graph.json)")
+    export_parser.add_argument("--format", choices=["json", "jsonl"], default="json", help="Export format (default: json)")
+
+    # Import
+    import_parser = subparsers.add_parser("import", help="Import research graph from JSON bundle")
+    import_parser.add_argument("file", help="Path to exported graph bundle JSON file")
+    import_parser.add_argument("--dry-run", action="store_true", help="Preview import without modifying database")
+    import_parser.add_argument("--upsert", action="store_true", default=True, help="Upsert existing hypotheses (default: True)")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -300,6 +321,74 @@ def main():
     elif args.command == "recon":
         profile = detect_project_profile(args.dir)
         print(json.dumps(profile, indent=2, ensure_ascii=False))
+
+    elif args.command == "doctor":
+        from .doctor import run_epires_doctor, print_doctor_report
+        checks = run_epires_doctor()
+        ok = print_doctor_report(checks)
+        sys.exit(0 if ok else 1)
+
+    elif args.command == "ingest":
+        from .importer import ingest_file
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        target_file = Path(args.file).resolve()
+        
+        print(f"[*] Ingesting research findings from {target_file.name} ...")
+        res = ingest_file(store=store, file_path=target_file, dry_run=args.dry_run, upsert=args.upsert)
+        
+        if args.dry_run:
+            print("\n[DRY RUN PREVIEW]")
+            print(f"  Recognized Hypotheses: {res.get('hypotheses_count', 0)}")
+            print(f"  Recognized Evidence:   {res.get('evidence_count', 0)}")
+            if "hypotheses" in res:
+                for h in res["hypotheses"]:
+                    print(f"    - [{h['id']}] {h['title']} (Status: {h['status']})")
+            print("\nRun without --dry-run to commit records into SQLite research database.")
+        else:
+            print(f"[+] Successfully ingested {res.get('hypotheses_ingested', 0)} hypotheses and {res.get('evidence_ingested', 0)} evidence claims.")
+            print(f"[+] Total database state: {res.get('total_hypotheses', 0)} hypotheses, {res.get('total_evidence', 0)} evidence records.")
+
+    elif args.command == "export":
+        from .importer import export_graph_bundle
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        bundle = export_graph_bundle(store=store, project_name=config.project_name)
+
+        if args.format == "jsonl":
+            lines = []
+            for h in bundle["hypotheses"]:
+                lines.append(json.dumps({"type": "hypothesis", **h}, ensure_ascii=False))
+            for ev in bundle["evidence"]:
+                lines.append(json.dumps({"type": "evidence", **ev}, ensure_ascii=False))
+            out_str = "\n".join(lines)
+        else:
+            out_str = json.dumps(bundle, indent=2, ensure_ascii=False)
+
+        if args.out:
+            out_path = Path(args.out).resolve()
+            out_path.write_text(out_str, encoding="utf-8")
+            print(f"[+] Exported research graph ({bundle['counts']['hypotheses']} hypotheses, {bundle['counts']['evidence']} evidence) to {out_path}")
+            print(f"    SHA256 Checksum: {bundle['checksum_sha256']}")
+        else:
+            print(out_str)
+
+    elif args.command == "import":
+        from .importer import import_graph_bundle
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        import_path = Path(args.file).resolve()
+        
+        bundle = json.loads(import_path.read_text(encoding="utf-8"))
+        res = import_graph_bundle(store=store, bundle=bundle, upsert=args.upsert, dry_run=args.dry_run)
+        
+        if args.dry_run:
+            print(f"[DRY RUN] Would import {res['hypotheses_count']} hypotheses and {res['evidence_count']} evidence records.")
+        else:
+            print(f"[+] Successfully imported {res.get('hypotheses_ingested', 0)} hypotheses and {res.get('evidence_ingested', 0)} evidence claims.")
 
     elif args.command == "serve":
         root = find_project_root()
@@ -328,7 +417,8 @@ def main():
                 "FALSIFIED": "🔴",
                 "BLOCKED": "⚫",
                 "IN_PROGRESS": "🟡",
-                "PROPOSED": "🔵"
+                "PROPOSED": "🔵",
+                "REFINED": "🟣"
             }.get(h.status.value, "⚪")
             print(f"{status_icon} [{h.id}] {h.title} (Level: {h.current_evidence_level.value}, Status: {h.status.value})")
         print("================================================================\n")

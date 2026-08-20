@@ -111,11 +111,15 @@ def test_mcp_server_tools():
         mcp = create_mcp_server(db_path=db_path, trace_md=trace_path)
         assert mcp.name == "epires"
 
-        # Test tool manager has all 11 tools
+        # Test tool manager has all 15 tools
         tool_names = [tool.name for tool in mcp._tool_manager.list_tools()]
         assert "epires_register_hypothesis" in tool_names
         assert "epires_log_evidence" in tool_names
         assert "epires_retract_evidence" in tool_names
+        assert "epires_update_hypothesis" in tool_names
+        assert "epires_bulk_import" in tool_names
+        assert "epires_export_graph" in tool_names
+        assert "epires_import_graph" in tool_names
         assert "epires_query_graph" in tool_names
         assert "epires_find_gaps" in tool_names
         assert "epires_associative_search" in tool_names
@@ -129,6 +133,9 @@ def test_mcp_server_tools():
         log_ev = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_log_evidence")
         register = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_register_hypothesis")
         retract = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_retract_evidence")
+        update_h = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_update_hypothesis")
+        bulk_imp = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_bulk_import")
+        export_g = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_export_graph")
         
         register(id="H-TEST-MCP", title="MCP test", a_priori_mechanism="math", falsification_criteria="loss > 1")
         log_ev(hypothesis_id="H-TEST-MCP", claim="Erroneous fail", evidence_level="E3", falsification_triggered=True)
@@ -143,6 +150,26 @@ def test_mcp_server_tools():
         res2 = json.loads(query(h_id="H-TEST-MCP"))
         assert res2["hypothesis"]["status"] == "PROPOSED"
         assert res2["hypothesis"]["current_evidence_level"] == "E0"
+
+        # Test epires_update_hypothesis (e.g. mark REFINED)
+        up_msg = update_h(id="H-TEST-MCP", status="REFINED", target_evidence_level="E4")
+        assert "Status is REFINED" in up_msg
+        res3 = json.loads(query(h_id="H-TEST-MCP"))
+        assert res3["hypothesis"]["status"] == "REFINED"
+        assert res3["hypothesis"]["target_evidence_level"] == "E4"
+
+        # Test bulk import via MCP
+        bulk_payload = json.dumps([
+            {"id": "H-BULK-1", "title": "Bulk 1", "a_priori_mechanism": "m", "falsification_criteria": "f"},
+            {"id": "H-BULK-2", "title": "Bulk 2", "a_priori_mechanism": "m", "falsification_criteria": "f"}
+        ])
+        bulk_res = json.loads(bulk_imp(hypotheses_json=bulk_payload))
+        assert bulk_res["hypotheses_ingested"] == 2
+
+        # Test export graph via MCP
+        bundle_out = json.loads(export_g(project_name="mcp-test"))
+        assert bundle_out["schema_version"] == "epires.v1"
+        assert bundle_out["counts"]["hypotheses"] >= 3
 
 
 def test_mcp_entity_pairs_are_persisted_and_validated():

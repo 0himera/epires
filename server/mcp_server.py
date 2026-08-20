@@ -1,9 +1,13 @@
 """FastMCP Server for Epires Research Harness.
 
-Exposes 11 deterministic tools for LLM agents:
+Exposes 15 deterministic tools for LLM agents:
 - epires_register_hypothesis
 - epires_log_evidence (Collision-proof millisecond + SHA256 ID)
 - epires_retract_evidence (Recalculates status, demotes level, and cascades unblocking)
+- epires_update_hypothesis (Explicit status update, target level, tags, fields)
+- epires_bulk_import (Fast batch transaction ingestion)
+- epires_export_graph (Portable JSON bundle with SHA256 checksum)
+- epires_import_graph (Reproducible graph restoration)
 - epires_query_graph
 - epires_find_gaps
 - epires_associative_search
@@ -55,11 +59,11 @@ def create_mcp_server(
         p_key = get_parallel_api_key()
         hypotheses = store.list_hypotheses()
         return json.dumps({
-            "version": "0.1.1",
+            "version": "0.2.0",
             "db_path": str(db_path),
             "total_hypotheses": len(hypotheses),
             "parallel_auth": bool(p_key),
-            "tools_count": 11,
+            "tools_count": 15,
             "status": "ready"
         }, indent=2)
 
@@ -164,6 +168,85 @@ def create_mcp_server(
         if unblocked:
             msg += f"\n[DAG CASCADE] Automatically UNBLOCKED downstream hypotheses: {', '.join(unblocked)}"
         return msg
+
+    @mcp.tool()
+    def epires_update_hypothesis(
+        id: str,
+        status: Optional[str] = None,
+        target_evidence_level: Optional[str] = None,
+        title: Optional[str] = None,
+        a_priori_mechanism: Optional[str] = None,
+        falsification_criteria: Optional[str] = None,
+        parent_ids: Optional[List[str]] = None,
+        entity_types: Optional[List[str]] = None,
+        entity_values: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
+        agent_role: str = "Lead-PI"
+    ) -> str:
+        """Explicitly update properties or status of an existing hypothesis (e.g. set REFINED, PAUSED, IN_PROGRESS, or edit target level/tags)."""
+        entities = None
+        if entity_types is not None and entity_values is not None:
+            if len(entity_types) != len(entity_values):
+                raise ValueError("entity_types and entity_values must match in length")
+            entities = [Entity(type=t, value=v) for t, v in zip(entity_types, entity_values)]
+
+        stat_enum = HypothesisStatus(status) if status else None
+        target_enum = EvidenceLevel(target_evidence_level) if target_evidence_level else None
+
+        updated = store.update_hypothesis(
+            h_id=id,
+            title=title,
+            a_priori_mechanism=a_priori_mechanism,
+            falsification_criteria=falsification_criteria,
+            target_evidence_level=target_enum,
+            status=stat_enum,
+            parent_ids=parent_ids,
+            entities=entities,
+            tags=tags,
+            agent_role=agent_role
+        )
+        if not updated:
+            return f"Hypothesis '{id}' not found."
+        return f"Successfully updated hypothesis '{updated.id}': Status is {updated.status.value}, Target: {updated.target_evidence_level.value}."
+
+    @mcp.tool()
+    def epires_bulk_import(
+        hypotheses_json: str,
+        evidence_json: Optional[str] = None,
+        upsert: bool = True
+    ) -> str:
+        """Bulk import a batch of hypotheses and/or evidence claims in a single transaction.
+        
+        hypotheses_json: JSON string representing an array of Hypothesis objects.
+        evidence_json: Optional JSON string representing an array of Evidence objects.
+        """
+        raw_h = json.loads(hypotheses_json) if hypotheses_json else []
+        raw_ev = json.loads(evidence_json) if evidence_json else []
+
+        h_objs = []
+        for item in raw_h:
+            if "entities" in item and isinstance(item["entities"], list):
+                item["entities"] = [Entity(**e) if isinstance(e, dict) else e for e in item["entities"]]
+            h_objs.append(HypothesisNode(**item))
+
+        ev_objs = [EvidenceClaim(**item) for item in raw_ev]
+        res = store.bulk_import(hypotheses=h_objs, evidence=ev_objs, upsert=upsert)
+        return json.dumps(res, indent=2)
+
+    @mcp.tool()
+    def epires_export_graph(project_name: str = "epires") -> str:
+        """Export the entire research graph, evidence ledger, relations, and traces into a portable JSON bundle with SHA256 checksum."""
+        from epires_core.importer import export_graph_bundle
+        bundle = export_graph_bundle(store=store, project_name=project_name)
+        return json.dumps(bundle, indent=2, ensure_ascii=False)
+
+    @mcp.tool()
+    def epires_import_graph(bundle_json: str, upsert: bool = True) -> str:
+        """Import a research graph JSON bundle into the local database."""
+        from epires_core.importer import import_graph_bundle
+        bundle = json.loads(bundle_json)
+        res = import_graph_bundle(store=store, bundle=bundle, upsert=upsert)
+        return json.dumps(res, indent=2)
 
     @mcp.tool()
     def epires_query_graph(

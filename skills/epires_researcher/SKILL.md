@@ -104,3 +104,10 @@ When delegating work to a coder or runner subagent, enforce the **Strict Contrac
 * Review the Mermaid graph via `epires_export_mermaid_dag`.
 * Verify that `docs/agent-trace.md` has recorded all milestones.
 * Ensure a clean Git working tree.
+
+### Step 8: Bulk Ingestion & Graph Portability
+* When joining an existing repository with historical hypotheses, ingest them in one command:
+  `epires ingest findings.md --dry-run` followed by `epires ingest findings.md --upsert`
+  or via MCP `epires_bulk_import(hypotheses_json=...)`.
+* Export and preserve reproducible research graphs for CI/Git via `epires export --out graph.json` or `epires_export_graph`.
+* Check system health and MCP tools readiness anytime with `epires doctor`.

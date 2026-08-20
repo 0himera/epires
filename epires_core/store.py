@@ -120,7 +120,12 @@ class EpiresStore:
     # -------------------------------------------------------------------------
     # Hypotheses
     # -------------------------------------------------------------------------
-    def register_hypothesis(self, h: HypothesisNode, allow_status_override: bool = False) -> HypothesisNode:
+    def register_hypothesis(
+        self,
+        h: HypothesisNode,
+        allow_status_override: bool = False,
+        emit_trace: bool = True
+    ) -> HypothesisNode:
         now = self._now()
         existing = self.get_hypothesis(h.id)
         h.created_at = h.created_at or (existing.created_at if existing else now)
@@ -195,15 +200,105 @@ class EpiresStore:
                 VALUES (?, ?, ?, ?)
                 """, (h.id, pid, RelationType.DEPENDS_ON.value, json.dumps({})))
 
-        self.log_trace(TraceEntry(
-            timestamp=now,
-            action="REGISTER_HYPOTHESIS",
-            agent_role="Lead-PI",
-            h_tag=h.id,
-            summary=f"Registered hypothesis {h.id}: {h.title} [Status: {h.status.value}]",
-            details={"a_priori": h.a_priori_mechanism, "falsification": h.falsification_criteria}
-        ))
+        if emit_trace:
+            self.log_trace(TraceEntry(
+                timestamp=now,
+                action="REGISTER_HYPOTHESIS",
+                agent_role="Lead-PI",
+                h_tag=h.id,
+                summary=f"Registered hypothesis {h.id}: {h.title} [Status: {h.status.value}]",
+                details={"a_priori": h.a_priori_mechanism, "falsification": h.falsification_criteria}
+            ))
         return h
+
+    def update_hypothesis(
+        self,
+        h_id: str,
+        title: Optional[str] = None,
+        a_priori_mechanism: Optional[str] = None,
+        falsification_criteria: Optional[str] = None,
+        target_evidence_level: Optional[EvidenceLevel] = None,
+        status: Optional[HypothesisStatus] = None,
+        parent_ids: Optional[List[str]] = None,
+        entities: Optional[List[Entity]] = None,
+        tags: Optional[List[str]] = None,
+        agent_role: str = "Lead-PI"
+    ) -> Optional[HypothesisNode]:
+        """Explicitly update properties and/or status of an existing hypothesis."""
+        h = self.get_hypothesis(h_id)
+        if not h:
+            return None
+
+        if title is not None:
+            h.title = title
+        if a_priori_mechanism is not None:
+            h.a_priori_mechanism = a_priori_mechanism
+        if falsification_criteria is not None:
+            h.falsification_criteria = falsification_criteria
+        if target_evidence_level is not None:
+            h.target_evidence_level = target_evidence_level
+        if status is not None:
+            h.status = status
+        if parent_ids is not None:
+            h.parent_ids = parent_ids
+        if entities is not None:
+            h.entities = entities
+        if tags is not None:
+            h.tags = tags
+
+        saved = self.register_hypothesis(h, allow_status_override=True, emit_trace=False)
+        self.log_trace(TraceEntry(
+            timestamp=self._now(),
+            action="UPDATE_HYPOTHESIS",
+            agent_role=agent_role,
+            h_tag=h.id,
+            summary=f"Updated hypothesis {h.id} -> Status: {h.status.value}, Target: {h.target_evidence_level.value}",
+            details={"title": h.title, "status": h.status.value}
+        ))
+        return saved
+
+    def bulk_import(
+        self,
+        hypotheses: List[HypothesisNode],
+        evidence: List[EvidenceClaim],
+        upsert: bool = True,
+        emit_summary_trace: bool = True,
+        agent_role: str = "Lead-PI"
+    ) -> Dict[str, Any]:
+        """Fast bulk import of hypotheses and evidence in a single transaction."""
+        now = self._now()
+        ingested_h = 0
+        ingested_ev = 0
+
+        # 1. Ingest hypotheses without emitting individual noisy traces
+        for h in hypotheses:
+            existing = self.get_hypothesis(h.id)
+            if existing and not upsert:
+                continue
+            self.register_hypothesis(h, allow_status_override=True, emit_trace=False)
+            ingested_h += 1
+
+        # 2. Ingest evidence claims
+        for ev in evidence:
+            self.log_evidence(ev, emit_trace=False)
+            ingested_ev += 1
+
+        if emit_summary_trace and (ingested_h > 0 or ingested_ev > 0):
+            self.log_trace(TraceEntry(
+                timestamp=now,
+                action="BULK_INGEST",
+                agent_role=agent_role,
+                h_tag="",
+                summary=f"Bulk ingested {ingested_h} hypotheses and {ingested_ev} evidence claims.",
+                details={"hypotheses_count": ingested_h, "evidence_count": ingested_ev}
+            ))
+
+        return {
+            "hypotheses_ingested": ingested_h,
+            "evidence_ingested": ingested_ev,
+            "total_hypotheses": len(self.list_hypotheses()),
+            "total_evidence": len(self.list_evidence()),
+        }
 
     def get_hypothesis(self, h_id: str) -> Optional[HypothesisNode]:
         with self._get_connection() as conn:
@@ -241,7 +336,7 @@ class EpiresStore:
     # -------------------------------------------------------------------------
     # Evidence & Cascading Falsification
     # -------------------------------------------------------------------------
-    def log_evidence(self, ev: EvidenceClaim) -> Tuple[EvidenceClaim, List[str]]:
+    def log_evidence(self, ev: EvidenceClaim, emit_trace: bool = True) -> Tuple[EvidenceClaim, List[str]]:
         """Logs an empirical evidence claim and cascades falsification/promotion."""
         now = self._now()
         ev.timestamp = ev.timestamp or now
@@ -270,7 +365,7 @@ class EpiresStore:
 
             if ev.falsification_triggered:
                 h.status = HypothesisStatus.FALSIFIED
-                self.register_hypothesis(h)
+                self.register_hypothesis(h, allow_status_override=True, emit_trace=False)
                 blocked_children = self._cascade_falsification(ev.hypothesis_id)
             else:
                 # Non-falsifying observations cannot reopen an invalidated or
@@ -281,17 +376,18 @@ class EpiresStore:
                     h.status = HypothesisStatus.CONFIRMED
                 else:
                     h.status = HypothesisStatus.IN_PROGRESS
-                self.register_hypothesis(h)
+                self.register_hypothesis(h, allow_status_override=True, emit_trace=False)
 
-        self.log_trace(TraceEntry(
-            timestamp=now,
-            action="LOG_EVIDENCE",
-            agent_role="Lead-PI",
-            h_tag=ev.hypothesis_id,
-            summary=f"Evidence [{ev.evidence_level.value}, {ev.source_confidence.value}] logged for {ev.hypothesis_id}: {ev.claim}"
-                    + (f" -> FALSIFIED! Blocked {len(blocked_children)} child hypotheses." if ev.falsification_triggered else ""),
-            details={"metric": ev.metric_name, "value": ev.metric_value, "delta": ev.delta_vs_baseline, "falsified": ev.falsification_triggered}
-        ))
+        if emit_trace:
+            self.log_trace(TraceEntry(
+                timestamp=now,
+                action="LOG_EVIDENCE",
+                agent_role="Lead-PI",
+                h_tag=ev.hypothesis_id,
+                summary=f"Evidence [{ev.evidence_level.value}, {ev.source_confidence.value}] logged for {ev.hypothesis_id}: {ev.claim}"
+                        + (f" -> FALSIFIED! Blocked {len(blocked_children)} child hypotheses." if ev.falsification_triggered else ""),
+                details={"metric": ev.metric_name, "value": ev.metric_value, "delta": ev.delta_vs_baseline, "falsified": ev.falsification_triggered}
+            ))
         return ev, blocked_children
 
     def _cascade_falsification(self, falsified_h_id: str) -> List[str]:

@@ -308,6 +308,18 @@ Epires adapts seamlessly to any repository structure:
 # Initialize Epires in the current repository
 epires init [--dir <path>] [--force]
 
+# Diagnostic doctor: verifies MCP tools, SQLite integrity, and agent configuration
+epires doctor
+
+# Bulk ingest historical hypotheses from Markdown, JSON, or JSONL
+epires ingest findings.md [--dry-run] [--upsert]
+
+# Export research graph to portable JSON bundle with SHA256 checksum (for Git/CI)
+epires export [--out research-graph.json] [--format json|jsonl]
+
+# Import research graph from portable JSON bundle
+epires import research-graph.json [--upsert]
+
 # Perform reconnaissance scan on repository topology and domain
 epires recon [--dir <path>]
 
@@ -328,13 +340,17 @@ epires dag
 
 ## 6. Model Context Protocol (MCP) Specification
 
-Epires exposes 11 deterministic MCP tools for AI agents:
+Epires exposes 15 deterministic MCP tools for AI agents:
 
 | MCP Tool | Description |
 | :--- | :--- |
 | `epires_register_hypothesis` | Registers a hypothesis with a priori proof and falsification criteria |
 | `epires_log_evidence` | Logs empirical evidence, metrics, CI95, and cascades falsification |
 | `epires_retract_evidence` | Retracts erroneous evidence, recalculates evidence level, and cascades unblocking |
+| `epires_update_hypothesis` | Explicitly updates hypothesis status (REFINED, PAUSED), target level, tags, or text |
+| `epires_bulk_import` | Ingests a batch of hypotheses and evidence claims in a single fast transaction |
+| `epires_export_graph` | Exports entire research memory to portable versioned JSON with SHA256 checksum |
+| `epires_import_graph` | Reproducibly imports research graph bundle from JSON |
 | `epires_query_graph` | Queries hypotheses by ID or status (CONFIRMED, FALSIFIED, BLOCKED) |
 | `epires_find_gaps` | Discovers untested combinations and research white spots in VSA hypergraph |
 | `epires_associative_search` | Sub-millisecond VSA cosine similarity search across the research graph |
@@ -352,7 +368,7 @@ The engine is verified using **property-based fuzz testing** powered by `hypothe
 
 ```bash
 pytest -v
-============================== 30 passed in 3.66s ==============================
+============================== 34 passed in 3.93s ==============================
 ```
 
 ### Verified Mathematical Invariants:
