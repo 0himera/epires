@@ -27,9 +27,15 @@ from .hypergraph import HypergraphEncoder
 
 
 class EpiresStore:
-    def __init__(self, db_path: str | Path = ".epires/hypotheses.db", vsa_dim: int = 10000):
+    def __init__(
+        self,
+        db_path: str | Path = ".epires/hypotheses.db",
+        vsa_dim: int = 10000,
+        trace_md_path: Optional[str | Path] = "docs/agent-trace.md"
+    ):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.trace_md_path = Path(trace_md_path) if trace_md_path else None
         self.vsa = BipolarVSA(dim=vsa_dim)
         self.encoder = HypergraphEncoder(self.vsa)
         self._init_db()
@@ -391,14 +397,24 @@ class EpiresStore:
     # Evidence & Cascading Falsification
     # -------------------------------------------------------------------------
     def log_evidence(self, ev: EvidenceClaim, emit_trace: bool = True) -> Tuple[EvidenceClaim, List[str]]:
-        """Logs an empirical evidence claim and cascades falsification/promotion."""
+        """Logs an empirical evidence claim to an immutable append-only ledger and cascades falsification/promotion."""
         now = self._now()
         ev.timestamp = ev.timestamp or now
         blocked_children: List[str] = []
 
+        # Epistemic rigor validation: Positive E4 promotion requires confidence intervals
+        if not ev.falsification_triggered and ev.evidence_level == EvidenceLevel.E4:
+            if ev.ci_95_lower is None or ev.ci_95_upper is None:
+                raise ValueError("Evidence level E4 requires 95% confidence intervals (ci_95_lower and ci_95_upper).")
+
         with self._get_connection() as conn:
+            # Check duplicate ID for strict append-only immutability
+            existing = conn.execute("SELECT id FROM evidence WHERE id = ?", (ev.id,)).fetchone()
+            if existing:
+                raise ValueError(f"Evidence claim '{ev.id}' already exists in ledger. Evidence records are immutable and append-only.")
+
             conn.execute("""
-            INSERT OR REPLACE INTO evidence (
+            INSERT INTO evidence (
                 id, hypothesis_id, evidence_level, source_confidence,
                 claim, metric_name, metric_value, delta_vs_baseline,
                 ci_95_lower, ci_95_upper, falsification_triggered,
@@ -820,10 +836,19 @@ class EpiresStore:
         return results
 
     def find_gaps(self, gq: GapQuery) -> List[Dict[str, Any]]:
-        """Finds under-explored or untested entity combinations (White Spots / Gaps in research)."""
+        """Finds under-explored or untested entity combinations (White Spots / Gaps in research).
+        
+        Distinguishes mere conceptual hypotheses from empirically tested combinations.
+        """
         all_h = self.list_hypotheses()
         tested_combinations: Dict[Tuple[str, ...], int] = {}
+        hypothesized_combinations: Dict[Tuple[str, ...], int] = {}
         dimension_values: Dict[str, set[str]] = {dim: set() for dim in gq.dimensions}
+
+        # Cache evidence and experiment counts per hypothesis
+        with self._get_connection() as conn:
+            ev_counts = {r["hypothesis_id"]: r["c"] for r in conn.execute("SELECT hypothesis_id, COUNT(*) as c FROM evidence GROUP BY hypothesis_id").fetchall()}
+            exp_counts = {r["hypothesis_id"]: r["c"] for r in conn.execute("SELECT hypothesis_id, COUNT(*) as c FROM experiments GROUP BY hypothesis_id").fetchall()}
 
         for h in all_h:
             ent_map: Dict[str, str] = {
@@ -837,7 +862,12 @@ class EpiresStore:
             # Check if hypothesis covers all requested dimensions
             if all(dim in ent_map for dim in gq.dimensions):
                 combo = tuple(ent_map[dim] for dim in gq.dimensions)
-                tested_combinations[combo] = tested_combinations.get(combo, 0) + 1
+                hypothesized_combinations[combo] = hypothesized_combinations.get(combo, 0) + 1
+                
+                # An entity combination is considered empirically tested if it has evidence/experiments
+                empirical_weight = ev_counts.get(h.id, 0) + exp_counts.get(h.id, 0)
+                if empirical_weight > 0 or h.status in {HypothesisStatus.CONFIRMED, HypothesisStatus.FALSIFIED}:
+                    tested_combinations[combo] = tested_combinations.get(combo, 0) + max(1, empirical_weight)
 
         # Compute Cartesian product of seen dimension values
         import itertools
@@ -845,12 +875,14 @@ class EpiresStore:
 
         gaps: List[Dict[str, Any]] = []
         for combo in all_combos:
-            count = tested_combinations.get(combo, 0)
-            if count < gq.min_tested:
+            tested_count = tested_combinations.get(combo, 0)
+            hypo_count = hypothesized_combinations.get(combo, 0)
+            if tested_count < gq.min_tested:
                 gaps.append({
                     "combination": {dim: val for dim, val in zip(gq.dimensions, combo)},
-                    "tested_count": count,
-                    "status": "UNTESTED" if count == 0 else "UNDER_TESTED"
+                    "tested_count": tested_count,
+                    "hypothesized_count": hypo_count,
+                    "status": "UNTESTED" if tested_count == 0 else "UNDER_TESTED"
                 })
         return gaps
 
@@ -865,6 +897,27 @@ class EpiresStore:
             INSERT INTO traces (timestamp, action, agent_role, h_tag, summary, details_json)
             VALUES (?, ?, ?, ?, ?, ?)
             """, (entry.timestamp, entry.action, entry.agent_role, entry.h_tag, entry.summary, json.dumps(entry.details)))
+
+        # Append to docs/agent-trace.md for real-time Markdown synchronization
+        if self.trace_md_path and self.trace_md_path.parent.exists():
+            try:
+                if not self.trace_md_path.exists():
+                    header = (
+                        "# Agent Trace & Epistemic Log\n\n"
+                        "> Automated operational ledger for multisession persistence, evidence promotion, "
+                        "and cascading falsification audits.\n\n"
+                        "| Timestamp (UTC) | Role | Action | H-Tag | Commit | Summary |\n"
+                        "|---|---|---|---|---|---|\n"
+                    )
+                    self.trace_md_path.write_text(header, encoding="utf-8")
+
+                h_col = f"`{entry.h_tag}`" if entry.h_tag else "—"
+                clean_summary = entry.summary.replace("|", "/")
+                row = f"| {entry.timestamp} | `{entry.agent_role}` | **{entry.action}** | {h_col} | `local` | {clean_summary} |\n"
+                with open(self.trace_md_path, "a", encoding="utf-8") as f:
+                    f.write(row)
+            except Exception:
+                pass
 
     def list_traces(self, limit: int = 50) -> List[TraceEntry]:
         with self._get_connection() as conn:
