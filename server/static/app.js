@@ -24,6 +24,7 @@
     config: {},
     hypotheses: [],
     traces: [],
+    artifacts: [],
     gaps: [],
     selectedHypothesisId: null,
     activeFilter: 'ALL',
@@ -94,6 +95,7 @@
     tabButtons: document.querySelectorAll('.m-tab'),
     tabContents: document.querySelectorAll('.tab-pane'),
     tabBadgeTraces: document.getElementById('tab-badge-traces'),
+    tabBadgeArtifacts: document.getElementById('tab-badge-artifacts'),
     tabBadgeGaps: document.getElementById('tab-badge-gaps'),
     filterButtons: document.querySelectorAll('.f-pill'),
     inspectorEmpty: document.getElementById('inspector-empty'),
@@ -107,12 +109,18 @@
     insParents: document.getElementById('ins-parents'),
     insLedgerCount: document.getElementById('ins-ledger-count'),
     insEvidenceList: document.getElementById('ins-evidence-list'),
+    insArtifactCount: document.getElementById('ins-artifact-count'),
+    insArtifactCountPill: document.getElementById('ins-artifact-count-pill'),
+    insArtifactsList: document.getElementById('ins-artifacts-list'),
     btnCopyId: document.getElementById('btn-copy-id'),
     btnFocusNode: document.getElementById('btn-focus-node'),
     btnFilterTraces: document.getElementById('btn-filter-traces'),
     tracesStreamContainer: document.getElementById('traces-stream-container'),
     tracesCountText: document.getElementById('traces-count-text'),
     tracesSearch: document.getElementById('traces-search'),
+    artifactsStreamContainer: document.getElementById('artifacts-stream-container'),
+    artifactsCountText: document.getElementById('artifacts-count-text'),
+    artifactsSearch: document.getElementById('artifacts-search'),
     gapsMatrixContainer: document.getElementById('gaps-matrix-container'),
     btnOpenSearch: document.getElementById('btn-open-search'),
     searchModal: document.getElementById('search-modal'),
@@ -526,10 +534,11 @@
     try {
       setSyncState('loading');
 
-      const [configResult, hypoResult, tracesResult, gapsResult, snapshotResult, stratigraphyResult, coverageResult, provenanceResult] = await Promise.all([
+      const [configResult, hypoResult, tracesResult, artifactsResult, gapsResult, snapshotResult, stratigraphyResult, coverageResult, provenanceResult] = await Promise.all([
         fetchEndpoint('/config'),
         fetchEndpoint('/hypotheses'),
         fetchEndpoint('/traces?limit=100'),
+        fetchEndpoint('/artifacts'),
         fetchEndpoint('/gaps', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -548,6 +557,7 @@
         config: configResult,
         hypotheses: hypoResult,
         traces: tracesResult,
+        artifacts: artifactsResult,
         gaps: gapsResult,
         snapshot: snapshotResult,
         stratigraphy: stratigraphyResult,
@@ -572,6 +582,7 @@
       const configRes = configResult.data;
       const hypoRes = hypoResult.data;
       const tracesRes = tracesResult.data;
+      const artifactsRes = artifactsResult.data;
       const gapsRes = gapsResult.data;
       const snapshotRes = snapshotResult.data;
       const stratigraphyRes = stratigraphyResult.data;
@@ -588,10 +599,11 @@
       state.hypotheses = hypoResult.available ? asArray(hypoRes) : snapshotHypotheses;
       state.traces = tracesResult.available ? asArray(tracesRes) : snapshotTraces;
       state.gaps = gapsResult.available ? asArray(gapsRes) : snapshotGaps;
+      state.provenance = provenanceResult.available ? (provenanceRes || {}) : {};
+      state.artifacts = artifactsResult.available ? asArray(artifactsRes && artifactsRes.artifacts) : ((state.provenance && state.provenance.artifact_files) || []);
       state.relations = asArray(state.atlasSnapshot.relations);
       state.stratigraphy = stratigraphyResult.available ? asArray(stratigraphyRes && (stratigraphyRes.events || stratigraphyRes.items || stratigraphyRes)) : [];
       state.coverage = coverageResult.available ? (coverageRes || {}) : {};
-      state.provenance = provenanceResult.available ? (provenanceRes || {}) : {};
       state.evidenceByHypothesis.clear();
       hydrateSnapshotEvidence(state.atlasSnapshot);
 
@@ -599,6 +611,7 @@
       updateKPISummary();
       renderDAG();
       renderTraces();
+      renderArtifactsStream();
       renderGaps();
       renderAtlasViews();
 
@@ -613,6 +626,7 @@
 
       // Update badge counts on tabs
       if (dom.tabBadgeTraces) dom.tabBadgeTraces.textContent = state.traces.length;
+      if (dom.tabBadgeArtifacts) dom.tabBadgeArtifacts.textContent = state.artifacts.length;
       if (dom.tabBadgeGaps) dom.tabBadgeGaps.textContent = state.gaps.length;
     } catch (err) {
       console.error('Epires fetch error:', err);
@@ -1675,32 +1689,43 @@
         });
       }
 
-      // 4. Associated Research Artifact Files from Provenance
-      const artFiles = (state.provenance && state.provenance.artifact_files) || [];
+      // 5. Associated Research Artifact Files
+      const artFiles = state.artifacts.length > 0 ? state.artifacts : ((state.provenance && state.provenance.artifact_files) || []);
       const idClean = String(id).toLowerCase().replace(/[^a-z0-9]/g, '');
       const numMatch = id.match(/\d+/);
-      const numStr = numMatch ? numMatch[0] : '';
+      const numStr = numMatch ? String(parseInt(numMatch[0], 10)) : '';
+      const numStrPadded = numMatch ? numMatch[0] : '';
+
       const matchedArts = artFiles.filter(a => {
         const nameClean = a.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-        return nameClean.includes(idClean) || (numStr.length >= 3 && nameClean.includes(numStr));
+        const pathClean = String(a.path || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        return nameClean.includes(idClean) ||
+               pathClean.includes(idClean) ||
+               (numStrPadded.length >= 2 && (nameClean.includes(`vsar${numStrPadded}`) || pathClean.includes(`vsar${numStrPadded}`))) ||
+               (numStr.length >= 1 && (nameClean.includes(`h${numStr}`) || nameClean.includes(`vsar${numStr}`)));
       });
 
-      if (matchedArts.length > 0) {
-        const artSection = makeElement('div', 'ledger-artifacts-section');
-        artSection.appendChild(makeElement('div', 'ledger-section-title', `RESEARCH ARTIFACTS (${matchedArts.length})`));
-        const artList = makeElement('div', 'ledger-artifact-chips');
-        matchedArts.forEach(art => {
-          const chip = makeElement('a', 'ledger-artifact-chip');
-          chip.href = `/artifacts/${encodeURIComponent(art.rel_path || art.name)}`;
-          chip.target = '_blank';
-          chip.rel = 'noopener';
-          chip.title = `View artifact ${art.name} (${Math.round(art.size_bytes / 1024)} KB)`;
-          chip.appendChild(makeElement('span', 'art-icon', '📄'));
-          chip.appendChild(makeElement('span', 'art-name', art.name));
-          artList.appendChild(chip);
-        });
-        artSection.appendChild(artList);
-        dom.insEvidenceList.appendChild(artSection);
+      if (dom.insArtifactCount) dom.insArtifactCount.textContent = matchedArts.length;
+      if (dom.insArtifactCountPill) dom.insArtifactCountPill.textContent = matchedArts.length;
+      if (dom.insArtifactsList) {
+        clearElement(dom.insArtifactsList);
+        if (matchedArts.length === 0) {
+          dom.insArtifactsList.appendChild(makeElement('div', 'empty-artifacts-note', 'No specimen-specific artifact matching this ID.'));
+        } else {
+          matchedArts.forEach(art => {
+            const chip = makeElement('a', 'ledger-artifact-chip');
+            chip.href = `/artifacts/${encodeURIComponent(art.path || art.rel_path || art.name)}`;
+            chip.target = '_blank';
+            chip.rel = 'noopener';
+            chip.title = `View ${art.name} (${Math.round((art.size_bytes || 0) / 1024)} KB)`;
+            chip.appendChild(makeElement('span', 'art-icon', '📄'));
+            chip.appendChild(makeElement('span', 'art-name', art.name));
+            if (art.size_bytes) {
+              chip.appendChild(makeElement('span', 'art-size', `${Math.round(art.size_bytes / 1024)} KB`));
+            }
+            dom.insArtifactsList.appendChild(chip);
+          });
+        }
       }
     } catch (err) {
       if (inspectorGeneration !== state.inspectorGeneration) return;
@@ -1719,6 +1744,55 @@
         dom.insEvidenceList.appendChild(makeElement('div', 'empty-evidence', 'Empirical ledger unavailable for this specimen.'));
       }
     }
+  }
+
+  // --------------------------------------------------------------------------
+  // Research Artifacts Stream & Library
+  // --------------------------------------------------------------------------
+  function renderArtifactsStream() {
+    if (!dom.artifactsStreamContainer) return;
+    const container = dom.artifactsStreamContainer;
+    const filter = (dom.artifactsSearch && dom.artifactsSearch.value || '').trim().toLowerCase();
+
+    const filtered = state.artifacts.filter(art => {
+      if (!filter) return true;
+      return String(art.name || '').toLowerCase().includes(filter) ||
+             String(art.path || '').toLowerCase().includes(filter);
+    });
+
+    if (dom.artifactsCountText) {
+      dom.artifactsCountText.textContent = `${filtered.length} files`;
+    }
+
+    clearElement(container);
+    if (filtered.length === 0) {
+      container.appendChild(makeElement('div', 'empty-evidence', state.artifacts.length === 0 ? 'No artifacts discovered in project.' : 'No artifacts match search filter.'));
+      return;
+    }
+
+    filtered.forEach(art => {
+      const card = makeElement('a', 'artifact-stream-card');
+      card.href = `/artifacts/${encodeURIComponent(art.path || art.rel_path || art.name)}`;
+      card.target = '_blank';
+      card.rel = 'noopener';
+
+      const topRow = makeElement('div', 'artifact-card-top');
+      const isMd = art.name.endsWith('.md');
+      const isJson = art.name.endsWith('.json');
+      const extTag = isMd ? 'MARKDOWN' : (isJson ? 'JSON' : 'FILE');
+      topRow.appendChild(makeElement('span', `artifact-ext-tag ${extTag.toLowerCase()}`, extTag));
+      if (art.size_bytes) {
+        topRow.appendChild(makeElement('span', 'artifact-size-tag', `${Math.round(art.size_bytes / 1024)} KB`));
+      }
+      card.appendChild(topRow);
+
+      card.appendChild(makeElement('div', 'artifact-card-title', art.name));
+      if (art.path && art.path !== art.name) {
+        card.appendChild(makeElement('div', 'artifact-card-path', art.path));
+      }
+
+      container.appendChild(card);
+    });
   }
 
   // --------------------------------------------------------------------------
@@ -2046,6 +2120,9 @@
 
     dom.btnRefresh.addEventListener('click', () => syncDataIfChanged(true));
     dom.tracesSearch.addEventListener('input', renderTraces);
+    if (dom.artifactsSearch) {
+      dom.artifactsSearch.addEventListener('input', renderArtifactsStream);
+    }
 
     // Command Palette Events
     if (dom.btnOpenSearch) {

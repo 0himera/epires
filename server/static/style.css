@@ -1020,6 +1020,85 @@ body.editorial-body {
 
 .ledger-artifact-chip .art-name {
   font-weight: 500;
+  flex: 1;
+}
+
+.ledger-artifact-chip .art-size {
+  color: var(--ink-muted);
+  font-size: 0.62rem;
+}
+
+.empty-artifacts-note {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--ink-muted);
+  font-style: italic;
+  padding: 0.4rem 0.2rem;
+}
+
+.artifact-stream-card {
+  background: var(--bg-plate-subtle);
+  border: 1px solid var(--rule-crisp);
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+
+.artifact-stream-card:hover {
+  background: var(--bg-plate);
+  border-color: var(--ink-primary);
+}
+
+.artifact-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.artifact-ext-tag {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 2px;
+  background: var(--bg-surface);
+  color: var(--ink-secondary);
+  border: 1px solid var(--rule-crisp);
+}
+
+.artifact-ext-tag.markdown {
+  color: var(--pastel-in-progress-ink);
+  background: var(--pastel-in-progress-bg);
+}
+
+.artifact-ext-tag.json {
+  color: var(--pastel-confirmed-ink);
+  background: var(--pastel-confirmed-bg);
+}
+
+.artifact-size-tag {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--ink-muted);
+}
+
+.artifact-card-title {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--ink-primary);
+  word-break: break-all;
+}
+
+.artifact-card-path {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  color: var(--ink-muted);
+  word-break: break-all;
 }
 
 /* --------------------------------------------------------------------------

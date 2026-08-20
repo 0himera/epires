@@ -156,6 +156,7 @@
         <div class="monograph-tabs">
           <button class="m-tab active" data-tab="inspector">DOSSIER</button>
           <button class="m-tab" data-tab="traces">TRACES <span class="tab-count-badge" id="tab-badge-traces">0</span></button>
+          <button class="m-tab" data-tab="artifacts">ARTIFACTS <span class="tab-count-badge" id="tab-badge-artifacts">0</span></button>
           <button class="m-tab" data-tab="gaps">WHITE SPOTS <span class="tab-count-badge" id="tab-badge-gaps">0</span></button>
         </div>
 
@@ -195,6 +196,7 @@
               <a href="#sec-falsification" class="anchor-pill">§2 BOUNDARY</a>
               <a href="#sec-parents" class="anchor-pill">§3 DAG</a>
               <a href="#sec-ledger" class="anchor-pill">§4 LEDGER (<span id="ins-ledger-count">0</span>)</a>
+              <a href="#sec-artifacts" class="anchor-pill">§5 ARTIFACTS (<span id="ins-artifact-count-pill">0</span>)</a>
             </div>
 
             <!-- Monograph Section §1 -->
@@ -222,6 +224,14 @@
                 <!-- Dynamically populated table/cards -->
               </div>
             </div>
+
+            <!-- Monograph Section §5: Associated Research Artifacts -->
+            <div class="dossier-block" id="sec-artifacts">
+              <span class="block-lbl">§ 5.0 ASSOCIATED RESEARCH ARTIFACTS (<span id="ins-artifact-count">0</span>)</span>
+              <div class="ledger-artifact-chips" id="ins-artifacts-list">
+                <!-- Dynamically populated artifact chips -->
+              </div>
+            </div>
           </div>
         </div>
 
@@ -234,7 +244,16 @@
           <div class="trace-list" id="traces-stream-container"></div>
         </div>
 
-        <!-- Tab 3: White Spot Gaps Analysis -->
+        <!-- Tab 3: Research Artifacts Library -->
+        <div class="tab-pane" id="tab-artifacts">
+          <div class="trace-search-box">
+            <input type="text" id="artifacts-search" placeholder="Filter research artifacts by name, metric, or hypothesis..." class="clean-input">
+            <span class="trace-badge" id="artifacts-count-text">0 files</span>
+          </div>
+          <div class="trace-list" id="artifacts-stream-container"></div>
+        </div>
+
+        <!-- Tab 4: White Spot Gaps Analysis -->
         <div class="tab-pane" id="tab-gaps">
           <div class="gaps-info">
             <h3>Cartesian White Spot Analysis</h3>
