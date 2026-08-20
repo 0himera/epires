@@ -41,7 +41,9 @@
 
 Большинство существующих инструментов автоматизации исследований (Weco CLI, AIDE, Karpathy AutoResearch) оперируют в парадигме **«жадного линейного поиска»**:
 
-$$\text{Code} \xrightarrow{\text{LLM Mutation}} \text{New Code} \xrightarrow{\text{Eval Script}} \text{Scalar Metric} \xrightarrow{\text{Keep or Revert}} \dots$$
+$$
+\text{Code} \xrightarrow{\text{LLM Mutation}} \text{New Code} \xrightarrow{\text{Eval Script}} \text{Scalar Metric} \xrightarrow{\text{Keep or Revert}} \dots
+$$
 
 Для сложных междисциплинарных и квант-задач такой подход оказывается неэффективным по фундаментальным причинам:
 1. **Иллюзия прогресса и Reward Hacking**: агент переобучается на локальные валидационные окна, читерит на сидах и разрушает архитектуру ради мимолетного улучшения скаляра.
@@ -167,19 +169,34 @@ Epires содержит встроенный наблюдательный исс
 
 В традиционных графовых базах данных (Neo4j, RDF) сложный эксперимент распадается на изолированные триплеты $(A \to B)$, теряя целостность контекста. В Epires используется концепция **Hypergraph-as-a-Vector** (наследие HSME и архитектур Kanerva SDM):
 
-Каждый эксперимент или гипотеза кодируется как **гиперребро** в единый биполярный вектор $\mathbf{v} \in \{-1, +1\}^D$ размерности $D = 10\,000$ с помощью трех фундаментальных операций:
+Каждый эксперимент или гипотеза кодируется как **гиперребро** в единый биполярный вектор $\mathbf{v} \in \{-1, +1\}^D$ размерности $D = 10{,}000$ с помощью трех фундаментальных операций:
 
 1. **Bind ($\otimes$)**: Поэлементное умножение, связывающее роль со значением:
-   $$\mathbf{v}_{\text{bound}} = \mathbf{v}_{\text{role}} \odot \mathbf{v}_{\text{value}}$$
-   *Свойство*: операция обратима $\mathbf{v}_{\text{bound}} \odot \mathbf{v}_{\text{role}} = \mathbf{v}_{\text{value}}$ и ортогональна обоим операндам.
+
+$$
+\mathbf{v}_{\text{bound}} = \mathbf{v}_{\text{role}} \odot \mathbf{v}_{\text{value}}
+$$
+
+*Свойство*: операция обратима ($\mathbf{v}_{\text{bound}} \odot \mathbf{v}_{\text{role}} = \mathbf{v}_{\text{value}}$) и ортогональна обоим операндам.
+
 2. **Permute ($\sigma$)**: Циклический сдвиг вектора для кодирования направленности связей:
-   $$\mathbf{v}_{\text{edge}} = \mathbf{v}_{\text{src}} \odot \mathbf{v}_{\text{rel}} \odot \sigma^k(\mathbf{v}_{\text{tgt}})$$
+
+$$
+\mathbf{v}_{\text{edge}} = \mathbf{v}_{\text{src}} \odot \mathbf{v}_{\text{rel}} \odot \sigma^k(\mathbf{v}_{\text{tgt}})
+$$
+
 3. **Bundle ($\oplus$)**: Мажоритарное голосование для упаковки множества сущностей в один вектор:
-   $$\mathbf{v}_{\text{hyperedge}} = \text{sign}\left(\sum_{i=1}^M \mathbf{v}_i\right)$$
+
+$$
+\mathbf{v}_{\text{hyperedge}} = \operatorname{sign}\left(\sum_{i=1}^M \mathbf{v}_i\right)
+$$
 
 #### Gap Analysis (Поиск белых пятен)
 Через операцию проекции в гипервекторном пространстве Epires вычисляет неисследованные декартовы комбинации параметров:
-$$\text{Gaps} = \left(\mathcal{M}_{\text{models}} \times \mathcal{F}_{\text{features}} \times \mathcal{R}_{\text{regimes}}\right) \setminus \mathcal{E}_{\text{tested}}$$
+
+$$
+\text{Gaps} = (\mathcal{M}_{\text{models}} \times \mathcal{F}_{\text{features}} \times \mathcal{R}_{\text{regimes}}) \setminus \mathcal{E}_{\text{tested}}
+$$
 
 ---
 
@@ -276,8 +293,8 @@ graph TD
 
 Движок адаптируется под любую структуру репозитория:
 
-* **Mode A: Чистый репозиторий**: опрос пользователя о домене и метрике $\to$ генерация чистых директорий $\to$ создание `.epires/config.json` $\to$ готовность к первой гипотезе $H_0$.
-* **Mode B: Существующий репозиторий**: эвристический скан $\to$ выявление существующих документов и логов $\to$ диалог с пользователем $\to$ сохранение утвержденных путей в конфиг $\to$ векторизация старых гипотез в VSA-граф.
+* **Mode A: Чистый репозиторий**: опрос пользователя о домене и метрике ➔ генерация чистых директорий ➔ создание `.epires/config.json` ➔ готовность к первой гипотезе $H_0$.
+* **Mode B: Существующий репозиторий**: эвристический скан ➔ выявление существующих документов и логов ➔ диалог с пользователем ➔ сохранение утвержденных путей в конфиг ➔ векторизация старых гипотез в VSA-граф.
 
 ---
 

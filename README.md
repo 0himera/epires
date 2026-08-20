@@ -42,7 +42,9 @@
 
 Current automated research and coding agents (e.g., vanilla Autoresearch, AIDE, naive Keep-or-Revert loops) typically follow a **greedy linear search loop**:
 
-$$\text{Code} \xrightarrow{\text{LLM Mutation}} \text{New Code} \xrightarrow{\text{Eval Script}} \text{Scalar Metric} \xrightarrow{\text{Keep or Revert}} \dots$$
+$$
+\text{Code} \xrightarrow{\text{LLM Mutation}} \text{New Code} \xrightarrow{\text{Eval Script}} \text{Scalar Metric} \xrightarrow{\text{Keep or Revert}} \dots
+$$
 
 When applied to serious scientific ML, quantitative finance, or complex systems, this paradigm suffers from critical failure modes:
 1. **Reward Hacking & Horizon Truncation**: Agents overfit to local validation windows, cherry-pick random seeds, and introduce technical debt to maximize a transient scalar.
@@ -168,19 +170,34 @@ Epires includes a built-in real-time observational research atlas accessible at 
 
 In traditional graph databases (Neo4j, RDF), an experiment is fractured across dozens of binary relations $(A \to B)$, losing structural integrity. Epires implements **Hypergraph-as-a-Vector** (inspired by HSME and Kanerva SDM memory architectures):
 
-Each hypothesis or experiment is encoded as an **n-ary hyperedge** into a single bipolar hypervector $\mathbf{v} \in \{-1, +1\}^D$ ($D = 10,000$) using three algebraic operations:
+Each hypothesis or experiment is encoded as an **n-ary hyperedge** into a single bipolar hypervector $\mathbf{v} \in \{-1, +1\}^D$ ($D = 10{,}000$) using three algebraic operations:
 
 1. **Bind ($\otimes$)**: Element-wise multiplication binding roles to values:
-   $$\mathbf{v}_{\text{bound}} = \mathbf{v}_{\text{role}} \odot \mathbf{v}_{\text{value}}$$
-   *Property*: Reversible ($\mathbf{v}_{\text{bound}} \odot \mathbf{v}_{\text{role}} = \mathbf{v}_{\text{value}}$) and quasi-orthogonal to both inputs.
+
+$$
+\mathbf{v}_{\text{bound}} = \mathbf{v}_{\text{role}} \odot \mathbf{v}_{\text{value}}
+$$
+
+*Property*: Reversible ($\mathbf{v}_{\text{bound}} \odot \mathbf{v}_{\text{role}} = \mathbf{v}_{\text{value}}$) and quasi-orthogonal to both inputs.
+
 2. **Permute ($\sigma$)**: Cyclic vector permutation encoding relation directionality:
-   $$\mathbf{v}_{\text{edge}} = \mathbf{v}_{\text{src}} \odot \mathbf{v}_{\text{rel}} \odot \sigma^k(\mathbf{v}_{\text{tgt}})$$
+
+$$
+\mathbf{v}_{\text{edge}} = \mathbf{v}_{\text{src}} \odot \mathbf{v}_{\text{rel}} \odot \sigma^k(\mathbf{v}_{\text{tgt}})
+$$
+
 3. **Bundle ($\oplus$)**: Majority voting bundling multiple entities and relations into a single composite representation:
-   $$\mathbf{v}_{\text{hyperedge}} = \text{sign}\left(\sum_{i=1}^M \mathbf{v}_i\right)$$
+
+$$
+\mathbf{v}_{\text{hyperedge}} = \operatorname{sign}\left(\sum_{i=1}^M \mathbf{v}_i\right)
+$$
 
 #### Automated Gap Discovery
 Using algebraic projections in the hypervector space, Epires computes unstudied Cartesian product combinations across dimensions:
-$$\text{Gaps} = \left(\mathcal{M}_{\text{models}} \times \mathcal{F}_{\text{features}} \times \mathcal{R}_{\text{regimes}}\right) \setminus \mathcal{E}_{\text{tested}}$$
+
+$$
+\text{Gaps} = (\mathcal{M}_{\text{models}} \times \mathcal{F}_{\text{features}} \times \mathcal{R}_{\text{regimes}}) \setminus \mathcal{E}_{\text{tested}}
+$$
 
 ---
 
@@ -277,8 +294,8 @@ The `AutoTracer` module eliminates manual logging overhead. Every tool call and 
 
 Epires adapts seamlessly to any repository structure:
 
-* **Mode A: Clean / Empty Repositories**: Interactive user interview $\to$ directory scaffolding $\to$ `.epires/config.json` initialization $\to$ ready for baseline hypothesis $H_0$.
-* **Mode B: Existing / Custom Repositories**: Topology reconnaissance $\to$ dynamic path & metric inference $\to$ interactive user alignment $\to$ path binding in `.epires/config.json` and `AGENTS.md` $\to$ historical hypothesis ingestion.
+* **Mode A: Clean / Empty Repositories**: Interactive user interview ➔ directory scaffolding ➔ `.epires/config.json` initialization ➔ ready for baseline hypothesis $H_0$.
+* **Mode B: Existing / Custom Repositories**: Topology reconnaissance ➔ dynamic path & metric inference ➔ interactive user alignment ➔ path binding in `.epires/config.json` and `AGENTS.md` ➔ historical hypothesis ingestion.
 
 ---
 
