@@ -1,4 +1,4 @@
-"""FastAPI Application for Epires Research Engine & Cybernetic Web Dashboard."""
+"""FastAPI Application for Epires Research Engine & Web Dashboard."""
 
 from __future__ import annotations
 from datetime import datetime, timezone
@@ -61,7 +61,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     app = FastAPI(
         title="Epires Research Engine",
         version="0.1.0",
-        description="Minimalist Cybernetic Research Engine: VSA Hypergraph, Hypothesis Falsification DAG & Automated Tracing"
+        description="Deterministic Research Engine: VSA Hypergraph, Hypothesis Falsification DAG & Automated Tracing"
     )
 
     app.add_middleware(

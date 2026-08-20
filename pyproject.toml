@@ -1,7 +1,7 @@
 [project]
 name = "epires"
 version = "0.1.0"
-description = "Minimalist Cybernetic Auto-Research Harness: VSA Hypergraph, Hypothesis Falsification DAG, Automated Tracing & MCP"
+description = "Deterministic Auto-Research Harness: VSA Hypergraph, Hypothesis Falsification DAG, Automated Tracing & MCP"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

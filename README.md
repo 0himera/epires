@@ -1,4 +1,4 @@
-# Epires — Minimalist Cybernetic Auto-Research Harness
+# Epires — Deterministic Auto-Research Harness
 
 > 🇷🇺 Русская версия доступна в [README_RU.md](README_RU.md).
 
@@ -49,7 +49,7 @@ When applied to serious scientific ML, quantitative finance, or complex systems,
 2. **Loss of Epistemic Memory**: The system fails to understand *why* a mutation succeeded and discards the valuable search-space reduction provided by negative results.
 3. **Flat Code Mutations vs Causal DAGs**: Experiments are treated as isolated text diffs rather than a structured causal graph of interconnected theoretical hypotheses.
 
-**Epires** addresses this by providing an end-to-end cybernetic auto-research harness integrating **Vector Symbolic Architectures (VSA)**, **Hypothesis Dependency DAGs**, and **automated epistemic gatekeeping**.
+**Epires** addresses this by providing an end-to-end auto-research harness integrating **Vector Symbolic Architectures (VSA)**, **Hypothesis Dependency DAGs**, and **automated epistemic gatekeeping**.
 
 ---
 
@@ -94,7 +94,7 @@ python main.py init
 # 1. Start the MCP Server for AI coding assistants (Cursor, Claude Code, Antigravity):
 python main.py mcp
 
-# 2. Start the FastAPI REST API Server & Cybernetic Web Dashboard (open http://localhost:8000 in your browser):
+# 2. Start the FastAPI REST API Server & Web Dashboard (open http://localhost:8000 in your browser):
 python main.py serve --port 8000
 
 # 3. Inspect research status and generate Mermaid DAG in the terminal:
@@ -124,8 +124,8 @@ python main.py dag
               │                        │                      │
               ▼                        ▼                      ▼
 ┌─────────────────────────┐  ┌───────────────────┐  ┌───────────────────┐
-│   .epires/hypotheses.db │  │ docs/agent-trace  │  │ Cybernetic Atlas  │
-│   (SQLite + VSA Vectors)│  │ (Audit Trail)     │  │ (Web Dashboard UI)│
+│   .epires/hypotheses.db │  │ docs/agent-trace  │  │ Research Atlas UI │
+│   (SQLite + VSA Vectors)│  │ (Audit Trail)     │  │ (Web Dashboard)   │
 └─────────────────────────┘  └───────────────────┘  └───────────────────┘
 ```
 
@@ -137,14 +137,14 @@ python main.py dag
 * `epires_core/tracer.py` — Automated logger syncing actions between SQLite and `docs/agent-trace.md`.
 * `epires_core/config.py` — Dynamic project configuration (`.epires/config.json`) and heuristic topology scanner.
 * `tools/web_search.py` — Multi-query literature and web search gateway powered by `parallel-web 1.3.0` SDK.
-* `server/app.py` — FastAPI REST API & Cybernetic Web Dashboard backend (CRUD, Gap Analysis, Stratigraphy, Provenance, WebSockets).
-* `server/static/` — Cybernetic Research Atlas SPA frontend (interactive DAG visualizer, dossier, timeline, artifacts explorer).
+* `server/app.py` — FastAPI REST API & Web Dashboard backend (CRUD, Gap Analysis, Stratigraphy, Provenance, WebSockets).
+* `server/static/` — Research Atlas SPA frontend (interactive DAG visualizer, dossier, timeline, artifacts explorer).
 * `server/mcp_server.py` — FastMCP server exposing 10 research tools to AI agents.
 * `skills/epires_researcher/SKILL.md` — Cognitive protocol and operational standard for the Lead Principal Investigator.
 
 ---
 
-### 🌐 Cybernetic Research Atlas (Web Dashboard)
+### 🌐 Research Atlas (Web Dashboard)
 
 Epires includes a built-in real-time observational research atlas accessible at `http://localhost:8000`:
 

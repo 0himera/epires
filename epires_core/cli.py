@@ -244,7 +244,7 @@ def setup_flow(target_ide: str = "all", project_dir: str = ".") -> None:
 def main():
     parser = argparse.ArgumentParser(
         prog="epires",
-        description="Epires: Minimalist Cybernetic Auto-Research Harness"
+        description="Epires: Deterministic Auto-Research Harness"
     )
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 

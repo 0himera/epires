@@ -1,4 +1,4 @@
-# Epires — Minimalist Cybernetic Auto-Research Harness (Русская версия)
+# Epires — Детерминированный Auto-Research харнесс (Русская версия)
 
 > 🌐 English version is available at [README.md](README.md).
 
@@ -91,7 +91,7 @@ python main.py init
 # 1. Запуск MCP-сервера для AI-агентов (Cursor / Claude Code / Antigravity):
 python main.py mcp
 
-# 2. Запуск REST API сервера и Кибернетического Веб-Дашборда (откройте http://localhost:8000 в браузере):
+# 2. Запуск REST API сервера и Веб-Дашборда (откройте http://localhost:8000 в браузере):
 python main.py serve --port 8000
 
 # 3. Просмотр статуса лаборатории и Mermaid DAG в терминале:
@@ -121,8 +121,8 @@ python main.py dag
               │                        │                      │
               ▼                        ▼                      ▼
 ┌─────────────────────────┐  ┌───────────────────┐  ┌───────────────────┐
-│   .epires/hypotheses.db │  │ docs/agent-trace  │  │ Cybernetic Atlas  │
-│   (SQLite + VSA Vectors)│  │ (Audit Trail)     │  │ (Web Dashboard UI)│
+│   .epires/hypotheses.db │  │ docs/agent-trace  │  │ Research Atlas UI │
+│   (SQLite + VSA Vectors)│  │ (Audit Trail)     │  │ (Web Dashboard)   │
 └─────────────────────────┘  └───────────────────┘  └───────────────────┘
 ```
 
@@ -134,14 +134,14 @@ python main.py dag
 * `epires_core/tracer.py` — автоматический трейсер для регистрации решений в SQLite и генерации `docs/agent-trace.md`.
 * `epires_core/config.py` — динамический конфиг проекта (`.epires/config.json`) и эвристический сканер топологии.
 * `tools/web_search.py` — многопоточный поисковый шлюз на базе SDK `parallel-web 1.3.0`.
-* `server/app.py` — бэкенд FastAPI REST API и Кибернетического Веб-Дашборда (CRUD, Gap Analysis, Стратиграфия, Provenance, WebSockets).
-* `server/static/` — фронтенд Cybernetic Research Atlas SPA (интерактивный визуализатор DAG, досье, таймлайн, просмотрщик артефактов).
+* `server/app.py` — бэкенд FastAPI REST API и Веб-Дашборда (CRUD, Gap Analysis, Стратиграфия, Provenance, WebSockets).
+* `server/static/` — фронтенд Research Atlas SPA (интерактивный визуализатор DAG, досье, таймлайн, просмотрщик артефактов).
 * `server/mcp_server.py` — FastMCP сервер инструментов для AI-агентов (10 детерминированных инструментов).
 * `skills/epires_researcher/SKILL.md` — протокол Главного Исследователя (Lead-PI).
 
 ---
 
-### 🌐 Cybernetic Research Atlas (Веб-Дашборд)
+### 🌐 Research Atlas (Веб-Дашборд)
 
 Epires содержит встроенный наблюдательный исследовательский атлас реального времени, доступный по адресу `http://localhost:8000`:
 
