@@ -50,8 +50,8 @@
   --svg-edge-stroke: rgba(0, 0, 0, 0.18);
   --svg-edge-highlight: #121316;
 
-  --font-mono: "IBM Plex Mono", "SF Mono", monospace;
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  --font-mono: "Geist Mono", "IBM Plex Mono", "SF Mono", monospace;
+  --font-sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
 }
 
 [data-theme="noir"] {
