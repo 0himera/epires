@@ -68,7 +68,6 @@
     hdrTaskDesc: document.getElementById('hdr-task-desc'),
     dotTask: document.getElementById('dot-task'),
     hdrProjectDomain: document.getElementById('hdr-project-domain'),
-    headerRecordState: document.getElementById('header-record-state'),
     btnThemeToggle: document.getElementById('btn-theme-toggle'),
     themeLabel: document.getElementById('theme-label'),
     btnRefresh: document.getElementById('btn-refresh'),
@@ -271,56 +270,157 @@
   }
 
   // --------------------------------------------------------------------------
-  // Specimen docket geometry: one precise archival form for every hypothesis.
-  // Identity comes from the record, status and evidence ruler—not random shape.
+  // Procedural Organic Voronoi Pebble Geometry (6 Clean Facet Profiles)
   // --------------------------------------------------------------------------
-  function getSpecimenDocketGeometry(w = 270, h = 100, inset = 0) {
-    const smallCut = Math.max(8, 14 - inset * 0.45);
-    const largeCut = Math.max(22, 32 - inset * 0.45);
-    const left = inset;
-    const top = inset;
-    const right = w - inset;
-    const bottom = h - inset;
-    const points = [
-      [left + smallCut, top],
-      [right - largeCut, top],
-      [right, top + largeCut],
-      [right, bottom - smallCut],
-      [right - smallCut, bottom],
-      [left + smallCut, bottom],
-      [left, bottom - smallCut],
-      [left, top + smallCut]
-    ];
-    return createFilletedPolygonPath(points, inset ? 3 : 5);
+  function getVoronoiPebbleGeometry(id, w = 270, h = 100) {
+    let hash = 0;
+    const str = String(id || '');
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+    }
+    const variant = hash % 6;
+
+    let rawOuter;
+    switch (variant) {
+      case 0: // Smooth Pebble Hexagon
+        rawOuter = [[28, 0], [w - 28, 0], [w, h * 0.48], [w - 24, h], [24, h], [0, h * 0.52]];
+        break;
+      case 1: // Organic Facet with Asymmetric Shoulder
+        rawOuter = [[18, 0], [w - 36, 0], [w, h * 0.38], [w - 18, h], [32, h], [0, h * 0.65]];
+        break;
+      case 2: // Elongated Voronoi Capsule-Diamond
+        rawOuter = [[34, 0], [w - 18, 0], [w, h * 0.6], [w - 32, h], [16, h], [0, h * 0.4]];
+        break;
+      case 3: // Slanted Crystallographic Pebble
+        rawOuter = [[30, 0], [w, 0], [w - 16, h * 0.5], [w - 30, h], [0, h], [16, h * 0.5]];
+        break;
+      case 4: // Soft Rounded Pentagonal Lobe
+        rawOuter = [[20, 0], [w - 20, 0], [w, h * 0.55], [w - 26, h], [12, h], [0, h * 0.45]];
+        break;
+      case 5: // Curved Isogrid Facet
+      default:
+        rawOuter = [[14, 0], [w - 30, 0], [w, h * 0.45], [w - 16, h], [24, h], [0, h * 0.55]];
+        break;
+    }
+
+    return createFilletedPolygonPath(rawOuter, 16);
   }
 
-  function evidenceLevelNumber(value) {
-    const parsed = Number.parseInt(String(value || 'E0').replace(/^E/i, ''), 10);
-    return Number.isFinite(parsed) ? Math.max(0, Math.min(5, parsed)) : 0;
-  }
+  // --------------------------------------------------------------------------
+  // Animated Vector-Memory Calibration Instrument Canvas
+  // --------------------------------------------------------------------------
+  function initHeaderFieldAnimation() {
+    const canvas = document.getElementById('header-matrix-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const width = 184;
+    const height = 42;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
 
-  function specimenStatusSymbol(status) {
-    return {
-      PROPOSED: '?',
-      IN_PROGRESS: '~',
-      CONFIRMED: '+',
-      FALSIFIED: '×',
-      BLOCKED: '∥',
-      REFINED: '↗'
-    }[status] || '·';
-  }
+    const count = 22;
+    const nodes = [];
+    for (let i = 0; i < count; i++) {
+      const theta = (i / count) * Math.PI * 2;
+      const phi = Math.acos((i / (count - 1)) * 2 - 1);
+      nodes.push({ theta, phi, radius: 13 + (i % 3) * 2, speed: 0.007 + (i % 4) * 0.003 });
+    }
 
-  function renderNodeEvidenceRuler(currentLevel, targetLevel) {
-    const current = evidenceLevelNumber(currentLevel);
-    const target = evidenceLevelNumber(targetLevel);
-    return Array.from({ length: 6 }, (_, index) => {
-      const isTarget = index === target;
-      const className = `node-evidence-tick${index <= current ? ' reached' : ''}${isTarget ? ' target' : ''}`;
-      const x = 205 + index * 7.5;
-      const y = isTarget ? 81 : 84;
-      const height = isTarget ? 9 : 5;
-      return `<rect class="${className}" x="${x}" y="${y}" width="4" height="${height}" />`;
-    }).join('');
+    let angle = 0;
+    let scanX = 0;
+    let isHovered = false;
+
+    canvas.addEventListener('mouseenter', () => { isHovered = true; });
+    canvas.addEventListener('mouseleave', () => { isHovered = false; });
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+      const isNoir = document.documentElement.getAttribute('data-theme') === 'noir';
+      const primaryColor = isNoir ? '244, 243, 238' : '18, 19, 22';
+      const accentColor = isNoir ? '52, 211, 153' : '5, 150, 105';
+
+      const cx = width / 2;
+      const cy = height / 2;
+      angle += isHovered ? 0.028 : 0.012;
+      scanX = (scanX + 0.6) % (width + 40);
+
+      // Projected 3D points
+      const projected = nodes.map((n) => {
+        const currentTheta = n.theta + angle * n.speed * 40;
+        const x3d = n.radius * Math.sin(n.phi) * Math.cos(currentTheta);
+        const y3d = n.radius * Math.cos(n.phi);
+        const z3d = n.radius * Math.sin(n.phi) * Math.sin(currentTheta);
+
+        const pitch = 0.32;
+        const yRot = y3d * Math.cos(pitch) - z3d * Math.sin(pitch);
+        const zRot = y3d * Math.sin(pitch) + z3d * Math.cos(pitch);
+
+        const scale = 1 / (1 - zRot / 55);
+        const px = cx + x3d * scale;
+        const py = cy + yRot * scale;
+        const depthAlpha = Math.max(0.18, Math.min(0.85, (zRot + 16) / 32));
+
+        return { x: px, y: py, z: zRot, alpha: depthAlpha };
+      });
+
+      // Filaments between nearby nodes
+      ctx.lineWidth = 0.65;
+      for (let i = 0; i < projected.length; i++) {
+        for (let j = i + 1; j < projected.length; j++) {
+          const dx = projected[i].x - projected[j].x;
+          const dy = projected[i].y - projected[j].y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 25) {
+            const edgeAlpha = (1 - dist / 25) * projected[i].alpha * projected[j].alpha * 0.5;
+            ctx.strokeStyle = `rgba(${primaryColor}, ${edgeAlpha})`;
+            ctx.beginPath();
+            ctx.moveTo(projected[i].x, projected[i].y);
+            ctx.lineTo(projected[j].x, projected[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Sweeping scanline effect
+      const curScan = scanX - 20;
+      if (curScan >= 0 && curScan <= width) {
+        const grad = ctx.createLinearGradient(curScan - 10, 0, curScan + 10, 0);
+        grad.addColorStop(0, `rgba(${accentColor}, 0)`);
+        grad.addColorStop(0.5, `rgba(${accentColor}, 0.22)`);
+        grad.addColorStop(1, `rgba(${accentColor}, 0)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(curScan - 10, 3, 20, height - 6);
+
+        ctx.strokeStyle = `rgba(${accentColor}, 0.6)`;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(curScan, 5);
+        ctx.lineTo(curScan, height - 5);
+        ctx.stroke();
+      }
+
+      // Nodes
+      projected.forEach(p => {
+        ctx.fillStyle = `rgba(${primaryColor}, ${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.z > 0 ? 1.3 : 0.85, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Subtle registration ticks
+      ctx.strokeStyle = `rgba(${primaryColor}, 0.22)`;
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(10, cy); ctx.lineTo(18, cy);
+      ctx.moveTo(width - 18, cy); ctx.lineTo(width - 10, cy);
+      ctx.stroke();
+
+      requestAnimationFrame(draw);
+    }
+
+    requestAnimationFrame(draw);
   }
 
   // --------------------------------------------------------------------------
@@ -808,20 +908,6 @@
         if (dom.dotTask) dom.dotTask.style.display = 'none';
       }
     }
-
-    // Persisted record totals replace the synthetic "research phase" label.
-    if (dom.headerRecordState) {
-      const summary = state.atlasSnapshot.summary || {};
-      // These state lists already encode primary-feed authority and snapshot
-      // fallback, so their displayed totals cannot disagree with the views.
-      const hypothesesTotal = state.hypotheses.length;
-      const tracesTotal = state.traces.length;
-      const snapshotAvailable = !(state.endpointStatus.snapshot && state.endpointStatus.snapshot.available === false);
-      const evidenceTotal = snapshotAvailable
-        ? (summary.evidence_total ?? [...state.evidenceByHypothesis.values()].reduce((total, rows) => total + rows.length, 0))
-        : '—';
-      dom.headerRecordState.textContent = `${hypothesesTotal} SPECIMENS · ${evidenceTotal} EVIDENCE · ${tracesTotal} TRACES`;
-    }
   }
 
   // --------------------------------------------------------------------------
@@ -1058,7 +1144,7 @@
       gEdges.appendChild(path);
     });
 
-    // 2. Archival specimen docket nodes
+    // 2. Generative Voronoi Pebble Specimen Nodes
     filteredNodes.forEach(node => {
       const pos = state.nodePositions.get(node.id);
       if (!pos) return;
@@ -1077,29 +1163,17 @@
       gNode.setAttribute('aria-label', `${node.id}: ${node.title}. ${node.status}, ${node.current_evidence_level || 'E0'}. Open dossier.`);
       gNode.dataset.id = node.id;
 
-      const platePath = getSpecimenDocketGeometry(NODE_WIDTH, NODE_HEIGHT);
-      const innerPath = getSpecimenDocketGeometry(NODE_WIDTH, NODE_HEIGHT, 7);
-      const titleLinesSVG = formatBalancedTitleSVG(node.title, 202, 30, 49, 2);
+      const pebblePath = getVoronoiPebbleGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
+      const titleLinesSVG = formatBalancedTitleSVG(node.title, 218, 24, 48, 2);
       const currentLevel = node.current_evidence_level || 'E0';
       const targetLevel = node.target_evidence_level || 'E3';
-      const evidenceRuler = renderNodeEvidenceRuler(currentLevel, targetLevel);
-      const statusSymbol = specimenStatusSymbol(node.status);
 
       gNode.innerHTML = `
-        <path class="node-plate" d="${platePath}" />
-        <path class="node-status-band" d="M7 76H263V82L252 93H18L7 82Z" />
-        <path class="node-inner-frame" d="${innerPath}" />
-        <path class="node-status-rail" d="M7 20V73" />
-        <path class="node-header-rule" d="M18 33H235" />
-        <path class="node-selection-ticks" d="M1 17V1H17 M226 1H237L269 33V44 M269 72V85L254 99H241 M29 99H15L1 85V72" />
-
-        <text class="node-id" x="28" y="23">${escapeSvgText(node.id)}</text>
-        <text class="node-level" x="230" y="23" text-anchor="end">${escapeSvgText(currentLevel)} / ${escapeSvgText(targetLevel)}</text>
+        <path class="node-plate" d="${pebblePath}" />
+        <text class="node-id" x="24" y="24">${escapeSvgText(node.id)}</text>
+        <text class="node-level" x="${NODE_WIDTH - 24}" y="24" text-anchor="end">${escapeSvgText(currentLevel)} / ${escapeSvgText(targetLevel)}</text>
         ${titleLinesSVG}
-        <rect class="node-status-key" x="19" y="79" width="15" height="14" />
-        <text class="node-status-symbol" x="26.5" y="90" text-anchor="middle">${escapeSvgText(statusSymbol)}</text>
-        <text class="node-status-text" x="40" y="90">${escapeSvgText(node.status)}</text>
-        <g class="node-evidence-ruler" aria-hidden="true">${evidenceRuler}</g>
+        <text class="node-status-text" x="24" y="84">[ ${escapeSvgText(node.status || 'PROPOSED')} ]</text>
       `;
 
       gNode.addEventListener('mousedown', (e) => {
@@ -1118,6 +1192,7 @@
     // 3. Optional White Spot Ghost Nodes
     if (state.showGhosts) {
       state.gaps.slice(0, 4).forEach((gap, idx) => {
+        const ghostId = `GHOST-${idx + 1}`;
         const ghostX = 60 + idx * (NODE_WIDTH + GAP_X);
         const ghostY = 380;
 
@@ -1125,23 +1200,18 @@
         gGhost.setAttribute('class', 'dag-node-group ghost-node');
         gGhost.setAttribute('transform', `translate(${ghostX}, ${ghostY})`);
 
-        const platePath = getSpecimenDocketGeometry(NODE_WIDTH, NODE_HEIGHT);
-        const innerPath = getSpecimenDocketGeometry(NODE_WIDTH, NODE_HEIGHT, 7);
+        const pebblePath = getVoronoiPebbleGeometry(ghostId, NODE_WIDTH, NODE_HEIGHT);
         const gapTitle = JSON.stringify(gap.combination || gap).substring(0, 32);
 
         gGhost.innerHTML = `
-          <path class="node-plate" d="${platePath}" />
-          <path class="node-status-band" d="M7 76H263V82L252 93H18L7 82Z" />
-          <path class="node-inner-frame" d="${innerPath}" />
-          <path class="node-status-rail" d="M7 20V73" />
-          <path class="node-header-rule" d="M18 33H235" />
-          <text class="node-id" x="28" y="23">WHITE SPOT / GAP</text>
-          <text class="node-ghost-title" x="30" y="55">${escapeSvgText(gapTitle)}</text>
-          <rect class="node-status-key" x="19" y="79" width="15" height="14" />
-          <text class="node-status-symbol" x="26.5" y="90" text-anchor="middle">□</text>
-          <text class="node-status-text" x="40" y="90">UNDECLARED</text>
+          <path class="node-plate" d="${pebblePath}" />
+          <text class="node-id" x="24" y="24">⚡ WHITE SPOT GAP</text>
+          <text class="node-ghost-title" x="24" y="52">${escapeSvgText(gapTitle)}</text>
+          <text class="node-status-text" x="24" y="84">[ UNTESTED COMBINATION ]</text>
         `;
         gViewport.appendChild(gGhost);
+      });
+    }
       });
     }
 
@@ -1572,6 +1642,7 @@
   function init() {
     applyTheme(state.theme);
     initNoiseShader();
+    initHeaderFieldAnimation();
     setupPanZoom();
 
     dom.tabButtons.forEach(btn => {

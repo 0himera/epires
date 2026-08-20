@@ -31,32 +31,13 @@
         </div>
       </div>
 
-      <!-- Zone 2: a quiet vector-memory calibration instrument. -->
+      <!-- Zone 2: Animated vector-memory calibration instrument with particle wave & scanline effects -->
       <div class="header-research-field" aria-hidden="true">
-        <svg class="research-field-glyph" viewBox="0 0 184 44" focusable="false">
-          <defs>
-            <clipPath id="research-field-aperture">
-              <ellipse cx="92" cy="22" rx="50" ry="17" />
-            </clipPath>
-          </defs>
-          <path class="field-guide" d="M7 22H42M142 22H177" />
-          <path class="field-registration" d="M7 17V27M177 17V27" />
-          <ellipse class="field-shell" cx="92" cy="22" rx="50" ry="17" />
-          <g class="field-lattice" clip-path="url(#research-field-aperture)">
-            <path d="M42 10Q92 17 142 10M42 16Q92 19 142 16M42 22H142M42 28Q92 25 142 28M42 34Q92 27 142 34" />
-            <path d="M57 7Q72 22 57 37M74 5Q83 22 74 39M92 4V40M110 5Q101 22 110 39M127 7Q112 22 127 37" />
-          </g>
-          <g class="field-scan" clip-path="url(#research-field-aperture)">
-            <rect x="42" y="4" width="9" height="36" />
-            <path d="M46.5 4V40" />
-          </g>
-          <circle class="field-core" cx="92" cy="22" r="2.2" />
-          <path class="field-axis-ticks" d="M92 2V6M92 38V42" />
-        </svg>
+        <canvas id="header-matrix-canvas" class="research-field-canvas" width="184" height="42"></canvas>
         <span class="research-field-label">VECTOR MEMORY FIELD / LIVE CALIBRATION</span>
       </div>
 
-      <!-- Zone 3: record controls and a JS-bindable live-state placeholder. -->
+      <!-- Zone 3: Record controls (unified height buttons, no clutter) -->
       <div class="header-right">
         <div class="header-actions">
           <button class="hdr-ctrl-btn cmd-k-btn" id="btn-open-search" title="Search Specimens (⌘K / Ctrl+K)">
@@ -76,7 +57,6 @@
             <span class="sync-timestamp" id="sync-time-text" aria-live="polite">--:--</span>
           </div>
         </div>
-        <span class="header-record-state" id="header-record-state" aria-live="polite">RECORD / AWAITING SYNC</span>
       </div>
     </header>
 
@@ -104,7 +84,6 @@
 
       <div class="kpi-cell kpi-spectrum-cell">
         <div class="ladder-header-row">
-          <span class="kpi-lbl">EVIDENCE MATURITY (POPPER LADDER)</span>
           <span class="ladder-hint" id="ladder-active-hint">Hover to inspect Popperian criteria</span>
         </div>
         <div class="spectrum-pills" id="evidence-spectrum">
@@ -158,14 +137,14 @@
           <section class="atlas-mode-view" id="atlas-view-ledger" data-atlas-view="ledger" role="tabpanel" aria-labelledby="atlas-tab-ledger" hidden>
             <div class="atlas-view-heading">
               <span class="block-lbl">PLATE 03 / EVIDENCE LEDGER</span>
-              <span class="atlas-view-note" id="ledger-summary">Comparative evidence by specimen.</span>
+              <span class="atlas-view-note" id="ledger-summary">Waiting for evidence ledger synthesis.</span>
             </div>
-            <div class="ledger-atlas-table-wrap" id="ledger-atlas-container" aria-live="polite"></div>
+            <div class="ledger-atlas-container" id="ledger-atlas-container" aria-live="polite"></div>
           </section>
           <section class="atlas-mode-view" id="atlas-view-coverage" data-atlas-view="coverage" role="tabpanel" aria-labelledby="atlas-tab-coverage" hidden>
             <div class="atlas-view-heading">
-              <span class="block-lbl">PLATE 04 / COVERAGE MATRIX</span>
-              <span class="atlas-view-note" id="coverage-summary">Basis: hypothesis-entity declarations · Model × Feature × Regime.</span>
+              <span class="block-lbl">PLATE 04 / PARAMETER COVERAGE MATRIX</span>
+              <span class="atlas-view-note" id="coverage-summary">Waiting for cartesian parameter sweep analysis.</span>
             </div>
             <div class="coverage-atlas-container" id="coverage-atlas-container" aria-live="polite"></div>
           </section>
@@ -175,13 +154,13 @@
       <!-- Right Stage: Clean Monograph Dossier -->
       <aside class="monograph-section">
         <div class="monograph-tabs">
-          <button class="m-tab active" id="tab-inspector-button" data-tab="inspector" role="tab" aria-controls="tab-inspector" aria-selected="true">DOSSIER</button>
-          <button class="m-tab" id="tab-traces-button" data-tab="traces" role="tab" aria-controls="tab-traces" aria-selected="false">TRACES <span class="tab-count-badge" id="tab-badge-traces">0</span></button>
-          <button class="m-tab" id="tab-gaps-button" data-tab="gaps" role="tab" aria-controls="tab-gaps" aria-selected="false">WHITE SPOTS <span class="tab-count-badge" id="tab-badge-gaps">0</span></button>
+          <button class="m-tab active" data-tab="inspector">DOSSIER</button>
+          <button class="m-tab" data-tab="traces">TRACES <span class="tab-count-badge" id="tab-badge-traces">0</span></button>
+          <button class="m-tab" data-tab="gaps">WHITE SPOTS <span class="tab-count-badge" id="tab-badge-gaps">0</span></button>
         </div>
 
         <!-- Tab 1: Specimen Dossier -->
-        <div class="tab-pane active" id="tab-inspector" role="tabpanel" aria-labelledby="tab-inspector-button">
+        <div class="tab-pane active" id="tab-inspector">
           <div id="inspector-empty" class="dossier-empty">
             <div class="empty-wireframe-icon">
               <div class="inner-sq"></div>
@@ -193,18 +172,21 @@
           <div id="inspector-body" class="dossier-filled" style="display: none;">
             <!-- Specimen Header & Quick Action Bar -->
             <div class="specimen-card-top">
-              <div class="spec-action-bar">
-                <button class="spec-action-btn" id="btn-copy-id" title="Copy ID to clipboard">COPY ID</button>
-                <button class="spec-action-btn" id="btn-focus-node" title="Center on graph">FOCUS</button>
-                <button class="spec-action-btn" id="btn-filter-traces" title="View in Traces">TRACES</button>
+              <div class="spec-plate-eyebrow">
+                PLATE / SELECTED SPECIMEN
               </div>
-
               <div class="spec-meta-row">
                 <span class="spec-id" id="ins-id"></span>
                 <span class="spec-badge" id="ins-status"></span>
                 <span class="spec-level-tag" id="ins-level"></span>
               </div>
               <h2 class="spec-title-text" id="ins-title"></h2>
+
+              <div class="spec-action-bar">
+                <button class="spec-action-btn" id="btn-copy-id" title="Copy ID to clipboard">COPY ID</button>
+                <button class="spec-action-btn" id="btn-focus-node" title="Center on graph">FOCUS</button>
+                <button class="spec-action-btn" id="btn-filter-traces" title="View in Traces">TRACES</button>
+              </div>
             </div>
 
             <!-- Sticky Mini Anchor Navigation -->
@@ -244,7 +226,7 @@
         </div>
 
         <!-- Tab 2: Operational Trace Feed -->
-        <div class="tab-pane" id="tab-traces" role="tabpanel" aria-labelledby="tab-traces-button" hidden>
+        <div class="tab-pane" id="tab-traces">
           <div class="trace-search-box">
             <input type="text" id="traces-search" placeholder="Filter operational log..." class="clean-input">
             <span class="trace-badge" id="traces-count-text"></span>
@@ -253,10 +235,10 @@
         </div>
 
         <!-- Tab 3: White Spot Gaps Analysis -->
-        <div class="tab-pane" id="tab-gaps" role="tabpanel" aria-labelledby="tab-gaps-button" hidden>
+        <div class="tab-pane" id="tab-gaps">
           <div class="gaps-info">
             <h3>Cartesian White Spot Analysis</h3>
-            <p>Undeclared hypothesis-entity intersections across domain models and features.</p>
+            <p>Untested parameter intersections across domain models and features.</p>
           </div>
           <div class="gaps-list" id="gaps-matrix-container"></div>
         </div>
@@ -265,14 +247,14 @@
   </div>
 
   <!-- Command Palette / Search Modal (⌘K) -->
-  <div class="cmd-k-modal-overlay" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-modal-title" style="display: none;">
+  <div class="cmd-k-modal-overlay" id="search-modal" style="display: none;">
     <div class="cmd-k-modal-panel">
       <div class="cmd-k-input-row">
-        <span class="cmd-k-search-icon" id="search-modal-title">SEARCH</span>
-        <input type="text" id="cmd-k-input" class="cmd-k-field" placeholder="Search specimens by ID, title, or status..." autocomplete="off" aria-controls="cmd-k-results">
+        <span class="cmd-k-search-icon">🔍</span>
+        <input type="text" id="cmd-k-input" class="cmd-k-field" placeholder="Search specimens by ID, title, or status..." autocomplete="off">
         <kbd class="kbd-pill">ESC</kbd>
       </div>
-      <div class="cmd-k-results-list" id="cmd-k-results" role="listbox" aria-label="Specimen search results">
+      <div class="cmd-k-results-list" id="cmd-k-results">
         <!-- Dynamically populated search items -->
       </div>
     </div>

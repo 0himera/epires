@@ -230,84 +230,33 @@ body.editorial-body {
   font-weight: 400;
 }
 
-/* Zone 2: a vector-memory calibration plate, not a dashboard metric. */
+/* Zone 2: an interactive vector-memory calibration instrument with particle wave & scanline effects. */
 .header-research-field {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.12rem;
+  gap: 0.18rem;
   min-width: 0;
-  padding: 0.1rem 0.85rem;
+  padding: 0.15rem 1.1rem;
   border-left: 1px solid var(--rule-hairline);
   border-right: 1px solid var(--rule-hairline);
 }
 
-.research-field-glyph {
+.research-field-canvas {
   display: block;
-  width: min(100%, 11.5rem);
-  height: 2.35rem;
-  overflow: visible;
-}
-
-.field-guide,
-.field-registration,
-.field-shell,
-.field-lattice path,
-.field-scan path,
-.field-axis-ticks {
-  fill: none;
-  stroke: var(--ink-bluegray);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.field-guide,
-.field-registration,
-.field-axis-ticks {
-  opacity: 0.7;
-}
-
-.field-shell {
-  fill: color-mix(in srgb, var(--bg-plate-subtle) 52%, transparent);
-  stroke: var(--rule-crisp);
-}
-
-.field-lattice {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: research-field-breathe 11s cubic-bezier(0.45, 0, 0.2, 1) infinite;
-}
-
-.field-lattice path {
-  opacity: 0.58;
-}
-
-.field-scan {
-  animation: research-field-scan 12s cubic-bezier(0.36, 0, 0.18, 1) infinite;
-}
-
-.field-scan rect {
-  fill: color-mix(in srgb, var(--ink-olive) 12%, transparent);
-}
-
-.field-scan path {
-  stroke: var(--ink-olive);
-  stroke-width: 1.2;
-}
-
-.field-core {
-  fill: var(--ink-olive);
-  stroke: var(--ink-olive);
+  width: 184px;
+  height: 42px;
 }
 
 .research-field-label {
-  font-family: var(--font-mono);
-  font-size: 0.52rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
   color: var(--ink-muted);
-  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 @keyframes research-field-breathe {
@@ -1154,11 +1103,9 @@ body.editorial-body {
 }
 
 /* --------------------------------------------------------------------------
-   7. SVG Specimen Dockets
+   7. SVG Generative Voronoi Pebble Specimen Nodes
    -------------------------------------------------------------------------- */
 .dag-node-group {
-  --node-status-ink: var(--ink-muted);
-  --node-status-wash: var(--bg-plate-subtle);
   cursor: grab;
   user-select: none;
 }
@@ -1170,78 +1117,47 @@ body.editorial-body {
 .dag-node-group .node-plate {
   fill: var(--svg-node-bg);
   stroke: var(--svg-node-stroke);
-  stroke-width: 1px;
+  stroke-width: 1.1px;
   transition: stroke 0.15s ease, filter 0.15s ease, fill 0.15s ease;
 }
 
-.dag-node-group.status-in-progress {
-  --node-status-ink: var(--ink-ochre);
-  --node-status-wash: color-mix(in srgb, var(--ink-ochre) 7%, var(--svg-node-bg));
+.dag-node-group.falsified .node-plate,
+.dag-node-group.status-falsified .node-plate {
+  fill: var(--pastel-falsified-bg);
+  stroke: var(--pastel-falsified-border);
 }
 
-.dag-node-group.status-confirmed {
-  --node-status-ink: var(--ink-olive);
-  --node-status-wash: color-mix(in srgb, var(--ink-olive) 7%, var(--svg-node-bg));
+.dag-node-group.confirmed .node-plate,
+.dag-node-group.status-confirmed .node-plate {
+  fill: var(--pastel-confirmed-bg);
+  stroke: var(--pastel-confirmed-border);
 }
 
-.dag-node-group.status-falsified {
-  --node-status-ink: var(--ink-rust);
-  --node-status-wash: color-mix(in srgb, var(--ink-rust) 7%, var(--svg-node-bg));
+.dag-node-group.in-progress .node-plate,
+.dag-node-group.status-in-progress .node-plate {
+  fill: var(--pastel-in-progress-bg);
+  stroke: var(--pastel-in-progress-border);
 }
 
-.dag-node-group.status-blocked {
-  --node-status-ink: var(--ink-rust);
-  --node-status-wash: color-mix(in srgb, var(--ink-rust) 4%, var(--svg-node-bg));
+.dag-node-group.ghost-node .node-plate {
+  fill: transparent;
+  stroke: var(--pastel-in-progress-ink);
+  stroke-dasharray: 4 3;
 }
 
-.dag-node-group.status-refined {
-  --node-status-ink: var(--ink-bluegray);
-  --node-status-wash: color-mix(in srgb, var(--ink-bluegray) 7%, var(--svg-node-bg));
+.dag-node-group:hover .node-plate {
+  stroke: var(--svg-node-hover-stroke);
+  stroke-width: 1.5px;
 }
 
-.dag-node-group .node-inner-frame,
-.dag-node-group .node-header-rule,
-.dag-node-group .node-selection-ticks {
-  fill: none;
-  stroke: var(--rule-hairline);
-  stroke-width: 0.8px;
-  pointer-events: none;
-  vector-effect: non-scaling-stroke;
-}
-
-.dag-node-group .node-inner-frame {
-  opacity: 0.78;
-}
-
-.dag-node-group .node-header-rule {
-  stroke: var(--rule-crisp);
-}
-
-.dag-node-group .node-status-band {
-  fill: var(--node-status-wash);
-  stroke: none;
-  pointer-events: none;
-}
-
-.dag-node-group .node-status-rail {
-  fill: none;
-  stroke: var(--node-status-ink);
-  stroke-linecap: square;
-  stroke-width: 3px;
-  pointer-events: none;
-  vector-effect: non-scaling-stroke;
-}
-
-.dag-node-group .node-selection-ticks {
-  opacity: 0;
+.dag-node-group.selected .node-plate {
   stroke: var(--ink-primary);
-  stroke-width: 1.4px;
-  transition: opacity 0.15s ease;
+  stroke-width: 2px;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.08));
 }
 
 .dag-node-group .node-id,
 .dag-node-group .node-level,
-.dag-node-group .node-status-symbol,
 .dag-node-group .node-status-text,
 .dag-node-group .node-ghost-title {
   font-family: var(--font-mono);
@@ -1256,58 +1172,35 @@ body.editorial-body {
 
 .dag-node-group .node-level {
   fill: var(--ink-muted);
-  font-size: 8.5px;
-  font-weight: 700;
+  font-size: 9px;
+  font-weight: 600;
   letter-spacing: 0.04em;
 }
 
-.dag-node-group .node-status-key {
-  fill: var(--svg-node-bg);
-  stroke: var(--node-status-ink);
-  stroke-width: 1px;
-  vector-effect: non-scaling-stroke;
-}
-
-.dag-node-group .node-status-symbol,
 .dag-node-group .node-status-text {
-  fill: var(--node-status-ink);
-  font-size: 8.5px;
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
-.dag-node-group .node-status-symbol {
-  font-size: 10px;
+.dag-node-group.status-falsified .node-status-text,
+.dag-node-group.falsified .node-status-text {
+  fill: var(--pastel-falsified-ink);
 }
 
-.dag-node-group.status-falsified .node-status-text {
-  text-decoration: line-through;
+.dag-node-group.status-confirmed .node-status-text,
+.dag-node-group.confirmed .node-status-text {
+  fill: var(--pastel-confirmed-ink);
 }
 
-.dag-node-group .node-evidence-tick {
-  fill: var(--rule-hairline);
-  stroke: transparent;
-  stroke-width: 0.8px;
-  vector-effect: non-scaling-stroke;
-}
-
-.dag-node-group .node-evidence-tick.reached {
-  fill: var(--ink-bluegray);
-}
-
-.dag-node-group .node-evidence-tick.target {
-  stroke: var(--node-status-ink);
+.dag-node-group.status-in-progress .node-status-text,
+.dag-node-group.in-progress .node-status-text {
+  fill: var(--pastel-in-progress-ink);
 }
 
 .dag-node-group .node-ghost-title {
   fill: var(--ink-secondary);
   font-size: 9.5px;
-}
-
-.dag-node-group.ghost-node .node-plate {
-  fill: transparent;
-  stroke: var(--pastel-in-progress-ink);
-  stroke-dasharray: 4 3;
 }
 
 .dag-node-group.ghost-node {
