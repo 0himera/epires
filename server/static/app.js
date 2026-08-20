@@ -1,6 +1,6 @@
 /**
  * EPIRES HYPERGRAPH ENGINE // CLIENT CONTROLLER
- * Minimalist Archival Paper Theme with Elongated Faceted Honeycomb Polygons & Fluid Architecture
+ * Archival Paper Theme with Procedural Voronoi / Isogrid Crystallographic Facet Geometry
  */
 
 (function () {
@@ -26,10 +26,10 @@
     pollingInterval: null
   };
 
-  // Dimensions for Elongated Faceted Honeycomb Cards
-  const NODE_WIDTH = 290;
+  // Dimensions for Voronoi / Isogrid Facet Cards
+  const NODE_WIDTH = 296;
   const NODE_HEIGHT = 88;
-  const GAP_X = 64;
+  const GAP_X = 60;
   const GAP_Y = 100;
 
   // DOM Elements
@@ -73,6 +73,52 @@
     tracesSearch: document.getElementById('traces-search'),
     gapsMatrixContainer: document.getElementById('gaps-matrix-container')
   };
+
+  // --------------------------------------------------------------------------
+  // Procedural Voronoi / Isogrid Crystallographic Geometry Generator
+  // --------------------------------------------------------------------------
+  function getVoronoiCellGeometry(id, w = 296, h = 88) {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+    }
+    const variant = hash % 6;
+
+    // 6 compatible crystallographic Voronoi & Isogrid facet archetypes
+    switch (variant) {
+      case 0: // Beveled heptagonal isogrid cell (top-left & bottom-right chamfer)
+        return {
+          points: `20,0 ${w - 14},0 ${w},14 ${w},${h - 22} ${w - 22},${h} 14,${h} 0,${h - 14} 0,20`,
+          insetPoints: `22,4 ${w - 16},4 ${w - 4},16 ${w - 4},${h - 24} ${w - 24},${h - 4} 16,${h - 4} 4,${h - 16} 4,22`
+        };
+      case 1: // Angled Voronoi facet (asymmetric 30-deg cut on left wing)
+        return {
+          points: `0,34 26,0 ${w - 18},0 ${w},18 ${w},${h} 26,${h} 0,${h - 26}`,
+          insetPoints: `4,34 28,4 ${w - 20},4 ${w - 4},20 ${w - 4},${h - 4} 28,${h - 4} 4,${h - 28}`
+        };
+      case 2: // Dual-chamfered isogrid diamond facet
+        return {
+          points: `16,0 ${w - 26},0 ${w},26 ${w},${h - 16} ${w - 16},${h} 26,${h} 0,${h - 26} 0,16`,
+          insetPoints: `18,4 ${w - 28},4 ${w - 4},28 ${w - 4},${h - 18} ${w - 18},${h - 4} 28,${h - 4} 4,${h - 28} 4,18`
+        };
+      case 3: // Slanted crystallographic rhombus-hex
+        return {
+          points: `22,0 ${w},0 ${w - 22},${h} 0,${h}`,
+          insetPoints: `24,4 ${w - 6},4 ${w - 24},${h - 4} 6,${h - 4}`
+        };
+      case 4: // Stepped Voronoi cell with cut top-right shelf
+        return {
+          points: `16,0 ${w - 32},0 ${w},32 ${w},${h} 16,${h} 0,${h - 16} 0,16`,
+          insetPoints: `18,4 ${w - 34},4 ${w - 4},34 ${w - 4},${h - 4} 18,${h - 4} 4,${h - 18} 4,18`
+        };
+      case 5: // Asymmetric pentagonal isogrid facet
+      default:
+        return {
+          points: `0,20 20,0 ${w},0 ${w - 16},${h} 16,${h} 0,${h - 20}`,
+          insetPoints: `4,22 22,4 ${w - 6},4 ${w - 18},${h - 4} 18,${h - 4} 4,${h - 22}`
+        };
+    }
+  }
 
   // --------------------------------------------------------------------------
   // Full-Screen Procedural Paper Grain Shader Canvas
@@ -281,7 +327,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // SVG Elongated Faceted Honeycomb DAG Rendering
+  // SVG Voronoi & Isogrid Facet DAG Rendering
   // --------------------------------------------------------------------------
   function renderDAG() {
     const svg = dom.svg;
@@ -339,7 +385,7 @@
       });
     });
 
-    // 2. Elongated Faceted Honeycomb Nodes
+    // 2. Voronoi / Isogrid Facet Nodes
     filteredNodes.forEach(node => {
       const pos = state.nodePositions.get(node.id);
       if (!pos) return;
@@ -361,29 +407,25 @@
       if (isConfirmed) statusColor = 'var(--pastel-confirmed-ink)';
       if (node.status === 'IN_PROGRESS') statusColor = 'var(--pastel-in-progress-ink)';
 
-      // Asymmetric Faceted Hexagonal Honeycomb Polygon Points
-      // (16,0) -> (274,0) -> (290,16) -> (290,72) -> (274,88) -> (16,88) -> (0,72) -> (0,16)
-      const polyPoints = `16,0 ${NODE_WIDTH - 16},0 ${NODE_WIDTH},16 ${NODE_WIDTH},${NODE_HEIGHT - 16} ${NODE_WIDTH - 16},${NODE_HEIGHT} 16,${NODE_HEIGHT} 0,${NODE_HEIGHT - 16} 0,16`;
+      // Generate unique Voronoi/Isogrid polygon geometry for this node
+      const geom = getVoronoiCellGeometry(node.id, NODE_WIDTH, NODE_HEIGHT);
 
       gNode.innerHTML = `
-        <!-- Elongated Faceted Honeycomb Plate -->
-        <polygon class="node-plate" points="${polyPoints}" />
+        <!-- Outer Voronoi Crystallographic Facet Plate -->
+        <polygon class="node-plate" points="${geom.points}" />
 
-        <!-- Subtle Left Accent Ticks -->
-        <line x1="8" y1="20" x2="8" y2="${NODE_HEIGHT - 20}" stroke="var(--rule-hairline)" stroke-width="1.5" />
+        <!-- Inner Isogrid Contour Wireframe -->
+        <polygon class="node-inset" points="${geom.insetPoints}" />
 
         <!-- Header: ID + Level -->
-        <text x="20" y="24" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="13">${node.id}</text>
-        <text x="${NODE_WIDTH - 20}" y="24" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="10" font-weight="600" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
+        <text x="24" y="25" fill="var(--ink-primary)" font-family="IBM Plex Mono" font-weight="700" font-size="13">${node.id}</text>
+        <text x="${NODE_WIDTH - 24}" y="25" fill="var(--ink-muted)" font-family="IBM Plex Mono" font-size="10" font-weight="600" text-anchor="end">${node.current_evidence_level || 'E0'}</text>
 
-        <!-- Divider Line -->
-        <line x1="20" y1="32" x2="${NODE_WIDTH - 20}" y2="32" stroke="var(--rule-hairline)" stroke-width="1" />
-
-        <!-- Title -->
-        <text x="20" y="52" fill="var(--ink-primary)" font-family="Inter" font-size="12.5" font-weight="500">${truncatedTitle}</text>
+        <!-- Clean Title -->
+        <text x="24" y="52" fill="var(--ink-primary)" font-family="Inter" font-size="12.5" font-weight="500">${truncatedTitle}</text>
 
         <!-- Status Tag -->
-        <text x="20" y="73" fill="${statusColor}" font-family="IBM Plex Mono" font-size="10" font-weight="700">[ ${node.status} ]</text>
+        <text x="24" y="73" fill="${statusColor}" font-family="IBM Plex Mono" font-size="10" font-weight="700">[ ${node.status} ]</text>
       `;
 
       // Drag listener

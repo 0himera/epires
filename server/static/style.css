@@ -35,7 +35,7 @@
   --pastel-in-progress-border: rgba(245, 158, 11, 0.35);
 
   --svg-node-bg: #ffffff;
-  --svg-node-stroke: rgba(0, 0, 0, 0.15);
+  --svg-node-stroke: rgba(0, 0, 0, 0.16);
   --svg-node-hover-stroke: #121316;
   --svg-edge-stroke: rgba(0, 0, 0, 0.2);
   --svg-edge-highlight: #121316;
@@ -796,7 +796,7 @@ body.editorial-body {
 }
 
 /* --------------------------------------------------------------------------
-   7. SVG Topological Morphic Nodes (Elongated Faceted Honeycomb Geometry)
+   7. SVG Voronoi & Isogrid Facet Nodes (Crystallographic Geometry)
    -------------------------------------------------------------------------- */
 .dag-node-group {
   cursor: grab;
@@ -812,6 +812,12 @@ body.editorial-body {
   stroke: var(--svg-node-stroke);
   stroke-width: 1px;
   transition: stroke 0.15s ease, filter 0.15s ease, fill 0.15s ease;
+}
+
+.dag-node-group .node-inset {
+  fill: none;
+  stroke: var(--rule-hairline);
+  stroke-width: 1px;
 }
 
 .dag-node-group.falsified .node-plate {
@@ -832,7 +838,7 @@ body.editorial-body {
 .dag-node-group.selected .node-plate {
   stroke: var(--ink-primary);
   stroke-width: 2px;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08));
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.08));
 }
 
 .edge-path {
