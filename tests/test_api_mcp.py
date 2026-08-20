@@ -16,6 +16,11 @@ def test_fastapi_endpoints():
         app = create_app(db_path=db_path, trace_md=trace_path)
         client = TestClient(app)
 
+        # Dashboard SPA
+        resp = client.get("/")
+        assert resp.status_code == 200
+        assert "EPIRES" in resp.text
+
         # Health
         resp = client.get("/health")
         assert resp.status_code == 200

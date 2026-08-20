@@ -1,9 +1,12 @@
-"""FastAPI Application for Epires Research Engine."""
+"""FastAPI Application for Epires Research Engine & Cybernetic Web Dashboard."""
 
 from __future__ import annotations
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from epires_core.models import (
@@ -45,6 +48,21 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     tracer = AutoTracer(store=store, trace_md_path=trace_md)
     web_searcher = ParallelWebSearcher()
 
+    static_dir = Path(__file__).resolve().parent / "static"
+    if static_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+    # -------------------------------------------------------------------------
+    # Web Dashboard SPA
+    # -------------------------------------------------------------------------
+    @app.get("/", response_class=HTMLResponse)
+    @app.get("/dashboard", response_class=HTMLResponse)
+    def serve_dashboard() -> FileResponse:
+        index_file = static_dir / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+        return HTMLResponse("<h1>Epires Research Engine API is running.</h1>")
+
     @app.get("/health")
     def health_check() -> Dict[str, Any]:
         hypotheses = store.list_hypotheses()
@@ -74,7 +92,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     def get_hypothesis_detail(h_id: str) -> Dict[str, Any]:
         h = store.get_hypothesis(h_id)
         if not h:
-            raise HTTPException(status_code=404, detail=f"Hypothesis '{h_id}' not found")
+            raise HTTPException(status_code=404, detail=f"Hypothesis {h_id} not found")
         evidence = store.get_evidence_for_hypothesis(h_id)
         return {
             "hypothesis": h,
@@ -138,10 +156,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
             queries=req.queries,
             objective=req.objective,
             mode=req.mode,
-            max_chars=req.max_chars
+            max_chars=req.max_chars,
         )
 
     return app
-
-
-app = create_app()

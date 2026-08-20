@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EPIRES // Cybernetic Research Control Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Cybernetic Header -->
+    <header class="hud-header">
+      <div class="header-branding">
+        <div class="hud-logo-stamp">
+          <span class="stamp-glyph">⬡</span>
+          <span class="brand-title">EPIRES</span>
+          <span class="brand-sub">RESEARCH HARNESS // VSA HYPERGRAPH</span>
+        </div>
+        <div class="project-pill" id="project-meta">
+          <span class="label">PROJECT:</span>
+          <span class="value" id="project-name">socomputing</span>
+          <span class="separator">/</span>
+          <span class="label">DOMAIN:</span>
+          <span class="value" id="project-domain">Cybernetic AI & VSA</span>
+        </div>
+      </div>
+
+      <div class="header-telemetry">
+        <div class="telemetry-badge">
+          <span class="dot live-pulse"></span>
+          <span class="badge-text" id="live-indicator">SYS: LIVE</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">SUPERPOSITION:</span>
+          <span class="mono-value" id="vsa-capacity-text">C=11 / 500</span>
+          <div class="capacity-bar"><div class="capacity-fill" id="vsa-capacity-bar" style="width: 2.2%;"></div></div>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">FALSIFICATION:</span>
+          <span class="mono-value stat-falsified" id="kpi-falsification-rate">18.2%</span>
+        </div>
+        <button class="hud-btn hud-btn-sm" id="btn-refresh" title="Force Refresh Data">
+          <span class="btn-icon">↻</span> REFRESH
+        </button>
+      </div>
+    </header>
+
+    <!-- KPI Matrix Ribbon -->
+    <section class="kpi-ribbon">
+      <div class="kpi-card" data-filter="ALL">
+        <div class="kpi-header">
+          <span class="kpi-tag">TOTAL HYPOTHESES</span>
+          <span class="corner-tick">⌜</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-number" id="kpi-total">11</span>
+          <span class="kpi-sub">Epistemic nodes</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card-confirmed" data-filter="CONFIRMED">
+        <div class="kpi-header">
+          <span class="kpi-tag">CONFIRMED [E1..E5]</span>
+          <span class="status-indicator confirmed"></span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-number" id="kpi-confirmed">0</span>
+          <span class="kpi-sub">Empirically verified</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card-in-progress" data-filter="IN_PROGRESS">
+        <div class="kpi-header">
+          <span class="kpi-tag">IN PROGRESS</span>
+          <span class="status-indicator in_progress"></span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-number" id="kpi-in-progress">9</span>
+          <span class="kpi-sub">Simulations active</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card-falsified" data-filter="FALSIFIED">
+        <div class="kpi-header">
+          <span class="kpi-tag">FALSIFIED</span>
+          <span class="status-indicator falsified"></span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-number stat-falsified" id="kpi-falsified">2</span>
+          <span class="kpi-sub">Popperian refutations</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card-blocked" data-filter="BLOCKED">
+        <div class="kpi-header">
+          <span class="kpi-tag">CASCADE BLOCKED</span>
+          <span class="status-indicator blocked"></span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-number" id="kpi-blocked">0</span>
+          <span class="kpi-sub">Invalidated branches</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-tag">EVIDENCE SPECTRUM</span>
+          <span class="kpi-code">E0→E5</span>
+        </div>
+        <div class="kpi-body">
+          <div class="evidence-ladder" id="evidence-spectrum">
+            <span class="level-pill active" title="E0: Speculative">E0: 11</span>
+            <span class="level-pill" title="E1: Unit Tested">E1: 0</span>
+            <span class="level-pill" title="E2: Local Replay">E2: 0</span>
+            <span class="level-pill" title="E3: Targeted Eval">E3: 0</span>
+            <span class="level-pill" title="E4: OOT Bootstrap">E4: 0</span>
+            <span class="level-pill" title="E5: Production">E5: 0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Workspace View: Left Canvas + Right Inspector -->
+    <main class="main-workspace">
+      <!-- DAG Canvas Panel -->
+      <section class="dag-panel">
+        <div class="panel-hud-bar">
+          <div class="hud-title-group">
+            <span class="hud-symbol">⌜</span>
+            <h2 class="hud-title">EPISTEMIC DAG CANVAS</h2>
+            <span class="hud-meta">// DIRECTED ACYCLIC HYPERGRAPH</span>
+          </div>
+          <div class="canvas-controls">
+            <div class="filter-pills" id="dag-filter-group">
+              <button class="filter-pill active" data-status="ALL">ALL</button>
+              <button class="filter-pill" data-status="CONFIRMED">CONFIRMED</button>
+              <button class="filter-pill" data-status="IN_PROGRESS">IN_PROGRESS</button>
+              <button class="filter-pill" data-status="FALSIFIED">FALSIFIED</button>
+            </div>
+            <div class="zoom-controls">
+              <button class="icon-btn" id="btn-zoom-in" title="Zoom In">+</button>
+              <button class="icon-btn" id="btn-zoom-out" title="Zoom Out">−</button>
+              <button class="icon-btn" id="btn-zoom-reset" title="Fit to View">⊡</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="canvas-viewport" id="canvas-container">
+          <svg id="dag-svg" class="dag-svg"></svg>
+          <div class="canvas-grid-overlay"></div>
+          <div class="canvas-hud-watermark">
+            <span class="wm-barcode">||| | || ||| || | ||| |||| |</span>
+            <span class="wm-text">VSA SUPERPOSITION FIELD [D=10,000]</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Inspector / Tabs -->
+      <aside class="inspector-panel">
+        <div class="inspector-tabs">
+          <button class="tab-btn active" data-tab="inspector">HYPOTHESIS INSPECTOR</button>
+          <button class="tab-btn" data-tab="traces">AGENT TRACES</button>
+          <button class="tab-btn" data-tab="gaps">WHITE SPOT GAPS</button>
+        </div>
+
+        <!-- Tab 1: Hypothesis Inspector -->
+        <div class="tab-content active" id="tab-inspector">
+          <div id="inspector-empty" class="inspector-placeholder">
+            <div class="ph-glyph">⬡</div>
+            <p class="ph-title">NO HYPOTHESIS SELECTED</p>
+            <p class="ph-desc">Click any node on the Epistemic DAG to inspect its theoretical mechanism, Popperian falsification criteria, and evidence history.</p>
+          </div>
+
+          <div id="inspector-body" class="inspector-details" style="display: none;">
+            <!-- HUD Card Header -->
+            <div class="hud-spec-card">
+              <div class="spec-header">
+                <div class="h-tag-row">
+                  <span class="h-id" id="ins-id">VSAR-004</span>
+                  <span class="status-badge" id="ins-status">IN_PROGRESS</span>
+                  <span class="level-badge" id="ins-level">LEVEL E0</span>
+                </div>
+                <h3 class="spec-title" id="ins-title">Error-feedback delta rule on hypervectors</h3>
+              </div>
+
+              <!-- Cybernetic Feedback Flow Box -->
+              <div class="cybernetic-flow-badge">
+                <div class="flow-step">
+                  <span class="step-lbl">CAUSE</span>
+                  <span class="step-val" id="ins-cause">VSA Superposition</span>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">
+                  <span class="step-lbl">CONDITION</span>
+                  <span class="step-val" id="ins-condition">Widrow-Hoff Error ΔW</span>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">
+                  <span class="step-lbl">RESULT</span>
+                  <span class="step-val" id="ins-result">O(1) Self-Correction</span>
+                </div>
+              </div>
+
+              <!-- A Priori Mechanism -->
+              <div class="spec-section">
+                <div class="sec-label">A PRIORI THEORETICAL MECHANISM</div>
+                <div class="sec-content mono-box" id="ins-mechanism">...</div>
+              </div>
+
+              <!-- Popperian Falsification Criteria -->
+              <div class="spec-section">
+                <div class="sec-label falsification-label">POPPERIAN FALSIFICATION BOUNDARY</div>
+                <div class="sec-content falsification-box" id="ins-falsification">...</div>
+              </div>
+
+              <!-- Dependencies -->
+              <div class="spec-section">
+                <div class="sec-label">DAG DEPENDENCIES</div>
+                <div class="dep-tags" id="ins-parents">None</div>
+              </div>
+
+              <!-- Evidence Claims Ledger -->
+              <div class="spec-section">
+                <div class="sec-label">EMPIRICAL EVIDENCE CLAIMS (<span id="ins-evidence-count">0</span>)</div>
+                <div class="evidence-list" id="ins-evidence-list">
+                  <div class="empty-evidence">No empirical runs recorded yet.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Agent Traces Feed -->
+        <div class="tab-content" id="tab-traces">
+          <div class="traces-header">
+            <span class="traces-count" id="traces-count-text">15 entries recorded</span>
+            <input type="text" id="traces-search" placeholder="Filter by action or H-tag..." class="hud-input hud-input-sm">
+          </div>
+          <div class="traces-stream" id="traces-stream-container">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Tab 3: White Spot Gaps Matrix -->
+        <div class="tab-content" id="tab-gaps">
+          <div class="gaps-header">
+            <p class="gaps-desc">White Spot Gap Analysis discovers unexplored combinations across VSA parameter dimensions.</p>
+            <div class="gaps-controls">
+              <span class="label">DIMENSIONS:</span>
+              <span class="dim-pill active">Model</span>
+              <span class="dim-pill active">Feature</span>
+              <span class="dim-pill active">Regime</span>
+            </div>
+          </div>
+          <div class="gaps-matrix" id="gaps-matrix-container">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
