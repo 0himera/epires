@@ -272,7 +272,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Procedural Organic Asymmetric Voronoi Crystalline Geometry (Sharp Steep Facets)
+  // Procedural Multi-Archetype Voronoi Crystalline Geometry (Distinct Silhouettes & Steep Facets)
   // --------------------------------------------------------------------------
   function createDeterministicPRNG(seedStr) {
     let h = 2166136261 >>> 0;
@@ -289,35 +289,99 @@
 
   function getVoronoiPebbleGeometry(id, w = 270, h = 100) {
     const rand = createDeterministicPRNG(id);
-    // 12 sharp-faceted Voronoi polygon vertices with steep angular cuts
-    const points = [
-      // 1. Top-left shoulder edge
-      [16 + rand() * 12, 0 + rand() * 3],
-      // 2. Top facet crest
-      [w * 0.46 + (rand() - 0.5) * 36, 0 + rand() * 4],
-      // 3. Top-right shoulder edge
-      [w - (16 + rand() * 12), 0 + rand() * 3],
-      // 4. Top-right steep facet cut
-      [w - rand() * 3, 16 + rand() * 12],
-      // 5. Right flank vertex
-      [w - rand() * 4, h * 0.52 + (rand() - 0.5) * 16],
-      // 6. Bottom-right steep facet cut
-      [w - rand() * 3, h - (16 + rand() * 12)],
-      // 7. Bottom-right shoulder edge
-      [w - (16 + rand() * 12), h - rand() * 3],
-      // 8. Bottom facet dip
-      [w * 0.54 + (rand() - 0.5) * 36, h - rand() * 4],
-      // 9. Bottom-left shoulder edge
-      [16 + rand() * 12, h - rand() * 3],
-      // 10. Bottom-left steep facet cut
-      [0 + rand() * 3, h - (16 + rand() * 12)],
-      // 11. Left flank vertex
-      [0 + rand() * 4, h * 0.48 + (rand() - 0.5) * 16],
-      // 12. Top-left steep facet cut
-      [0 + rand() * 3, 16 + rand() * 12]
-    ];
+    const archetype = Math.floor(rand() * 6); // 6 distinct topological cell archetypes
 
-    return createFilletedPolygonPath(points, 7);
+    let points;
+    let filletRadius = 6;
+
+    switch (archetype) {
+      case 0: // 1. Pointed Lateral Hexagon (Sharp lateral apexes & flat crest)
+        points = [
+          [20 + rand() * 10, 0 + rand() * 3],
+          [w * 0.48 + (rand() - 0.5) * 30, 0 + rand() * 3],
+          [w - (20 + rand() * 10), 0 + rand() * 3],
+          [w + rand() * 4, h * 0.5 + (rand() - 0.5) * 12],
+          [w - (20 + rand() * 10), h - rand() * 3],
+          [w * 0.52 + (rand() - 0.5) * 30, h - rand() * 3],
+          [20 + rand() * 10, h - rand() * 3],
+          [0 - rand() * 4, h * 0.5 + (rand() - 0.5) * 12]
+        ];
+        filletRadius = 6;
+        break;
+
+      case 1: // 2. Diagonal Chisel Wedge (Deep bottom-right facet bevel & steep slope)
+        points = [
+          [6 + rand() * 8, 0 + rand() * 3],
+          [w * 0.55 + (rand() - 0.5) * 24, 0 + rand() * 3],
+          [w - (8 + rand() * 8), 0 + rand() * 3],
+          [w + rand() * 3, h * 0.38 + (rand() - 0.5) * 10],
+          [w - (36 + rand() * 14), h - rand() * 3],
+          [w * 0.42 + (rand() - 0.5) * 20, h - rand() * 3],
+          [8 + rand() * 8, h - rand() * 3],
+          [0 + rand() * 3, h * 0.65 + (rand() - 0.5) * 10]
+        ];
+        filletRadius = 6;
+        break;
+
+      case 2: // 3. Slanted Rhomboid / Parallelepiped (Bold 18° shear angle)
+        points = [
+          [22 + rand() * 10, 0 + rand() * 3],
+          [w * 0.55 + (rand() - 0.5) * 24, 0 + rand() * 3],
+          [w + rand() * 3, 0 + rand() * 3],
+          [w - (12 + rand() * 8), h * 0.5 + (rand() - 0.5) * 10],
+          [w - (22 + rand() * 10), h - rand() * 3],
+          [w * 0.42 + (rand() - 0.5) * 24, h - rand() * 3],
+          [0 + rand() * 3, h - rand() * 3],
+          [12 + rand() * 8, h * 0.5 + (rand() - 0.5) * 10]
+        ];
+        filletRadius = 6;
+        break;
+
+      case 3: // 4. Asymmetric Shield with Dual Stepped Chamfers (Top-Left & Bottom-Right)
+        points = [
+          [0 + rand() * 3, 24 + rand() * 8],
+          [24 + rand() * 8, 0 + rand() * 3],
+          [w - (6 + rand() * 6), 0 + rand() * 3],
+          [w + rand() * 3, h * 0.4 + (rand() - 0.5) * 10],
+          [w + rand() * 3, h - (26 + rand() * 8)],
+          [w - (28 + rand() * 8), h - rand() * 3],
+          [8 + rand() * 8, h - rand() * 3],
+          [0 + rand() * 3, h * 0.7 + (rand() - 0.5) * 10]
+        ];
+        filletRadius = 6;
+        break;
+
+      case 4: // 5. Asymmetric Gem Pentagon (Wide top-right bevel & acute flank)
+        points = [
+          [10 + rand() * 8, 0 + rand() * 3],
+          [w * 0.44 + (rand() - 0.5) * 24, 0 + rand() * 3],
+          [w - (34 + rand() * 12), 0 + rand() * 3],
+          [w + rand() * 3, 28 + rand() * 10],
+          [w - (8 + rand() * 6), h - rand() * 3],
+          [w * 0.52 + (rand() - 0.5) * 20, h - rand() * 3],
+          [26 + rand() * 8, h - rand() * 3],
+          [0 + rand() * 3, h * 0.45 + (rand() - 0.5) * 10]
+        ];
+        filletRadius = 7;
+        break;
+
+      case 5: // 6. Tapered Isogrid Prism (Wide top, inward tapered flanks & bottom crest)
+      default:
+        points = [
+          [6 + rand() * 8, 0 + rand() * 3],
+          [w * 0.48 + (rand() - 0.5) * 24, 0 - rand() * 4],
+          [w - (6 + rand() * 8), 0 + rand() * 3],
+          [w - (10 + rand() * 6), h * 0.5 + (rand() - 0.5) * 10],
+          [w - (22 + rand() * 8), h - rand() * 3],
+          [w * 0.52 + (rand() - 0.5) * 20, h + rand() * 4],
+          [22 + rand() * 8, h - rand() * 3],
+          [10 + rand() * 6, h * 0.5 + (rand() - 0.5) * 10]
+        ];
+        filletRadius = 6;
+        break;
+    }
+
+    return createFilletedPolygonPath(points, filletRadius);
   }
 
   // --------------------------------------------------------------------------
