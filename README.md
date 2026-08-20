@@ -94,7 +94,7 @@ python main.py init
 # 1. Start the MCP Server for AI coding assistants (Cursor, Claude Code, Antigravity):
 python main.py mcp
 
-# 2. Start the FastAPI REST API Server:
+# 2. Start the FastAPI REST API Server & Cybernetic Web Dashboard (open http://localhost:8000 in your browser):
 python main.py serve --port 8000
 
 # 3. Inspect research status and generate Mermaid DAG in the terminal:
@@ -110,9 +110,9 @@ python main.py dag
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        LLM Agent / Subagents                           │
 │   (Governed by Cognitive Protocol: skills/epires_researcher)           │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ Model Context Protocol (MCP 2.0)
-                                    ▼
+└───────────────────┬────────────────────────────────┬───────────────────┘
+                    │ Model Context Protocol (MCP)   │ Real-time Delta Stream
+                    ▼                                ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │                    Epires Core & Server Engine                         │
 │                                                                        │
@@ -124,8 +124,8 @@ python main.py dag
               │                        │                      │
               ▼                        ▼                      ▼
 ┌─────────────────────────┐  ┌───────────────────┐  ┌───────────────────┐
-│   .epires/hypotheses.db │  │ docs/agent-trace  │  │ parallel-web 1.3  │
-│   (SQLite + VSA Vectors)│  │ (Audit Trail)     │  │ (Literature Search│
+│   .epires/hypotheses.db │  │ docs/agent-trace  │  │ Cybernetic Atlas  │
+│   (SQLite + VSA Vectors)│  │ (Audit Trail)     │  │ (Web Dashboard UI)│
 └─────────────────────────┘  └───────────────────┘  └───────────────────┘
 ```
 
@@ -137,9 +137,24 @@ python main.py dag
 * `epires_core/tracer.py` — Automated logger syncing actions between SQLite and `docs/agent-trace.md`.
 * `epires_core/config.py` — Dynamic project configuration (`.epires/config.json`) and heuristic topology scanner.
 * `tools/web_search.py` — Multi-query literature and web search gateway powered by `parallel-web 1.3.0` SDK.
-* `server/app.py` — FastAPI REST API (CRUD, Gap Analysis, Mermaid export).
-* `server/mcp_server.py` — FastMCP server exposing 8 research tools to AI agents.
+* `server/app.py` — FastAPI REST API & Cybernetic Web Dashboard backend (CRUD, Gap Analysis, Stratigraphy, Provenance, WebSockets).
+* `server/static/` — Cybernetic Research Atlas SPA frontend (interactive DAG visualizer, dossier, timeline, artifacts explorer).
+* `server/mcp_server.py` — FastMCP server exposing 10 research tools to AI agents.
 * `skills/epires_researcher/SKILL.md` — Cognitive protocol and operational standard for the Lead Principal Investigator.
+
+---
+
+### 🌐 Cybernetic Research Atlas (Web Dashboard)
+
+Epires includes a built-in real-time observational research atlas accessible at `http://localhost:8000`:
+
+* **Live Reactive DAG Visualizer**: Interactive Voronoi pebble cards with Catmull-Rom cubic splines, smart multi-subgraph matrix layout, node dragging, and automatic position persistence.
+* **Monograph Dossier**: Comprehensive 5-section inspection panel featuring theoretical mechanisms, Popperian falsification thresholds, metric delta confidence intervals (CI95), and entity combinations.
+* **Stratigraphy Event Stream**: Complete chronological timeline uniting hypothesis registrations, empirical evidence verdicts, and agent trace entries.
+* **Entity Coverage Grid**: Matrix projection across Cartesian spaces ($\text{Model} \times \text{Feature} \times \text{Regime}$) to instantly spotlight unexplored white spaces.
+* **Provenance Ledger & Artifacts Explorer**: Transparent audit trail mapping citations, code commits, evidence claims, and local filesystem artifacts (`artifacts/`) with direct file viewing.
+* **Zero-Latency WebSocket Sync**: Instant delta broadcast (`/ws`) reflecting agent actions in real time with ultra-low polling fallback (`/atlas/version`).
+* **Design Aesthetic**: Swiss coordinate dot matrix canvas with Bayer ordered dithering and risograph halftone shaders.
 
 ---
 
@@ -293,18 +308,20 @@ python main.py dag
 
 ## 6. Model Context Protocol (MCP) Specification
 
-Epires exposes 8 deterministic MCP tools:
+Epires exposes 10 deterministic MCP tools for AI agents:
 
 | MCP Tool | Description |
 | :--- | :--- |
 | `epires_register_hypothesis` | Registers a hypothesis with a priori proof and falsification criteria |
 | `epires_log_evidence` | Logs empirical evidence, metrics, CI95, and cascades falsification |
 | `epires_query_graph` | Queries hypotheses by ID or status (CONFIRMED, FALSIFIED, BLOCKED) |
-| `epires_find_gaps` | Discovers untested combinations and research white spots |
+| `epires_find_gaps` | Discovers untested combinations and research white spots in VSA hypergraph |
 | `epires_associative_search` | Sub-millisecond VSA cosine similarity search across the research graph |
 | `epires_parallel_web_search`| Multi-query parallel literature/web search via SDK `parallel-web 1.3.0` |
+| `epires_parallel_extract` | Structured full text/markdown extraction from specific URLs |
 | `epires_export_mermaid_dag` | Exports knowledge graph DAG into Mermaid Markdown |
 | `epires_record_trace` | Logs strategic rationale into SQLite traces and Markdown ledger |
+| `epires_system_status` | Returns harness version, database status, and search connectivity |
 
 ---
 
@@ -314,7 +331,7 @@ The engine is verified using **property-based fuzz testing** powered by `hypothe
 
 ```bash
 pytest -v
-============================== 19 passed in 3.10s ==============================
+============================== 29 passed in 3.53s ==============================
 ```
 
 ### Verified Mathematical Invariants:
