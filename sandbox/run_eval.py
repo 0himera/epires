@@ -50,7 +50,7 @@ def run_one(
 ) -> dict:
     from epires_core.store import EpiresStore
 
-    from .metrics import collect
+    from .metrics import collect, grade
 
     mod = load_scenario(scenario)
     rdir = Path(results_dir) if results_dir else RESULTS_DIR
@@ -77,6 +77,7 @@ def run_one(
         if td is not None:
             td.cleanup()
     result["success"] = bool(mod.success(result))
+    result["score"] = round(grade(result, scenario), 2)
     model_tag = ""
     if agent_kind == "opencode":
         model_tag = "__" + os.environ.get("EPIRES_EVAL_MODEL", "unknown").replace("/", "_")
@@ -92,6 +93,7 @@ _COLS = [
     "scenario",
     "variant",
     "success",
+    "score",
     "integrity_gap",
     "n_confirmed",
     "n_falsified",
@@ -106,15 +108,18 @@ def _fmt(v: Any) -> str:
 
 
 def report(results_dir: Optional[str | Path] = None) -> None:
+    from .metrics import grade
+
     rdir = Path(results_dir) if results_dir else RESULTS_DIR
     files = sorted(rdir.glob("*__*.json"))
     if not files:
         print("no results yet — run: python -m sandbox.run_eval --all")
         return
-    widths = [16, 12, 9, 9, 9, 9, 9, 9, 9]
+    widths = [16, 12, 9, 9, 9, 9, 9, 9, 9, 9]
     print(" ".join(c.ljust(w) for c, w in zip(_COLS, widths)))
     for f in files:
         d = json.loads(f.read_text(encoding="utf-8"))
+        d.setdefault("score", round(grade(d, d.get("scenario", "")), 2))
         print(" ".join(_fmt(d.get(c)).ljust(w) for c, w in zip(_COLS, widths)))
 
 

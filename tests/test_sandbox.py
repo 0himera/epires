@@ -19,6 +19,11 @@ NEW_SCENARIOS = [
     "leakage_gap",
     "open_leak_hunt",
     "open_web_prior",
+    "baseline_stale",
+    "metric_drift",
+    "survivor_bias",
+    "double_blind_missing",
+    "repro_flip",
 ]
 
 
