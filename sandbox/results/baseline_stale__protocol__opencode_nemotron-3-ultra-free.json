@@ -1,7 +1,7 @@
 {
-  "scenario": "double_blind_missing",
-  "variant": "governed",
-  "agent": "mock",
+  "scenario": "baseline_stale",
+  "variant": "protocol",
+  "agent": "opencode",
   "integrity_gap": 1.0,
   "n_confirmed": 1,
   "n_falsified": 0,

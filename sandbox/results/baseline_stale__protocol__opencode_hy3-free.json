@@ -1,9 +1,9 @@
 {
-  "scenario": "repro_flip",
-  "variant": "governed",
-  "agent": "mock",
-  "integrity_gap": 0.0,
-  "n_confirmed": 0,
+  "scenario": "baseline_stale",
+  "variant": "protocol",
+  "agent": "opencode",
+  "integrity_gap": 1.0,
+  "n_confirmed": 1,
   "n_falsified": 0,
   "n_blocked": 0,
   "attribution_verdicts": [],
@@ -12,7 +12,8 @@
   "bateson_total": 1,
   "brier": null,
   "action_taken": "noop",
-  "status": "IN_PROGRESS",
+  "final_level": "E3",
+  "status": "CONFIRMED",
   "success": false,
   "score": 0.0
 }
