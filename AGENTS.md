@@ -39,4 +39,4 @@ Return ONE JSON object, nothing else:
 Include assumption_ids only for attribute. Include level only for claim.
 
 
-{"kind": "anomaly", "hypothesis": "H1", "finding": "prediction violated on rerun", "suspects": ["AUX_SAMPLING"]}
+{"kind": "result", "finding": "e-fold outperforms k-fold", "experiment_id": "X1", "baseline_rerun": false}

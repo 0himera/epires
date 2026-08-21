@@ -78,6 +78,12 @@ class OpencodeAgent:
     def seed(self, workspace: Path, task: str = "") -> None:
         cfg_dir = workspace / ".opencode"
         cfg_dir.mkdir(parents=True, exist_ok=True)
+        # ponytail: isolate workspace as its own git project — otherwise opencode
+        # resolves project root to the parent repo and leaks its root AGENTS.md
+        if not (workspace / ".git").exists():
+            subprocess.run(["git", "init", "-q"], cwd=workspace, check=False)
+            subprocess.run(["git", "add", "-A"], cwd=workspace, check=False)
+            subprocess.run(["git", "commit", "-qm", "ws"], cwd=workspace, check=False)
         epires_bin = str((PROJECT_ROOT / ".venv" / "bin" / "epires").resolve())
         (cfg_dir / "opencode.json").write_text(
             json.dumps({"mcp": {"epires": {"type": "local", "command": [epires_bin, "mcp"]}}}),
@@ -88,14 +94,25 @@ class OpencodeAgent:
 
     def run(self, task: str, workspace: Path) -> str:
         self.seed(workspace, task)
+        # ponytail: opencode trusts $PWD over getcwd — point it at the workspace
+        env = dict(os.environ)
+        abs_ws = str(Path(workspace).resolve())
+        env["PWD"] = abs_ws
         r = subprocess.run(
-            ["opencode", "run", "Выполни задачу по AGENTS.md.", "--format", "json"],
-            cwd=workspace,
+            ["opencode", "run", "Execute the task described in AGENTS.md.", "--format", "json"],
+            cwd=abs_ws,
+            env=env,
             timeout=600,
             capture_output=True,
             text=True,
         )
-        return (r.stdout or "") + (r.stderr or "")
+        out = (r.stdout or "") + (r.stderr or "")
+        # ponytail: persist transcript for debugging failed runs
+        try:
+            (workspace / "agent_transcript.jsonl").write_text(out, encoding="utf-8")
+        except Exception:
+            pass
+        return out
 
     def respond(self, obs: dict) -> dict:
         out = self.run(json.dumps(obs), self.workspace or Path.cwd())
