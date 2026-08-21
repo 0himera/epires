@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 VERIFY_MARKER = "verify assumptions first"
 AUDIT_MARKER = "use audit before confirming"
@@ -61,3 +65,42 @@ class LLMAgent:
         content = r.json()["choices"][0]["message"]["content"]
         # ponytail: naive JSON slice, structured outputs if this survives contact with real models
         return json.loads(content[content.index("{") : content.rindex("}") + 1])
+
+
+class OpencodeAgent:
+    """Runs tasks through real opencode CLI in an isolated workspace."""
+
+    def __init__(self, variant_prompt: str, model: str | None = None):
+        self.variant_prompt = variant_prompt
+        self.model = model or os.getenv("EPIRES_EVAL_MODEL", "")
+        self.workspace: Path | None = None
+
+    def seed(self, workspace: Path, task: str = "") -> None:
+        cfg_dir = workspace / ".opencode"
+        cfg_dir.mkdir(parents=True, exist_ok=True)
+        epires_bin = str((PROJECT_ROOT / ".venv" / "bin" / "epires").resolve())
+        (cfg_dir / "opencode.json").write_text(
+            json.dumps({"mcp": {"epires": {"type": "local", "command": [epires_bin, "mcp"]}}}),
+            encoding="utf-8",
+        )
+        (workspace / "AGENTS.md").write_text(f"{self.variant_prompt}\n\n{task}", encoding="utf-8")
+        self.workspace = workspace
+
+    def run(self, task: str, workspace: Path) -> str:
+        self.seed(workspace, task)
+        r = subprocess.run(
+            ["opencode", "run", "Выполни задачу по AGENTS.md.", "--format", "json"],
+            cwd=workspace,
+            timeout=600,
+            capture_output=True,
+            text=True,
+        )
+        return (r.stdout or "") + (r.stderr or "")
+
+    def respond(self, obs: dict) -> dict:
+        out = self.run(json.dumps(obs), self.workspace or Path.cwd())
+        try:
+            return json.loads(out[out.index("{") : out.rindex("}") + 1])
+        except (ValueError, json.JSONDecodeError):
+            # ponytail: noop on unparseable output; tighten parsing if real runs show noise
+            return {"action": "noop"}

@@ -43,3 +43,25 @@ def test_llm_agent_smoke():
 
     a = LLMAgent(load_variant("governed"), "test scenario")
     assert isinstance(a.respond({"kind": "anomaly", "suspects": ["A1"]}), dict)
+
+
+def test_opencode_agent_seeds_workspace(tmp_path):
+    import json as jsonlib
+
+    from sandbox.agents import OpencodeAgent
+
+    a = OpencodeAgent("verify assumptions first")
+    a.seed(tmp_path, "task text")
+    cfg = jsonlib.loads((tmp_path / ".opencode" / "opencode.json").read_text())
+    cmd = cfg["mcp"]["epires"]["command"]
+    assert cmd[0].endswith("epires") and cmd[1] == "mcp"
+    agents_md = (tmp_path / "AGENTS.md").read_text()
+    assert "verify assumptions first" in agents_md and "task text" in agents_md
+
+
+@pytest.mark.skipif(not os.environ.get("EPIRES_EVAL_MODEL"), reason="no EPIRES_EVAL_MODEL configured")
+def test_opencode_agent_cli_smoke(tmp_path):
+    from sandbox.agents import OpencodeAgent
+
+    out = OpencodeAgent("test prompt").run("Reply with the word ok.", tmp_path)
+    assert isinstance(out, str) and out

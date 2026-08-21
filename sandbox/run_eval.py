@@ -35,6 +35,10 @@ def make_agent(kind: str, variant_text: str, scenario_description: str) -> Any:
         return MockAgent(variant_text)
     if kind == "llm":
         return LLMAgent(variant_text, scenario_description)
+    if kind == "opencode":
+        from .agents import OpencodeAgent
+
+        return OpencodeAgent(variant_text)
     raise ValueError(f"unknown agent kind: {kind}")
 
 
@@ -48,11 +52,24 @@ def run_one(
     mod = load_scenario(scenario)
     rdir = Path(results_dir) if results_dir else RESULTS_DIR
     rdir.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="epires_eval_") as td:
-        store = EpiresStore(db_path=Path(td) / "eval.db", trace_md_path=None)
+    if agent_kind == "opencode":
+        # persistent workspace: store lives there so the agent can inspect it via MCP
+        td = None
+        ws = rdir / f"ws_{scenario}__{variant}"
+        ws.mkdir(parents=True, exist_ok=True)
+        db_path = ws / "store.db"
+    else:
+        td = tempfile.TemporaryDirectory(prefix="epires_eval_")
+        ws = Path(td.name)
+        db_path = ws / "eval.db"
+    try:
+        store = EpiresStore(db_path=db_path, trace_md_path=None)
         agent = make_agent(agent_kind, load_variant(variant), getattr(mod, "DESCRIPTION", ""))
         extra = mod.run(agent, store)
         result = {"scenario": scenario, "variant": variant, "agent": agent_kind, **collect(store, scenario), **extra}
+    finally:
+        if td is not None:
+            td.cleanup()
     result["success"] = bool(mod.success(result))
     (rdir / f"{scenario}__{variant}.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     return result
@@ -96,7 +113,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--scenario")
     ap.add_argument("--variant", default="baseline")
-    ap.add_argument("--agent", default="mock", choices=["mock", "llm"])
+    ap.add_argument("--agent", default="mock", choices=["mock", "llm", "opencode"])
     ap.add_argument("--all", action="store_true", help="run all scenarios x all variants")
     ap.add_argument("--report", action="store_true", help="print table of stored results")
     args = ap.parse_args(argv)
