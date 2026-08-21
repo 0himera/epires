@@ -1,5 +1,5 @@
 {
-  "scenario": "selection_bias",
+  "scenario": "seed_luck",
   "variant": "protocol",
   "agent": "opencode",
   "integrity_gap": 0.0,
@@ -9,10 +9,9 @@
   "attribution_verdicts": [],
   "false_cascade_count": 0,
   "bateson_hot": 0,
-  "bateson_total": 1,
+  "bateson_total": 2,
   "brier": null,
   "final_level": "E1",
-  "status": "IN_PROGRESS",
   "success": true,
   "score": 1.0
 }

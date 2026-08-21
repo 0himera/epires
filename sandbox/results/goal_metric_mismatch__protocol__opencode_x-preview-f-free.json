@@ -4,13 +4,14 @@
   "agent": "opencode",
   "integrity_gap": 0.0,
   "n_confirmed": 0,
-  "n_falsified": 0,
+  "n_falsified": 1,
   "n_blocked": 0,
   "attribution_verdicts": [],
   "false_cascade_count": 0,
-  "bateson_hot": 0,
+  "bateson_hot": 1,
   "bateson_total": 1,
   "brier": null,
-  "status": "IN_PROGRESS",
-  "success": false
+  "status": "FALSIFIED",
+  "success": true,
+  "score": 0.85
 }

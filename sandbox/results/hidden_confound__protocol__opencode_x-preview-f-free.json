@@ -14,5 +14,6 @@
   "attributed": true,
   "blamed_embedder_or_baseline": true,
   "status": "IN_PROGRESS",
-  "success": true
+  "success": true,
+  "score": 0.85
 }

@@ -1,5 +1,5 @@
 {
-  "scenario": "selection_bias",
+  "scenario": "conflicting",
   "variant": "protocol",
   "agent": "opencode",
   "integrity_gap": 0.0,
@@ -9,10 +9,10 @@
   "attribution_verdicts": [],
   "false_cascade_count": 0,
   "bateson_hot": 0,
-  "bateson_total": 1,
+  "bateson_total": 0,
   "brier": null,
-  "final_level": "E1",
-  "status": "IN_PROGRESS",
+  "autoconfirmed": [],
+  "conversation_status": "in_conversation",
   "success": true,
-  "score": 1.0
+  "score": 0.85
 }
