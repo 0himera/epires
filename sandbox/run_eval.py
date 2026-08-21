@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -56,7 +57,8 @@ def run_one(
     if agent_kind == "opencode":
         # persistent workspace: store lives there so the agent can inspect it via MCP
         td = None
-        ws = rdir / f"ws_{scenario}__{variant}"
+        mtag = os.environ.get("EPIRES_EVAL_MODEL", "unknown").replace("/", "_")
+        ws = rdir / f"ws_{scenario}__{variant}__{mtag}"
         if ws.exists():
             shutil.rmtree(ws)  # ponytail: fresh state — append-only ledger breaks reseeding
         ws.mkdir(parents=True)
@@ -74,7 +76,10 @@ def run_one(
         if td is not None:
             td.cleanup()
     result["success"] = bool(mod.success(result))
-    (rdir / f"{scenario}__{variant}.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+    model_tag = ""
+    if agent_kind == "opencode":
+        model_tag = "__" + os.environ.get("EPIRES_EVAL_MODEL", "unknown").replace("/", "_")
+    (rdir / f"{scenario}__{variant}{model_tag}.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     return result
 
 

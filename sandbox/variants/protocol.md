@@ -37,6 +37,3 @@ Decide verdicts for research observations. Apply this protocol to every task.
 Return ONE JSON object, nothing else:
 {"action":"<attribute|falsify|claim|verify_level|confirm|discuss>", "assumption_ids":[...], "level":"E<n>"}
 Include assumption_ids only for attribute. Include level only for claim.
-
-
-{"kind": "anomaly", "hypothesis": "H1", "finding": "prediction violated on rerun", "suspects": ["AUX_SAMPLING"]}
