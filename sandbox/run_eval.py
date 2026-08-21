@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Any, List, Optional
@@ -56,7 +57,9 @@ def run_one(
         # persistent workspace: store lives there so the agent can inspect it via MCP
         td = None
         ws = rdir / f"ws_{scenario}__{variant}"
-        ws.mkdir(parents=True, exist_ok=True)
+        if ws.exists():
+            shutil.rmtree(ws)  # ponytail: fresh state — append-only ledger breaks reseeding
+        ws.mkdir(parents=True)
         db_path = ws / "store.db"
     else:
         td = tempfile.TemporaryDirectory(prefix="epires_eval_")

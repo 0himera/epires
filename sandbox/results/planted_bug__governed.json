@@ -1,7 +1,7 @@
 {
   "scenario": "planted_bug",
   "variant": "governed",
-  "agent": "mock",
+  "agent": "opencode",
   "integrity_gap": 0.0,
   "n_confirmed": 0,
   "n_falsified": 0,

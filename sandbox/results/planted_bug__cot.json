@@ -1,6 +1,6 @@
 {
   "scenario": "planted_bug",
-  "variant": "baseline",
+  "variant": "cot",
   "agent": "opencode",
   "integrity_gap": 0.0,
   "n_confirmed": 0,

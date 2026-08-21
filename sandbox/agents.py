@@ -99,8 +99,22 @@ class OpencodeAgent:
 
     def respond(self, obs: dict) -> dict:
         out = self.run(json.dumps(obs), self.workspace or Path.cwd())
+        # ponytail: --format json is an NDJSON event stream; model text lives in type=="text" parts
+        texts: list[str] = []
+        for line in out.splitlines():
+            line = line.strip()
+            if not (line.startswith("{") and line.endswith("}")):
+                continue
+            try:
+                ev = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            part = ev.get("part") or {}
+            if ev.get("type") == "text" or part.get("type") == "text":
+                texts.append(part.get("text", ""))
+        candidate = "\n".join(texts) or out
         try:
-            return json.loads(out[out.index("{") : out.rindex("}") + 1])
+            return json.loads(candidate[candidate.index("{") : candidate.rindex("}") + 1])
         except (ValueError, json.JSONDecodeError):
             # ponytail: noop on unparseable output; tighten parsing if real runs show noise
             return {"action": "noop"}
