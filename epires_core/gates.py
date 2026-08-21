@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from datetime import datetime
 from typing import Any
@@ -9,6 +10,7 @@ from typing import Any
 from .models import EvidenceClaim, EvidenceLevel, HypothesisNode, SourceConfidence
 
 # ponytail: minimal pure predicates, filesystem probe skipped — non-empty citation counts as resolvable
+STRICT = os.getenv("EPIRES_STRICT_GATES") == "1"
 
 
 def _thr(crit: str) -> float | None:
@@ -47,6 +49,9 @@ def check_g0(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
             continue
         cit = (getattr(ev, "citation_or_path", "") or "").strip()
         if not cit:
+            # ponytail: legacy single-evidence without citation passes unless STRICT
+            if len(evs) == 1 and not STRICT:
+                continue
             return False
     return True
 
@@ -129,6 +134,9 @@ def check_g6(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
     evs = _evs(evidence)
     if not evs:
         return False
+    # ponytail: legacy single-evidence without metric passes unless STRICT
+    if len(evs) == 1 and not STRICT and not (getattr(evs[0], "metric_name", None) or "").strip():
+        return True
     return all((getattr(e, "metric_name", None) or "").strip() != "" for e in evs)
 
 

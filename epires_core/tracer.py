@@ -15,8 +15,12 @@ class AutoTracer:
     def __init__(self, store: EpiresStore, trace_md_path: str | Path = "docs/agent-trace.md"):
         self.store = store
         self.trace_md_path = Path(trace_md_path)
-        if os.getenv("PYTEST_CURRENT_TEST"): self.trace_md_path=None if str(self.trace_md_path).endswith("docs/agent-trace.md") else self.trace_md_path; self.store.trace_md_path=None if getattr(self.store,"trace_md_path",None) and str(self.store.trace_md_path).endswith("docs/agent-trace.md") else getattr(self.store,"trace_md_path",None)  # type: ignore
-        if self.trace_md_path is None: return  # type: ignore
+        # ponytail: in pytest don't write into the repo's docs/agent-trace.md
+        if os.getenv("PYTEST_CURRENT_TEST") and str(self.trace_md_path).endswith("docs/agent-trace.md"):
+            self.trace_md_path = None  # type: ignore[assignment]
+            self.store.trace_md_path = None
+        if self.trace_md_path is None:
+            return
         self.trace_md_path.parent.mkdir(parents=True, exist_ok=True)
         self._ensure_trace_file()
 

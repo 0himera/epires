@@ -26,6 +26,7 @@ from .models import (
 )
 from .vsa import BipolarVSA
 from .hypergraph import HypergraphEncoder
+from .gates import STRICT as GATES_STRICT, compute_level
 
 
 class EpiresStore:
@@ -42,6 +43,7 @@ class EpiresStore:
             self.trace_md_path = None  # ponytail: no docs write in pytest
         self.vsa = BipolarVSA(dim=vsa_dim)
         self.encoder = HypergraphEncoder(self.vsa)
+        self._index: Any = None  # ponytail: lazy BinaryIndex, rebuilt on size mismatch
         self._init_db()
 
     @contextmanager
@@ -139,6 +141,12 @@ class EpiresStore:
             CREATE INDEX IF NOT EXISTS idx_evidence_h_id ON evidence(hypothesis_id);
             CREATE INDEX IF NOT EXISTS idx_traces_h_tag ON traces(h_tag);
             """)
+            # ponytail: TMS tables are optional, never block store init
+            try:
+                from .tms import init_tms_tables
+                init_tms_tables(conn)
+            except Exception:
+                pass
 
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()
@@ -285,6 +293,16 @@ class EpiresStore:
                     (h.id, pid, RelationType.DEPENDS_ON.value, json.dumps({})),
                 )
 
+            # ponytail: mirror DEPENDS_ON into JTMS-lite justifications
+            try:
+                from .tms import add_premise, add_justification
+                if h.parent_ids:
+                    add_justification(h.id, h.parent_ids, conn)
+                else:
+                    add_premise(h.id, conn)
+            except Exception:
+                pass
+
         if emit_trace:
             self.log_trace(
                 TraceEntry(
@@ -370,6 +388,20 @@ class EpiresStore:
                 """,
                 (edge.source_id, edge.target_id, edge.relation_type.value, json.dumps(edge.metadata)),
             )
+            # ponytail: CONFLICTS_WITH → Pask conversation, lazy, never blocks INSERT
+            if edge.relation_type == RelationType.CONFLICTS_WITH:
+                try:
+                    from .conversation import init_conversation_tables, open_conversation
+
+                    init_conversation_tables(conn)
+                    open_conversation(edge.source_id, edge.target_id, conn)
+                except Exception:
+                    pass
+            # TODO: bipolar_to_attacks sync for argumentation framework (lazy, later)
+            try:
+                from .argumentation import bipolar_to_attacks  # noqa: F401
+            except Exception:
+                pass
 
         if emit_trace:
             self.log_trace(
@@ -551,9 +583,15 @@ class EpiresStore:
 
         h = self.get_hypothesis(ev.hypothesis_id)
         if h:
-            # Evidence promotion is monotonic (records the highest rigor level reached)
-            if ev.evidence_level.value > h.current_evidence_level.value:
-                h.current_evidence_level = ev.evidence_level
+            if GATES_STRICT:
+                # STRICT: level is computed from gates, never lowered (monotonic max)
+                computed = compute_level([ev], h)
+                if computed.value > h.current_evidence_level.value:
+                    h.current_evidence_level = computed
+            else:
+                # Evidence promotion is monotonic (records the highest rigor level reached)
+                if ev.evidence_level.value > h.current_evidence_level.value:
+                    h.current_evidence_level = ev.evidence_level
 
             if ev.falsification_triggered:
                 h.status = HypothesisStatus.FALSIFIED
@@ -938,6 +976,27 @@ class EpiresStore:
                 for row in rows
             ]
 
+    # ponytail: stigmergy/calibration/scoring wrappers — lazy, not on hot path
+    def bateson_should_log(self, ev: EvidenceClaim) -> bool:
+        from .stigmergy import bateson_filter
+
+        return bateson_filter(ev)
+
+    def pheromone_rank(self) -> List[HypothesisNode]:
+        from .stigmergy import rank_by_stigmergy
+
+        return rank_by_stigmergy(self.list_hypotheses(), self)
+
+    def score_experiments(self, candidates: List[Dict[str, Any]], q: Dict[str, float]) -> List[Tuple[str, float]]:
+        from .scoring import score_candidates
+
+        return score_candidates(candidates, q)
+
+    def calibrated_p(self, agent_id: str, stated_p: float) -> float:
+        from .calibration import calibrated_weight
+
+        return calibrated_weight(agent_id, stated_p, self)
+
     # -------------------------------------------------------------------------
     # Hybrid FTS5 + VSA Associative Search & Gap Discovery
     # -------------------------------------------------------------------------
@@ -951,6 +1010,16 @@ class EpiresStore:
             ids = [r["id"] for r in rows]
             vectors = [np.frombuffer(r["vector_blob"], dtype=np.int8) for r in rows]
             matrix = np.stack(vectors, axis=0)
+
+            if self._index is None or len(getattr(self._index, "_ids", ())) != len(rows):
+                try:
+                    from .search_index import BinaryIndex
+                    idx = BinaryIndex(dim=self.vsa.dim)
+                    for hid, vec in zip(ids, vectors):
+                        idx.add(hid, vec)  # BinaryIndex packs bipolar int8 itself
+                    self._index = idx
+                except Exception:
+                    self._index = None
 
         # 1. Full-text search via SQLite FTS5
         fts_matches: Dict[str, float] = {}
@@ -975,7 +1044,11 @@ class EpiresStore:
             text_terms=terms, entities=sq.entities or [], status=sq.status.value if sq.status else None
         )
 
-        sims = self.vsa.batch_similarity(q_vec, matrix)
+        if self._index is not None:
+            hits = dict(self._index.search(q_vec, k=len(ids)))
+            sims = [hits.get(h_id, 0.0) for h_id in ids]
+        else:
+            sims = self.vsa.batch_similarity(q_vec, matrix)
 
         # 3. Hybrid fusion
         combined_scores: List[Tuple[str, float]] = []
@@ -1173,3 +1246,14 @@ class EpiresStore:
 
         lines.append("```")
         return "\n".join(lines)
+
+    # ponytail: thin wrappers — lazy import to avoid cycle, no hot-path call in log_evidence
+    def audit_pass(self, h_id: str) -> dict:
+        from .audit import audit_hypothesis
+
+        return audit_hypothesis(h_id, self)
+
+    def check_algedonic(self) -> list[dict]:
+        from .algedonic import check_triggers
+
+        return check_triggers(self)

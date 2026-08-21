@@ -673,6 +673,14 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     def list_traces(limit: int = Query(default=50, ge=1, le=500)) -> List[TraceEntry]:
         return store.list_traces(limit=limit)
 
+    @app.get("/audit/{h_id}")
+    def audit_endpoint(h_id: str) -> Dict[str, Any]:
+        return store.audit_pass(h_id)
+
+    @app.get("/algedonic/check")
+    def algedonic_check() -> List[Dict[str, Any]]:
+        return store.check_algedonic()
+
     @app.post("/traces", response_model=TraceEntry)
     def record_trace(entry: TraceEntry) -> TraceEntry:
         return tracer.record(
