@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import inspect
 import json
 import os
 import shutil
@@ -70,7 +71,7 @@ def run_one(
     try:
         store = EpiresStore(db_path=db_path, trace_md_path=None)
         agent = make_agent(agent_kind, load_variant(variant), getattr(mod, "DESCRIPTION", ""))
-        extra = mod.run(agent, store)
+        extra = mod.run(agent, store, ws) if len(inspect.signature(mod.run).parameters) > 2 else mod.run(agent, store)
         result = {"scenario": scenario, "variant": variant, "agent": agent_kind, **collect(store, scenario), **extra}
     finally:
         if td is not None:

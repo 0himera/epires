@@ -17,6 +17,8 @@ NEW_SCENARIOS = [
     "hidden_confound",
     "commitment_trap",
     "leakage_gap",
+    "open_leak_hunt",
+    "open_web_prior",
 ]
 
 
