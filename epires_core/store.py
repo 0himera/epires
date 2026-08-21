@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import json
+import os
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -37,6 +38,8 @@ class EpiresStore:
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.trace_md_path = Path(trace_md_path) if trace_md_path else None
+        if os.getenv("PYTEST_CURRENT_TEST") and self.trace_md_path and str(self.trace_md_path).endswith("docs/agent-trace.md"):
+            self.trace_md_path = None  # ponytail: no docs write in pytest
         self.vsa = BipolarVSA(dim=vsa_dim)
         self.encoder = HypergraphEncoder(self.vsa)
         self._init_db()

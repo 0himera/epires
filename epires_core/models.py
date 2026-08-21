@@ -71,6 +71,11 @@ class EvidenceClaim(BaseModel):
     citation_or_path: str = ""
     artifact_hash: Optional[str] = None
     timestamp: str = ""
+    observer_id: str = ""
+    criteria_version: str = "v1"
+    stated_p: float | None = None
+    assumption_ids: list[str] = Field(default_factory=list)
+    prediction: str | None = None
 
 
 class HypothesisNode(BaseModel):
@@ -84,6 +89,8 @@ class HypothesisNode(BaseModel):
     parent_ids: List[str] = Field(default_factory=list)
     entities: List[Entity] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
+    criteria_version: str = "v1"
+    observation_context: str = ""
     created_at: str = ""
     updated_at: str = ""
 

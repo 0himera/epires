@@ -84,6 +84,16 @@ class BipolarVSA:
 
         return bundled
 
+    def ngram_bundle(self, text: str, n: int = 3) -> np.ndarray:
+        """Bundle character n-grams of `text` for fuzzy matching (ponytail: 3-gram default)."""
+        t = text.lower().strip() if text else ""
+        if not t:
+            return self.get_or_create_vector("TAG:")
+        if len(t) <= n:
+            return self.get_or_create_vector(f"TAG:{t}")
+        grams = [t[i : i + n] for i in range(len(t) - n + 1)]
+        return self.bundle([self.get_or_create_vector(f"TAG:{g}") for g in grams])
+
     def similarity(self, v1: np.ndarray, v2: np.ndarray) -> float:
         """Calculates cosine similarity between two bipolar vectors.
 
