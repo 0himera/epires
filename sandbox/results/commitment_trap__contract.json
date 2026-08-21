@@ -1,0 +1,19 @@
+{
+  "scenario": "commitment_trap",
+  "variant": "contract",
+  "agent": "opencode",
+  "integrity_gap": 0.0,
+  "n_confirmed": 0,
+  "n_falsified": 0,
+  "n_blocked": 1,
+  "attribution_verdicts": [
+    "attributed:auxiliary:AUX_SAMPLING"
+  ],
+  "false_cascade_count": 0,
+  "bateson_hot": 1,
+  "bateson_total": 3,
+  "brier": null,
+  "h1_status": "BLOCKED",
+  "h2_status": "PROPOSED",
+  "success": true
+}
