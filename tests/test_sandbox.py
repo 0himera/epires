@@ -9,6 +9,22 @@ from sandbox.agents import MockAgent
 
 SCENARIOS = ["conflicting", "planted_bug", "reward_hack"]
 
+NEW_SCENARIOS = [
+    "seed_luck",
+    "selection_bias",
+    "goal_metric_mismatch",
+    "vacuous_confirm",
+    "hidden_confound",
+    "commitment_trap",
+    "leakage_gap",
+]
+
+
+@pytest.mark.parametrize("name", NEW_SCENARIOS)
+def test_new_scenario_smoke(name, tmp_path):
+    r = run_one(name, "governed", "mock", results_dir=tmp_path)
+    assert isinstance(r["success"], bool)
+
 
 @pytest.mark.parametrize("name", SCENARIOS)
 def test_governed_beats_baseline(name, tmp_path):
