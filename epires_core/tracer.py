@@ -62,12 +62,26 @@ class AutoTracer:
         # 1. Save to SQLite Store
         self.store.log_trace(entry)
 
+        # ponytail: Bateson filter — file gets only decision-changing events; SQLite keeps full ledger
+        try:
+            from .stigmergy import bateson_filter
+            # registration/bulk/falsify actions are differences by definition
+            forced = entry.action.upper().startswith(("REGISTER_", "BULK_", "FALSIFY"))
+            if not forced and not bateson_filter(entry):
+                return entry
+        except Exception:
+            pass
+
         # 2. Append markdown row to docs/agent-trace.md
         if self.trace_md_path is None:  # type: ignore
             return entry
         h_col = f"`{h_tag}`" if h_tag else "—"
         clean_summary = summary.replace("|", "/")
         row = f"| {now} | **{agent_role}** | `{action}` | {h_col} | `{commit}` | {clean_summary} |\n"
+
+        # ponytail: rotate at 1MB, keep one previous generation (.1)
+        if self.trace_md_path.exists() and self.trace_md_path.stat().st_size > 1_000_000:
+            self.trace_md_path.replace(self.trace_md_path.with_name(self.trace_md_path.name + ".1"))
 
         with open(self.trace_md_path, "a", encoding="utf-8") as f:  # type: ignore
             f.write(row)

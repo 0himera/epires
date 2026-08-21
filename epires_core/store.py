@@ -1154,6 +1154,10 @@ class EpiresStore:
         # Append to docs/agent-trace.md for real-time Markdown synchronization
         if self.trace_md_path and self.trace_md_path.parent.exists():
             try:
+                # ponytail: rotate at 1MB, keep one previous generation (.1)
+                if self.trace_md_path.exists() and self.trace_md_path.stat().st_size > 1_000_000:
+                    self.trace_md_path.replace(self.trace_md_path.with_name(self.trace_md_path.name + ".1"))
+
                 if not self.trace_md_path.exists():
                     header = (
                         "# Agent Trace & Epistemic Log\n\n"

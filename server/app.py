@@ -112,7 +112,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
         evidence = store.list_evidence()
         relations = store.list_relations()
         experiments = store.list_experiments()
-        traces = store.list_traces(limit=10000)
+        traces = store.list_traces(limit=500)
         status_distribution: Dict[str, int] = {}
         level_distribution: Dict[str, int] = {}
         for hypothesis in hypotheses:
