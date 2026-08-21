@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import tempfile
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -115,7 +116,12 @@ class OpencodeAgent:
         return out
 
     def respond(self, obs: dict) -> dict:
-        out = self.run(json.dumps(obs), self.workspace or Path.cwd())
+        # ponytail: NEVER run in repo cwd — it would overwrite the root AGENTS.md.
+        # One-shot verdicts get a throwaway isolated workspace.
+        if self.workspace is None:
+            self._td = tempfile.TemporaryDirectory(prefix="epires_respond_")
+            self.workspace = Path(self._td.name)
+        out = self.run(json.dumps(obs), self.workspace)
         # ponytail: --format json is an NDJSON event stream; model text lives in type=="text" parts
         texts: list[str] = []
         for line in out.splitlines():
