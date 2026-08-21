@@ -5,7 +5,13 @@ import sqlite3
 import pytest
 
 from epires_core.algedonic import check_triggers
-from epires_core.argumentation import bipolar_to_attacks, grounded_labeling
+from epires_core.argumentation import (
+    bipolar_to_attacks,
+    grounded_labeling,
+    level_to_standard,
+    proof_standard_check,
+    weights_from_evidence,
+)
 from epires_core.audit import audit_hypothesis
 from epires_core.calibration import brier_score, calibrated_weight, fit_platt, platt_scale
 from epires_core.conversation import add_turn, init_conversation_tables, open_conversation, resolve_conversation
@@ -99,6 +105,25 @@ def test_bipolar_conflict_propagates_through_support():
     attacks = bipolar_to_attacks(supports=[("b", "c")], conflicts=[("a", "b")])
     assert ("a", "c") in attacks
     assert ("a", "b") in attacks
+
+
+def test_proof_standards_carneades():
+    e2 = make_ev("claim", "e1")
+    e3 = make_ev("claim", "e2")
+    e2.evidence_level = EvidenceLevel.E2
+    e3.evidence_level = EvidenceLevel.E3
+    weights = weights_from_evidence([e2, e3])
+    assert weights["claim"] == pytest.approx(1.5)
+    attacks = [("attacker", "claim")]
+    assert proof_standard_check("claim", {"claim": 1.5, "attacker": 0.6}, attacks, "preponderance") is True
+    assert proof_standard_check("claim", {"claim": 1.1, "attacker": 0.6}, attacks, "preponderance") is True
+    assert proof_standard_check("claim", {"claim": 1.5, "attacker": 0.8}, attacks, "clear_and_convincing") is False
+    assert proof_standard_check("claim", {"claim": 1.5}, [], "beyond_reasonable_doubt") is True
+    with pytest.raises(ValueError):
+        proof_standard_check("claim", {"claim": 1.5}, [], "scintilla")
+    assert level_to_standard("E2") == "preponderance"
+    assert level_to_standard("E4") == "clear_and_convincing"
+    assert level_to_standard("E5") == "beyond_reasonable_doubt"
 
 
 # --- tms ---
@@ -230,3 +255,41 @@ def test_algedonic_contradiction_trigger(store):
     store.log_evidence(make_ev("H1", "ev_con", falsification_triggered=True))
     triggers = check_triggers(store)
     assert any(t["trigger"] == "contradiction" and t["node_id"] == "H1" for t in triggers)
+
+
+# --- Duhem-Quine anomaly attribution ---
+
+
+def test_single_falsification_auxiliary_blame_vs_inconclusive(tmp_path):
+    # auxiliary blame: assumption present, no independent repeats -> BLOCKED, child spared
+    store = EpiresStore(db_path=tmp_path / "t.db", trace_md_path=None)
+    store.register_hypothesis(make_h("H1"))
+    store.register_hypothesis(make_h("H2"))
+    store.add_relation(RelationEdge(source_id="H2", target_id="H1", relation_type=RelationType.DEPENDS_ON))
+    store.log_evidence(make_ev("H1", "ev_a", falsification_triggered=True, assumption_ids=["A1"]))
+    assert store.get_hypothesis("H1").status.value == "BLOCKED"
+    assert store.get_hypothesis("H2").status.value == "PROPOSED"
+
+    # inconclusive: no assumptions -> old strict path FALSIFIED + cascade
+    store.register_hypothesis(make_h("H3"))
+    store.register_hypothesis(make_h("H4"))
+    store.add_relation(RelationEdge(source_id="H4", target_id="H3", relation_type=RelationType.DEPENDS_ON))
+    store.log_evidence(make_ev("H3", "ev_none", falsification_triggered=True))
+    assert store.get_hypothesis("H3").status.value == "FALSIFIED"
+    assert store.get_hypothesis("H4").status.value == "BLOCKED"
+
+
+def test_independent_falsifications_implicate_hypothesis(tmp_path):
+    from epires_core.attribution import attribute_anomaly
+
+    store = EpiresStore(db_path=tmp_path / "t.db", trace_md_path=None)
+    store.register_hypothesis(make_h("H5"))
+    store.register_hypothesis(make_h("H6"))
+    store.add_relation(RelationEdge(source_id="H6", target_id="H5", relation_type=RelationType.DEPENDS_ON))
+    ev1 = make_ev("H5", "ev_x", falsification_triggered=True, assumption_ids=["A1"])
+    ev2 = make_ev("H5", "ev_y", falsification_triggered=True, assumption_ids=["A2"])
+    store.log_evidence(ev1)  # first hit -> auxiliary blame, BLOCKED
+    store.log_evidence(ev2)
+    assert attribute_anomaly(store.get_evidence("ev_y"), store) == "attributed:hypothesis"
+    assert store.get_hypothesis("H5").status.value == "FALSIFIED"
+    assert store.get_hypothesis("H6").status.value == "BLOCKED"

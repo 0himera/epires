@@ -148,6 +148,12 @@ class EpiresStore:
             except Exception:
                 pass
 
+            # ponytail: migrate pre-attribution DBs missing evidence.assumption_ids_json
+            try:
+                conn.execute("ALTER TABLE evidence ADD COLUMN assumption_ids_json TEXT NOT NULL DEFAULT '[]'")
+            except Exception:
+                pass
+
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()
 
@@ -560,8 +566,8 @@ class EpiresStore:
                 id, hypothesis_id, evidence_level, source_confidence,
                 claim, metric_name, metric_value, delta_vs_baseline,
                 ci_95_lower, ci_95_upper, falsification_triggered,
-                citation_or_path, artifact_hash, timestamp
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                citation_or_path, artifact_hash, timestamp, assumption_ids_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     ev.id,
@@ -578,6 +584,7 @@ class EpiresStore:
                     ev.citation_or_path,
                     ev.artifact_hash,
                     ev.timestamp,
+                    json.dumps(ev.assumption_ids),
                 ),
             )
 
@@ -594,6 +601,18 @@ class EpiresStore:
                     h.current_evidence_level = ev.evidence_level
 
             if ev.falsification_triggered:
+                try:
+                    from .attribution import attribute_anomaly
+                    verdict = attribute_anomaly(ev, self)
+                    if verdict.startswith("attributed:auxiliary"):
+                        h.status = HypothesisStatus.BLOCKED  # ponytail: blame auxiliary, no cascade
+                        self.register_hypothesis(h, allow_status_override=True, emit_trace=False)
+                        self.log_trace(TraceEntry(timestamp=self._now(), action="ANOMALY_ATTRIBUTED", agent_role="System-DAG",
+                            h_tag=ev.hypothesis_id, summary=f"Anomaly attributed to auxiliary ({verdict}); hypothesis BLOCKED, no cascade",
+                            details={"evidence_id": ev.id, "verdict": verdict}))
+                        return ev, []
+                except Exception:
+                    pass
                 h.status = HypothesisStatus.FALSIFIED
                 self.register_hypothesis(h, allow_status_override=True, emit_trace=False)
                 blocked_children = self._cascade_falsification(ev.hypothesis_id)
@@ -854,6 +873,7 @@ class EpiresStore:
             ci_95_lower=row["ci_95_lower"],
             ci_95_upper=row["ci_95_upper"],
             falsification_triggered=bool(row["falsification_triggered"]),
+            assumption_ids=json.loads(row["assumption_ids_json"]) if "assumption_ids_json" in row.keys() else [],
             citation_or_path=row["citation_or_path"] or "",
             artifact_hash=row["artifact_hash"],
             timestamp=row["timestamp"],

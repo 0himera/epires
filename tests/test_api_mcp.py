@@ -112,9 +112,9 @@ def test_mcp_server_tools():
         mcp = create_mcp_server(db_path=db_path, trace_md=trace_path)
         assert mcp.name == "epires"
 
-        # Test tool manager has all 20 tools
+        # Test tool manager has all 27 tools
         tool_names = [tool.name for tool in mcp._tool_manager.list_tools()]
-        assert len(tool_names) == 20
+        assert len(tool_names) == 27
         assert "epires_get_schema" in tool_names
         assert "epires_register_hypothesis" in tool_names
         assert "epires_register_experiment" in tool_names

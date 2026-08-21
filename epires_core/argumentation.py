@@ -74,6 +74,44 @@ def bipolar_to_attacks(
     return sorted(attacks)
 
 
+def weights_from_evidence(evidence_list, calibrated_fn=None) -> dict[str, float]:
+    """Вес узла = сумма (0.5 + 0.1*level_index) по его evidence; calibrated_fn домножает stated_p."""
+    weights: dict[str, float] = {}
+    for ev in evidence_list:
+        idx = int(str(ev.evidence_level.value)[1])
+        contrib = 0.5 + 0.1 * idx
+        if calibrated_fn and ev.stated_p is not None:
+            contrib *= calibrated_fn(ev.stated_p)
+        weights[ev.hypothesis_id] = weights.get(ev.hypothesis_id, 0.0) + contrib
+    return weights
+
+
+def proof_standard_check(
+    claim_id: str, weights: dict[str, float], attacks: list[tuple[str, str]], standard: str
+) -> bool:
+    """Carneades proof standards поверх взвешенного графа атак."""
+    w = weights.get(claim_id, 0.0)
+    a = sum(weights.get(src, 0.0) for src, tgt in attacks if tgt == claim_id)
+    if standard == "preponderance":
+        return w > a
+    if standard == "clear_and_convincing":
+        return w >= 2 * a and w > 0
+    if standard == "beyond_reasonable_doubt":
+        return a == 0 and w > 0
+    raise ValueError(f"unknown standard: {standard}")
+
+
+def level_to_standard(level: str) -> str:
+    """E0-E2→preponderance, E3-E4→clear_and_convincing, E5→beyond_reasonable_doubt."""
+    if level in ("E0", "E1", "E2"):
+        return "preponderance"
+    if level in ("E3", "E4"):
+        return "clear_and_convincing"
+    if level == "E5":
+        return "beyond_reasonable_doubt"
+    return "preponderance"
+
+
 def status_from_label(label: str) -> str:
     """IN→CONFIRMED, OUT→FALSIFIED, UNDEC→BLOCKED."""
     if label == "IN":
