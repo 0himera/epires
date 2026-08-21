@@ -2,8 +2,8 @@
   "scenario": "baseline_stale",
   "variant": "protocol",
   "agent": "opencode",
-  "integrity_gap": 1.0,
-  "n_confirmed": 1,
+  "integrity_gap": 0.0,
+  "n_confirmed": 0,
   "n_falsified": 0,
   "n_blocked": 0,
   "attribution_verdicts": [],
@@ -11,9 +11,9 @@
   "bateson_hot": 0,
   "bateson_total": 1,
   "brier": null,
-  "action_taken": "noop",
-  "final_level": "E3",
-  "status": "CONFIRMED",
-  "success": false,
-  "score": 0.0
+  "action_taken": "attribute",
+  "final_level": "E2",
+  "status": "IN_PROGRESS",
+  "success": true,
+  "score": 1.0
 }

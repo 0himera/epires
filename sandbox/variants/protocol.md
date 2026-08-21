@@ -28,6 +28,7 @@ Decide verdicts for research observations. Apply this protocol to every task.
 | result | train score high, holdout low | {"action":"falsify"} — leakage suspected |
 | result | n_seeds=1 or delta within stated noise | {"action":"attribute","assumption_ids":["AUX_EVAL_NOISE"]} or {"action":"verify_level"} |
 | result | configs_differ has >1 item | {"action":"attribute","assumption_ids":[<the NON-architecture difference>]} |
+| result | baseline_rerun=false or baseline_commit != current | {"action":"attribute","assumption_ids":["AUX_BASELINE_STALE"]} |
 | result | delta large, single config pair | {"action":"verify_level"} before claiming |
 | claim | trials_available > 1 mentioned | {"action":"verify_level"} — selection bias check |
 | supporting_result | modest effect | {"action":"claim","level":"E2"} — never above E2 on one run |
