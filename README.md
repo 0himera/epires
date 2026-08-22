@@ -5,6 +5,7 @@
 <div align="center">
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![CI](https://github.com/himera/epires/actions/workflows/ci.yml/badge.svg)](https://github.com/himera/epires/actions/workflows/ci.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
 [![MCP 2.0](https://img.shields.io/badge/MCP-2.0-8A2BE2.svg)](https://modelcontextprotocol.io)
 [![Property-Based Fuzzing](https://img.shields.io/badge/Fuzzing-Hypothesis-success.svg)](https://hypothesis.readthedocs.io/)
@@ -31,10 +32,12 @@
    - [4.5 Separation of Concerns: Lead-PI vs Coder Subagents](#45-separation-of-concerns-lead-pi-vs-coder-subagents)
    - [4.6 Zero-Overhead Epistemic Tracing](#46-zero-overhead-epistemic-tracing)
    - [4.7 Antifragile Dual-Mode Onboarding](#47-antifragile-dual-mode-onboarding)
-5. [CLI Command Reference](#5-cli-command-reference)
-6. [Model Context Protocol (MCP) Specification](#6-model-context-protocol-mcp-specification)
-7. [Testing & Mathematical Fuzzing](#7-testing--mathematical-fuzzing)
-8. [License](#8-license)
+5. [What's New in 0.4.0: Verifiable Epistemics](#5-whats-new-in-040-verifiable-epistemics)
+6. [CLI Command Reference](#6-cli-command-reference)
+7. [Model Context Protocol (MCP) Specification](#7-model-context-protocol-mcp-specification)
+8. [Eval Sandbox](#8-eval-sandbox)
+9. [Testing & Mathematical Fuzzing](#9-testing--mathematical-fuzzing)
+10. [License](#10-license)
 
 ---
 
@@ -302,7 +305,26 @@ Epires adapts seamlessly to any repository structure:
 
 ---
 
-## 5. CLI Command Reference
+## 5. What's New in 0.4.0: Verifiable Epistemics
+
+v0.4.0 turns the declared methodology into enforced, measurable machinery.
+
+### Computed, not declared
+- **Evidence Gates G0–G8** — evidence levels are the *ceiling of passed predicates* (provenance resolves, ≥3 seeds, held-out hash predates result, preregistration, CI95 outside significance threshold, …), recomputed automatically. `EPIRES_STRICT_GATES=1` hard-fails violations.
+- **Duhem–Quine attribution** — an anomaly refutes the bundle ⟨hypothesis + auxiliaries⟩, never the hypothesis alone. Single anomalies with suspects BLOCK without cascading; only reproduction on ≥2 independent axes (`env/data/model/agent`) falsifies and cascades.
+- **JTMS-lite + argumentation semantics** — hypothesis status is *computed* from justifications and Dung grounded labeling (`IN/OUT/UNDEC`), not hand-set by agents.
+
+### Oversight (VSM)
+- **S3\* independent auditor** — `s3_audit_confirmed()` re-verifies every CONFIRMED hypothesis with a deterministic pre-test plus another model (`EPIRES_AUDIT_MODEL`).
+- **Algedonic channel** — contradiction / audit-failure / repeated-failure triggers escalate past Lead-PI; `freeze_branch()` quarantines the affected DAG subtree.
+- **Calibration ledger** — per-agent Brier/Platt tracking; `calibrated_p(agent_id, stated_p)` weights every claim by the agent's track record (<30 resolutions → skeptical prior).
+
+### Decision quality
+- **Experiment scoring by expected information gain** — `score_experiments(candidates, q)` replaces intuition-driven selection.
+- **Pask conversations** — `CONFLICTS_WITH` opens a structured conversation node (`merge/split/add_condition`) instead of a dead-end label.
+- **28 MCP tools** expose all of the above to coding agents.
+
+## 6. CLI Command Reference
 
 ```bash
 # Initialize Epires in the current repository
@@ -344,7 +366,7 @@ epires dag
 
 ---
 
-## 6. Model Context Protocol (MCP) Specification
+## 7. Model Context Protocol (MCP) Specification
 
 Epires exposes 20 deterministic MCP tools for AI agents:
 
@@ -373,7 +395,24 @@ Epires exposes 20 deterministic MCP tools for AI agents:
 
 ---
 
-## 7. Testing & Mathematical Fuzzing
+## 8. Eval Sandbox
+
+`sandbox/` measures whether prompts and models actually behave epistemically — scenarios with ground truth, graded 0–1 scoring, full transcripts.
+
+```bash
+# mock agents (no LLM needed)
+python -m sandbox.run_eval --all --report
+
+# real agents via opencode CLI
+EPIRES_EVAL_MODEL=opencode/x-preview-f-free \
+  python -m sandbox.run_eval --all --variant protocol --agent opencode
+```
+
+17 scenarios cover: Duhem–Quine attribution (`planted_bug`, `hidden_confound`, `baseline_stale`), selection bias (`selection_bias`, `survivor_bias`), metric traps (`goal_metric_mismatch`, `seed_luck`), leakage (`leakage_gap`, `open_leak_hunt`), test manipulation (`planted_manipulation`), premature commitment (`commitment_trap`, `repro_flip`), self-evaluation bias (`double_blind_missing`), vacuous confirmation (`vacuous_confirm`), drift (`metric_drift`), conflicts (`conflicting`, `open_web_prior`).
+
+Measured result (protocol.md decision prompt): frontier-class model 15/15 PASS; free-tier models pass the easy half only — the battery discriminates.
+
+## 9. Testing & Mathematical Fuzzing
 
 The engine is verified using **property-based fuzz testing** powered by `hypothesis`:
 
@@ -390,6 +429,6 @@ pytest -v
 
 ---
 
-## 8. License
+## 10. License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for details.

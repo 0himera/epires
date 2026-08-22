@@ -1,6 +1,6 @@
 [project]
 name = "epires"
-version = "0.3.3.1"
+version = "0.4.0.0"
 description = "Epistemic Auto-Research Harness: VSA Hypergraph, Hypothesis Falsification DAG, Automated Tracing & MCP"
 readme = "README.md"
 license = { text = "MIT" }
