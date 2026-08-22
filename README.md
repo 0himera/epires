@@ -5,7 +5,7 @@
 <div align="center">
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![CI](https://github.com/himera/epires/actions/workflows/ci.yml/badge.svg)](https://github.com/himera/epires/actions/workflows/ci.yml)
+[![CI](https://github.com/0himera/epires/actions/workflows/ci.yml/badge.svg)](https://github.com/0himera/epires/actions/workflows/ci.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
 [![MCP 2.0](https://img.shields.io/badge/MCP-2.0-8A2BE2.svg)](https://modelcontextprotocol.io)
 [![Property-Based Fuzzing](https://img.shields.io/badge/Fuzzing-Hypothesis-success.svg)](https://hypothesis.readthedocs.io/)
