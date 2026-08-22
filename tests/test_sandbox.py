@@ -24,6 +24,7 @@ NEW_SCENARIOS = [
     "survivor_bias",
     "double_blind_missing",
     "repro_flip",
+    "planted_manipulation",
 ]
 
 

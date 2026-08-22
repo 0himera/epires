@@ -1,6 +1,6 @@
 """FastMCP Server for Epires Research Harness.
 
-Exposes 27 deterministic tools for LLM agents:
+Exposes 28 deterministic tools for LLM agents:
 - epires_get_schema (Canonical data format & python migration template)
 - epires_register_hypothesis (Popperian criteria & DAG cycle detection)
 - epires_register_experiment (Explicit reproducibility metadata & execution parameters)
@@ -20,7 +20,7 @@ Exposes 27 deterministic tools for LLM agents:
 - epires_parallel_web_search (Multi-query literature search via parallel-web)
 - epires_parallel_extract (Guaranteed JSON markdown extraction from URLs)
 - epires_record_trace (Real-time operational audit trail)
-- epires_system_status (Harness version, database status, and tools inventory)
+ - epires_system_status (Harness version, database status, and tools inventory)
 """
 
 from __future__ import annotations
@@ -68,7 +68,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
                 "db_path": str(db_path),
                 "total_hypotheses": len(hypotheses),
                 "parallel_auth": bool(p_key),
-                "tools_count": 27,
+                "tools_count": 28,
                 "status": "ready",
             },
             indent=2,
@@ -550,6 +550,13 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             evidence.append(ev)
         level = compute_level(evidence, hypothesis)
         return json.dumps({"hypothesis_id": hypothesis_id, "evidence_count": len(evidence), "level": level.value})
+
+    @mcp.tool()
+    def s3_audit_confirmed() -> str:
+        """Run the independent S3* auditor over all CONFIRMED hypotheses."""
+        from epires_core.auditor import audit_confirmed
+
+        return json.dumps(audit_confirmed(store), indent=2)
 
     return mcp
 
