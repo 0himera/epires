@@ -56,8 +56,11 @@ class RelationEdge(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
+from uuid import uuid4
+
+
 class EvidenceClaim(BaseModel):
-    id: str
+    id: str = Field(default_factory=lambda: f"EV-{uuid4().hex[:8]}")
     hypothesis_id: str
     evidence_level: EvidenceLevel
     source_confidence: SourceConfidence = SourceConfidence.V

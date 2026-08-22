@@ -376,6 +376,81 @@ def main():
     )
     synthesis_parser.add_argument("--out", "-o", default=None, help="Output markdown file path (default: stdout)")
 
+    # Register Hypothesis
+    reg_parser = subparsers.add_parser(
+        "register-hypothesis", aliases=["register"], help="Register a new hypothesis in the epistemic hypergraph"
+    )
+    reg_parser.add_argument("--id", "-i", "-H", required=True, help="Unique hypothesis ID (e.g., H93, VSAR-025)")
+    reg_parser.add_argument("--title", "-t", required=True, help="Descriptive hypothesis title")
+    reg_parser.add_argument(
+        "--mechanism", "-m", required=True, help="A priori theoretical mechanism / mathematical justification"
+    )
+    reg_parser.add_argument(
+        "--criteria", "-c", required=True, help="Popperian falsification criteria (e.g., 'delta < 0')"
+    )
+    reg_parser.add_argument("--parents", "-p", default="", help="Comma-separated parent hypothesis IDs")
+    reg_parser.add_argument(
+        "--status",
+        "-s",
+        choices=["PROPOSED", "IN_PROGRESS", "CONFIRMED", "FALSIFIED", "BLOCKED", "REFINED"],
+        default="PROPOSED",
+        help="Initial status (default: PROPOSED)",
+    )
+    reg_parser.add_argument(
+        "--target-level",
+        "-l",
+        choices=["E0", "E1", "E2", "E3", "E4", "E5"],
+        default="E3",
+        help="Target evidence level (default: E3)",
+    )
+    reg_parser.add_argument("--domain", default=None, help="Domain override")
+    reg_parser.add_argument("--primary-metric", default=None, help="Primary metric override")
+
+    # Log Evidence
+    ev_parser = subparsers.add_parser(
+        "log-evidence", aliases=["evidence"], help="Log empirical evidence claim and update hypothesis status"
+    )
+    ev_parser.add_argument("--hypothesis", "-H", "-i", required=True, help="Target hypothesis ID (e.g. H92-T1)")
+    ev_parser.add_argument("--claim", "-c", required=True, help="Empirical evidence claim text")
+    ev_parser.add_argument(
+        "--level",
+        "-l",
+        choices=["E0", "E1", "E2", "E3", "E4", "E5"],
+        default="E2",
+        help="Evidence level (default: E2)",
+    )
+    ev_parser.add_argument(
+        "--source",
+        "-s",
+        choices=["V", "P", "D"],
+        default="V",
+        help="Source confidence: [V]erified, [P]roposed/secondary, [D]erived (default: V)",
+    )
+    ev_parser.add_argument("--metric", "-m", default=None, help="Primary metric name (e.g. RMSLE, AUC, loss)")
+    ev_parser.add_argument("--delta", "-d", type=float, default=None, help="Delta vs baseline (positive or negative)")
+    ev_parser.add_argument("--ci", default=None, help="95% Confidence interval as '[lower, upper]' or 'lower,upper'")
+    ev_parser.add_argument(
+        "--falsified",
+        "--falsification-triggered",
+        dest="falsification_triggered",
+        action="store_true",
+        help="Mark evidence as triggering falsification",
+    )
+    ev_parser.add_argument(
+        "--status",
+        choices=["CONFIRMED", "FALSIFIED", "BLOCKED", "IN_PROGRESS", "PROPOSED", "REFINED"],
+        default=None,
+        help="Explicit status transition override",
+    )
+    ev_parser.add_argument(
+        "--assumptions",
+        "-a",
+        default=None,
+        help="Comma-separated suspect auxiliary assumptions (e.g. 'AUX_SAMPLING,AUX_SEED')",
+    )
+    ev_parser.add_argument("--commit", default=None, help="Git commit SHA associated with evidence")
+    ev_parser.add_argument("--artifact", default=None, help="Path to primary artifact")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -658,6 +733,106 @@ def main():
             print(f"[+] Epistemic synthesis report generated and written to {out_file}")
         else:
             print(report_md)
+
+    elif args.command in ("register-hypothesis", "register"):
+        from .models import HypothesisNode, HypothesisStatus, EvidenceLevel
+
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+
+        parents = [p.strip() for p in args.parents.split(",") if p.strip()] if args.parents else []
+        h = HypothesisNode(
+            id=args.id.strip(),
+            title=args.title.strip(),
+            a_priori_mechanism=args.mechanism.strip(),
+            falsification_criteria=args.criteria.strip(),
+            parent_ids=parents,
+            status=HypothesisStatus(args.status),
+            target_evidence_level=EvidenceLevel(args.target_level),
+            domain=args.domain or config.domain,
+            primary_metric=args.primary_metric or config.primary_metric,
+        )
+        saved = store.register_hypothesis(h, allow_status_override=True)
+        print(f"[+] Successfully registered hypothesis [{saved.id}]: '{saved.title}'")
+        print(
+            f"    Status: {saved.status.value} | Target Level: {saved.target_evidence_level.value} | Parents: {saved.parent_ids}"
+        )
+
+    elif args.command in ("log-evidence", "evidence"):
+        from .models import EvidenceClaim, EvidenceLevel, SourceConfidence, HypothesisStatus
+
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+
+        target_h = store.get_hypothesis(args.hypothesis.strip())
+        if not target_h:
+            print(f"[!] Error: Hypothesis '{args.hypothesis}' does not exist in research graph.")
+            sys.exit(1)
+
+        # Parse CI bounds
+        lower_ci: float | None = None
+        upper_ci: float | None = None
+        if args.ci:
+            import re
+
+            cleaned = args.ci.strip("[](){}\"'\t ")
+            parts = re.split(r"[,;\s]+", cleaned)
+            nums = []
+            for p in parts:
+                if p:
+                    try:
+                        nums.append(float(p))
+                    except ValueError:
+                        pass
+            if len(nums) >= 2:
+                lower_ci, upper_ci = nums[0], nums[1]
+            elif len(nums) == 1:
+                lower_ci = nums[0]
+
+        assumptions = [a.strip() for a in args.assumptions.split(",") if a.strip()] if args.assumptions else []
+
+        ev = EvidenceClaim(
+            hypothesis_id=args.hypothesis.strip(),
+            evidence_level=EvidenceLevel(args.level),
+            source_confidence=SourceConfidence(args.source),
+            claim=args.claim.strip(),
+            metric_name=args.metric or config.primary_metric,
+            delta_vs_baseline=args.delta,
+            ci_95_lower=lower_ci,
+            ci_95_upper=upper_ci,
+            falsification_triggered=args.falsification_triggered or (args.status == "FALSIFIED"),
+            assumption_ids=assumptions,
+            commit_hash=args.commit,
+            citation_or_path=args.artifact or "",
+        )
+
+        ev, blocked_children = store.log_evidence(ev)
+        if args.status:
+            target_h.status = HypothesisStatus(args.status)
+            store.register_hypothesis(target_h, allow_status_override=True, emit_trace=False)
+
+        updated_h = store.get_hypothesis(args.hypothesis.strip())
+        status_icon = (
+            "🟢"
+            if updated_h.status == HypothesisStatus.CONFIRMED
+            else "🔴"
+            if updated_h.status == HypothesisStatus.FALSIFIED
+            else "⚫"
+            if updated_h.status == HypothesisStatus.BLOCKED
+            else "🟡"
+        )
+        print(f"[+] Evidence logged for [{updated_h.id}] (Claim ID: {ev.id}):")
+        print(f"    Claim:  {ev.claim}")
+        print(f"    Status: {status_icon} {updated_h.status.value} (Level: {updated_h.current_evidence_level.value})")
+        if ev.delta_vs_baseline is not None:
+            ci_str = f" [95% CI: {ev.ci_95_lower}, {ev.ci_95_upper}]" if ev.ci_95_lower is not None else ""
+            print(f"    Delta:  {ev.delta_vs_baseline:+g} on {ev.metric_name}{ci_str}")
+        if blocked_children:
+            print(
+                f"    [!] Cascaded invalidation: BLOCKED {len(blocked_children)} child hypotheses: {blocked_children}"
+            )
 
     else:
         parser.print_help()
