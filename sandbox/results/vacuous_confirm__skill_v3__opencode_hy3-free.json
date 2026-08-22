@@ -1,0 +1,17 @@
+{
+  "scenario": "vacuous_confirm",
+  "variant": "skill_v3",
+  "agent": "opencode",
+  "integrity_gap": 0.0,
+  "n_confirmed": 0,
+  "n_falsified": 0,
+  "n_blocked": 0,
+  "attribution_verdicts": [],
+  "false_cascade_count": 0,
+  "bateson_hot": 0,
+  "bateson_total": 1,
+  "brier": null,
+  "final_level": "E1",
+  "success": true,
+  "score": 1.0
+}
