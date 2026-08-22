@@ -288,8 +288,18 @@ def main():
     # Status
     subparsers.add_parser("status", help="Print summary of research graph & evidence")
 
-    # Mermaid
-    subparsers.add_parser("dag", help="Print Mermaid diagram of hypothesis DAG")
+    # Mermaid DAG
+    dag_parser = subparsers.add_parser("dag", help="Print Mermaid diagram of hypothesis DAG")
+    dag_parser.add_argument(
+        "--frontier",
+        action="store_true",
+        help="Filter DAG to active frontier (PROPOSED & IN_PROGRESS nodes + immediate parents)",
+    )
+    dag_parser.add_argument(
+        "--status",
+        default=None,
+        help="Comma-separated status filter (e.g. 'CONFIRMED,IN_PROGRESS')",
+    )
 
     # Doctor
     subparsers.add_parser("doctor", help="Run comprehensive diagnostic checks on MCP, SQLite, and configuration")
@@ -369,6 +379,12 @@ def main():
     )
     algedonic_parser.add_argument("--threshold", type=int, default=3, help="Cascade failures threshold (default: 3)")
     algedonic_parser.add_argument("--freeze", default=None, help="Freeze downstream branch for given hypothesis ID")
+    algedonic_parser.add_argument(
+        "--active-only", action="store_true", help="Only check active IN_PROGRESS and CONFIRMED hypotheses"
+    )
+    algedonic_parser.add_argument(
+        "--min-level", choices=["E0", "E1", "E2", "E3", "E4", "E5"], default="E0", help="Minimum evidence level"
+    )
 
     # Synthesis
     synthesis_parser = subparsers.add_parser(
@@ -632,7 +648,8 @@ def main():
         root = find_project_root()
         config = EpiresProjectConfig.load(root)
         store = EpiresStore(db_path=str(root / config.paths.db_path))
-        print(store.export_mermaid_dag())
+        statuses = [s.strip() for s in args.status.split(",") if s.strip()] if args.status else None
+        print(store.export_mermaid_dag(frontier_only=args.frontier, statuses=statuses))
 
     elif args.command == "audit":
         import os
@@ -710,7 +727,12 @@ def main():
             for b in blocked:
                 print(f"    - ⚫ {b}")
         else:
-            alerts = check_triggers(store, n_failures_threshold=args.threshold)
+            alerts = check_triggers(
+                store,
+                n_failures_threshold=args.threshold,
+                active_only=args.active_only,
+                min_evidence_level=args.min_level,
+            )
             print(f"\n==================== ALGEDONIC ALERTS: {config.project_name.upper()} ====================")
             if not alerts:
                 print("🟢 No active pain triggers. Research graph is operating normally.")

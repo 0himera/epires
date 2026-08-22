@@ -1227,11 +1227,38 @@ class EpiresStore:
                 for r in reversed(rows)
             ]
 
-    def export_mermaid_dag(self) -> str:
-        """Generates a Mermaid graph markdown representing the hypothesis dependency DAG."""
+    def export_mermaid_dag(
+        self,
+        frontier_only: bool = False,
+        statuses: Optional[List[str]] = None,
+    ) -> str:
+        """Generates a Mermaid graph markdown representing the hypothesis dependency DAG.
+
+        frontier_only: If True, only includes active (PROPOSED / IN_PROGRESS) hypotheses and their immediate parents.
+        statuses: If provided, filters to hypotheses matching the given status strings.
+        """
         all_h = self.list_hypotheses()
         if not all_h:
             return "```mermaid\ngraph TD\n  Empty[No Hypotheses Registered]\n```"
+
+        target_nodes = set()
+        if frontier_only:
+            active = [h for h in all_h if h.status in (HypothesisStatus.PROPOSED, HypothesisStatus.IN_PROGRESS)]
+            for h in active:
+                target_nodes.add(h.id)
+                for pid in h.parent_ids:
+                    target_nodes.add(pid)
+        elif statuses:
+            status_set = {s.upper() for s in statuses}
+            for h in all_h:
+                if h.status.value in status_set:
+                    target_nodes.add(h.id)
+        else:
+            target_nodes = {h.id for h in all_h}
+
+        filtered_h = [h for h in all_h if h.id in target_nodes]
+        if not filtered_h:
+            return "```mermaid\ngraph TD\n  Empty[No Hypotheses Matched Filter]\n```"
 
         lines = ["```mermaid", "graph TD"]
 
@@ -1245,7 +1272,7 @@ class EpiresStore:
         with self._get_connection() as conn:
             edges = conn.execute("SELECT * FROM relations").fetchall()
 
-        for h in all_h:
+        for h in filtered_h:
             status_style = {
                 HypothesisStatus.CONFIRMED: "confirmed",
                 HypothesisStatus.FALSIFIED: "falsified",
@@ -1261,27 +1288,20 @@ class EpiresStore:
             )
 
         for edge in edges:
-            rel = edge["relation_type"]
             src = edge["source_id"]
             tgt = edge["target_id"]
-            if rel == RelationType.DEPENDS_ON.value:
-                lines.append(f"  {src} -->|depends_on| {tgt}")
-            elif rel == RelationType.SUPERSEDES.value:
-                lines.append(f"  {src} ==>|SUPERSEDES| {tgt}")
-            elif rel == RelationType.CONFLICTS_WITH.value:
-                lines.append(f"  {src} <-.->|CONFLICTS_WITH| {tgt}")
-            elif rel == RelationType.REFINES.value:
-                lines.append(f"  {src} -->|REFINES| {tgt}")
-            elif rel == RelationType.BLOCKS.value:
-                lines.append(f"  {src} -.->|BLOCKS| {tgt}")
-            elif rel == RelationType.FALSIFIES.value:
-                lines.append(f"  {src} ==>|FALSIFIES| {tgt}")
-            elif rel == RelationType.PRODUCES.value:
-                lines.append(f"  {src} -->|PRODUCES| {tgt}")
-            elif rel == RelationType.GATED_BY.value:
-                lines.append(f"  {src} -.->|GATED_BY| {tgt}")
-            else:
-                lines.append(f"  {src} -->|{rel}| {tgt}")
+            if src in target_nodes and tgt in target_nodes:
+                rel = edge["relation_type"]
+                if rel == RelationType.DEPENDS_ON.value:
+                    lines.append(f"  {src} --> {tgt}")
+                elif rel == RelationType.BLOCKS.value:
+                    lines.append(f"  {src} -.->|blocks| {tgt}")
+                elif rel == RelationType.SUPERSEDES.value:
+                    lines.append(f"  {src} ==>|supersedes| {tgt}")
+                elif rel == RelationType.CONFLICTS_WITH.value:
+                    lines.append(f"  {src} <-->|conflicts| {tgt}")
+                else:
+                    lines.append(f"  {src} --- {tgt}")
 
         lines.append("```")
         return "\n".join(lines)

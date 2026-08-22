@@ -134,3 +134,100 @@ def test_cli_atomic_register_and_log_evidence(monkeypatch):
         child_blocked = store.get_hypothesis("H-CHILD-1")
         assert h_fals.status == HypothesisStatus.FALSIFIED
         assert child_blocked.status == HypothesisStatus.BLOCKED
+
+
+def test_cli_dag_frontier_filter(monkeypatch):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_path = Path(tmpdir)
+        init_workspace(target_dir=tmp_path)
+        store = EpiresStore(db_path=tmp_path / ".epires" / "hypotheses.db")
+
+        # Register confirmed parent, in_progress child, and distant archived node
+        h_parent = store.register_hypothesis(
+            store._row_to_hypothesis(
+                {
+                    "id": "H-PARENT",
+                    "title": "Parent",
+                    "a_priori_mechanism": "m",
+                    "falsification_criteria": "c",
+                    "target_evidence_level": "E3",
+                    "current_evidence_level": "E3",
+                    "status": "CONFIRMED",
+                    "parent_ids_json": "[]",
+                    "entities_json": "[]",
+                    "tags_json": "[]",
+                    "criteria_version": "v1",
+                    "observation_context": "",
+                    "created_at": "",
+                    "updated_at": "",
+                }
+            ),
+            allow_status_override=True,
+            emit_trace=False,
+        )
+        h_active = store.register_hypothesis(
+            store._row_to_hypothesis(
+                {
+                    "id": "H-ACTIVE",
+                    "title": "Active frontier",
+                    "a_priori_mechanism": "m",
+                    "falsification_criteria": "c",
+                    "target_evidence_level": "E3",
+                    "current_evidence_level": "E1",
+                    "status": "IN_PROGRESS",
+                    "parent_ids_json": '["H-PARENT"]',
+                    "entities_json": "[]",
+                    "tags_json": "[]",
+                    "criteria_version": "v1",
+                    "observation_context": "",
+                    "created_at": "",
+                    "updated_at": "",
+                }
+            ),
+            allow_status_override=True,
+            emit_trace=False,
+        )
+        h_archived = store.register_hypothesis(
+            store._row_to_hypothesis(
+                {
+                    "id": "H-ARCHIVED",
+                    "title": "Archived Falsified",
+                    "a_priori_mechanism": "m",
+                    "falsification_criteria": "c",
+                    "target_evidence_level": "E3",
+                    "current_evidence_level": "E3",
+                    "status": "FALSIFIED",
+                    "parent_ids_json": "[]",
+                    "entities_json": "[]",
+                    "tags_json": "[]",
+                    "criteria_version": "v1",
+                    "observation_context": "",
+                    "created_at": "",
+                    "updated_at": "",
+                }
+            ),
+            allow_status_override=True,
+            emit_trace=False,
+        )
+
+        frontier_dag = store.export_mermaid_dag(frontier_only=True)
+        assert "H-ACTIVE" in frontier_dag
+        assert "H-PARENT" in frontier_dag
+        assert "H-ARCHIVED" not in frontier_dag
+
+
+def test_doctor_redundancy_check():
+    from epires_core.doctor import run_epires_doctor
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_path = Path(tmpdir)
+        init_workspace(target_dir=tmp_path)
+
+        # Create obsolete research.db
+        (tmp_path / ".epires" / "research.db").write_text("", encoding="utf-8")
+
+        checks = run_epires_doctor(project_dir=tmp_path)
+        redundancy_check = next((c for c in checks if c.name == "Database Architecture Cleanliness"), None)
+        assert redundancy_check is not None
+        assert redundancy_check.warning is True
+        assert "research.db" in redundancy_check.message

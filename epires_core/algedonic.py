@@ -40,7 +40,12 @@ def _downstream_ids(store: Any, node_id: str) -> List[str]:
         return []
 
 
-def check_triggers(store: Any, n_failures_threshold: int = 3) -> List[Dict[str, str]]:
+def check_triggers(
+    store: Any,
+    n_failures_threshold: int = 3,
+    active_only: bool = False,
+    min_evidence_level: str = "E0",
+) -> List[Dict[str, str]]:
     out: List[Dict[str, str]] = []
     try:
         hyps = store.list_hypotheses() if hasattr(store, "list_hypotheses") else []
@@ -50,35 +55,50 @@ def check_triggers(store: Any, n_failures_threshold: int = 3) -> List[Dict[str, 
         from .audit import audit_hypothesis  # type: ignore
     except Exception:
         audit_hypothesis = None  # type: ignore
+
     for h in hyps:
         hid = getattr(h, "id", "")
+        st = getattr(getattr(h, "status", ""), "value", str(getattr(h, "status", "")))
+        lvl = getattr(getattr(h, "current_evidence_level", ""), "value", str(getattr(h, "current_evidence_level", "")))
+
+        if active_only and st not in ("IN_PROGRESS", "CONFIRMED"):
+            continue
+        if lvl < min_evidence_level:
+            continue
+
         try:
             evs = store.get_evidence_for_hypothesis(hid) if hasattr(store, "get_evidence_for_hypothesis") else []
         except Exception:
             evs = []
+
+        # Contradiction: opposing evidence claims on same hypothesis
         has_true = any(getattr(e, "falsification_triggered", False) for e in evs)
         has_false = any(not getattr(e, "falsification_triggered", False) for e in evs)
         if has_true and has_false and len(evs) >= 2:
             out.append({"trigger": "contradiction", "node_id": hid, "severity": "high"})
-        if audit_hypothesis is not None:
+
+        # Integrity alert (audit_fail): Only evaluate G0-G8 on CONFIRMED hypotheses
+        if audit_hypothesis is not None and st == "CONFIRMED":
             try:
                 a = audit_hypothesis(hid, store)  # type: ignore
                 if not a["passed"]:
                     out.append({"trigger": "audit_fail", "node_id": hid, "severity": "high"})
             except Exception:
                 pass
+
         downstream = _downstream_ids(store, hid)
         blocked = 0
         for cid in downstream:
             try:
                 ch2 = store.get_hypothesis(cid) if hasattr(store, "get_hypothesis") else None
-                st = getattr(getattr(ch2, "status", ""), "value", str(getattr(ch2, "status", ""))) if ch2 else ""
-                if st == "BLOCKED":
+                ch_st = getattr(getattr(ch2, "status", ""), "value", str(getattr(ch2, "status", ""))) if ch2 else ""
+                if ch_st == "BLOCKED":
                     blocked += 1
             except Exception:
                 continue
         if blocked >= n_failures_threshold:
             out.append({"trigger": "n_failures", "node_id": hid, "severity": "medium"})
+
     try:
         traces = store.list_traces(limit=10001) if hasattr(store, "list_traces") else []  # type: ignore
         if len(traces) > 10000:

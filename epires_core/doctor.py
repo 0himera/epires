@@ -97,6 +97,25 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
         c_db.warn_check(f"Database file not yet created at {db_file}. Will be generated on first registration.")
     checks.append(c_db)
 
+    # 3b. Database Redundancy & Ambiguity Check
+    c_db_redundancy = DoctorCheck(
+        "Database Architecture Cleanliness", "Detects obsolete or duplicate SQLite databases in .epires/"
+    )
+    epires_dir = root / ".epires"
+    if epires_dir.exists():
+        all_dbs = [f for f in epires_dir.glob("*.db") if not f.name.endswith(("-journal", "-wal", "-shm"))]
+        legacy_dbs = [f.name for f in all_dbs if f.name != "hypotheses.db"]
+        if legacy_dbs:
+            c_db_redundancy.warn_check(
+                f"Multiple/legacy database files detected in .epires/: {', '.join(legacy_dbs)}. Canonical database is 'hypotheses.db'.",
+                redundant_databases=legacy_dbs,
+            )
+        else:
+            c_db_redundancy.pass_check("Clean single database architecture (.epires/hypotheses.db)")
+    else:
+        c_db_redundancy.pass_check("No .epires directory created yet")
+    checks.append(c_db_redundancy)
+
     # 4. MCP Server & Live Tool Registry
     c_mcp = DoctorCheck("MCP Server & Tool Registry", "Spawns MCPServer and verifies tool availability")
     try:
