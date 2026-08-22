@@ -143,4 +143,3 @@ class AuditVerdict(BaseModel):
     reason: Optional[str] = None
     violations: List[str] = Field(default_factory=list)
     source: Optional[str] = None
-

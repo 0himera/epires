@@ -40,7 +40,9 @@ def generate_synthesis_report(store: Any, project_name: str = "Research Project"
 
     lines: List[str] = []
     lines.append(f"# Epistemic Synthesis Report — {project_name}")
-    lines.append(f"\n> **Generated**: `{now_iso}` | **Total Hypotheses**: `{len(hyps)}` | **Evidence**: `{len(evidence)}` | **Relations**: `{len(relations)}`\n")
+    lines.append(
+        f"\n> **Generated**: `{now_iso}` | **Total Hypotheses**: `{len(hyps)}` | **Evidence**: `{len(evidence)}` | **Relations**: `{len(relations)}`\n"
+    )
 
     # 1. Executive Metrics & POSIWID
     lines.append("## 1. Executive Summary & POSIWID Integrity")
@@ -70,8 +72,12 @@ def generate_synthesis_report(store: Any, project_name: str = "Research Project"
         lines.append("\n| Severity | Trigger | Node / Target |")
         lines.append("|---|---|---|")
         for alert in algedonic_alerts:
-            sev_icon = "🔴" if alert.get("severity") == "critical" else "🟠" if alert.get("severity") == "high" else "🟡"
-            lines.append(f"| {sev_icon} {alert.get('severity', '').upper()} | `{alert.get('trigger')}` | `{alert.get('node_id')}` |")
+            sev_icon = (
+                "🔴" if alert.get("severity") == "critical" else "🟠" if alert.get("severity") == "high" else "🟡"
+            )
+            lines.append(
+                f"| {sev_icon} {alert.get('severity', '').upper()} | `{alert.get('trigger')}` | `{alert.get('node_id')}` |"
+            )
     lines.append("")
 
     # 3. Lakatos Hard Core (Confirmed Hypotheses)
@@ -82,7 +88,9 @@ def generate_synthesis_report(store: Any, project_name: str = "Research Project"
         for h in confirmed_core:
             hid = getattr(h, "id", "")
             title = getattr(h, "title", "")
-            lvl = getattr(getattr(h, "current_evidence_level", ""), "value", str(getattr(h, "current_evidence_level", "")))
+            lvl = getattr(
+                getattr(h, "current_evidence_level", ""), "value", str(getattr(h, "current_evidence_level", ""))
+            )
             crit = getattr(h, "falsification_criteria", "")
             h_evs = store.get_evidence_for_hypothesis(hid) if hasattr(store, "get_evidence_for_hypothesis") else []
             lines.append(f"\n### 🟢 `[{hid}]` {title}")
@@ -93,7 +101,11 @@ def generate_synthesis_report(store: Any, project_name: str = "Research Project"
                 lines.append("- **Supporting Evidence**:")
                 for e in h_evs:
                     if not getattr(e, "falsification_triggered", False):
-                        ci_str = f" (CI95: [{e.ci_95_lower}, {e.ci_95_upper}])" if getattr(e, "ci_95_lower", None) is not None else ""
+                        ci_str = (
+                            f" (CI95: [{e.ci_95_lower}, {e.ci_95_upper}])"
+                            if getattr(e, "ci_95_lower", None) is not None
+                            else ""
+                        )
                         lines.append(f"  - `[{e.evidence_level.value}]` {e.claim}{ci_str}")
     lines.append("")
 
@@ -106,7 +118,11 @@ def generate_synthesis_report(store: Any, project_name: str = "Research Project"
         in (HypothesisStatus.FALSIFIED.value, HypothesisStatus.BLOCKED.value)
         or any(
             getattr(e, "falsification_triggered", False)
-            for e in (store.get_evidence_for_hypothesis(getattr(h, "id", "")) if hasattr(store, "get_evidence_for_hypothesis") else [])
+            for e in (
+                store.get_evidence_for_hypothesis(getattr(h, "id", ""))
+                if hasattr(store, "get_evidence_for_hypothesis")
+                else []
+            )
         )
     ]
 
@@ -143,4 +159,3 @@ def generate_synthesis_report(store: Any, project_name: str = "Research Project"
         lines.append("")
 
     return "\n".join(lines)
-

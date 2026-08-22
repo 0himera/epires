@@ -118,7 +118,6 @@ def _parse_json(content: str) -> Dict[str, Any]:
     return parse_audit_verdict(content).model_dump()
 
 
-
 def independent_audit(
     h_id: str,
     store: Any,
