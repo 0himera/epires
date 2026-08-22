@@ -147,9 +147,18 @@ def check_g7(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
     evs = _evs(evidence)
     if hypothesis is not None:
         hid = getattr(hypothesis, "id", "")
-        cnt = sum(1 for t in trs if (getattr(t, "action", "") if not isinstance(t, dict) else t.get("action", "")) == "LOG_EVIDENCE" and (getattr(t, "h_tag", "") if not isinstance(t, dict) else t.get("h_tag", "")) == hid)
+        cnt = sum(
+            1
+            for t in trs
+            if (getattr(t, "action", "") if not isinstance(t, dict) else t.get("action", "")) == "LOG_EVIDENCE"
+            and (getattr(t, "h_tag", "") if not isinstance(t, dict) else t.get("h_tag", "")) == hid
+        )
         return len(evs) >= cnt or cnt == 0
-    cnt = sum(1 for t in trs if (getattr(t, "action", "") if not isinstance(t, dict) else t.get("action", "")) == "LOG_EVIDENCE")
+    cnt = sum(
+        1
+        for t in trs
+        if (getattr(t, "action", "") if not isinstance(t, dict) else t.get("action", "")) == "LOG_EVIDENCE"
+    )
     return len(evs) >= cnt
 
 
@@ -192,6 +201,11 @@ def compute_level(
     if not check_g4(evs, hypothesis, experiments, traces):
         return lvl
     lvl = EvidenceLevel.E4
-    if not (check_g5(evs, hypothesis, experiments, traces) and check_g6(evs, hypothesis, experiments, traces) and check_g7(evs, hypothesis, experiments, traces) and check_g8(evs, hypothesis, experiments, traces)):
+    if not (
+        check_g5(evs, hypothesis, experiments, traces)
+        and check_g6(evs, hypothesis, experiments, traces)
+        and check_g7(evs, hypothesis, experiments, traces)
+        and check_g8(evs, hypothesis, experiments, traces)
+    ):
         return lvl
     return EvidenceLevel.E5

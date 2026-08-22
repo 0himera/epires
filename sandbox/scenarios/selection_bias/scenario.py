@@ -15,13 +15,18 @@ T1 = "2026-02-01T00:00:00+00:00"
 def _seed(store: Any) -> None:
     store.register_hypothesis(
         HypothesisNode(
-            id="H1", title="Tuned config beats default", a_priori_mechanism="m", falsification_criteria="delta < 0",
+            id="H1",
+            title="Tuned config beats default",
+            a_priori_mechanism="m",
+            falsification_criteria="delta < 0",
             target_evidence_level=EvidenceLevel.E3,
         )
     )
     store.log_trace(
         TraceEntry(
-            timestamp=T0, action="TRIAL_LOG", h_tag="H1",
+            timestamp=T0,
+            action="TRIAL_LOG",
+            h_tag="H1",
             summary="swept 12 configs, selected #7 by test score",
             details={"configs": 12, "selection": "max(test_score)"},
         )
@@ -48,8 +53,13 @@ def run(agent: Any, store: Any) -> Dict[str, Any]:
         level, aids = EvidenceLevel.E3, []
     store.log_evidence(
         EvidenceClaim(
-            id="res1", hypothesis_id="H1", evidence_level=level, claim="+4pp, best of 12 configs",
-            citation_or_path="http://lab/res1", assumption_ids=aids, timestamp=T1,
+            id="res1",
+            hypothesis_id="H1",
+            evidence_level=level,
+            claim="+4pp, best of 12 configs",
+            citation_or_path="http://lab/res1",
+            assumption_ids=aids,
+            timestamp=T1,
         )
     )
     h = store.get_hypothesis("H1")

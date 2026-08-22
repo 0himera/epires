@@ -45,9 +45,7 @@ def make_agent(kind: str, variant_text: str, scenario_description: str) -> Any:
     raise ValueError(f"unknown agent kind: {kind}")
 
 
-def run_one(
-    scenario: str, variant: str, agent_kind: str = "mock", results_dir: Optional[str | Path] = None
-) -> dict:
+def run_one(scenario: str, variant: str, agent_kind: str = "mock", results_dir: Optional[str | Path] = None) -> dict:
     from epires_core.store import EpiresStore
 
     from .metrics import collect, grade

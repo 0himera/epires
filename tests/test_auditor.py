@@ -3,7 +3,14 @@
 from unittest import mock
 
 from epires_core.auditor import audit_prompt, independent_audit
-from epires_core.models import EvidenceClaim, EvidenceLevel, ExperimentNode, HypothesisNode, HypothesisStatus, SourceConfidence
+from epires_core.models import (
+    EvidenceClaim,
+    EvidenceLevel,
+    ExperimentNode,
+    HypothesisNode,
+    HypothesisStatus,
+    SourceConfidence,
+)
 from epires_core.store import EpiresStore
 
 
@@ -12,20 +19,35 @@ def _store(tmp_path):
 
 
 def _confirmed_h(store, h_id="H_AUD"):
-    store.register_hypothesis(HypothesisNode(
-        id=h_id, title="T", a_priori_mechanism="M", falsification_criteria="F",
-    ))
+    store.register_hypothesis(
+        HypothesisNode(
+            id=h_id,
+            title="T",
+            a_priori_mechanism="M",
+            falsification_criteria="F",
+        )
+    )
     store.update_hypothesis(h_id, status=HypothesisStatus.CONFIRMED)
     for i, lvl in enumerate(["E2", "E2", "E3"], 1):
-        store.log_evidence(EvidenceClaim(
-            id=f"ev{i}", hypothesis_id=h_id, evidence_level=EvidenceLevel(lvl),
-            source_confidence=SourceConfidence.V, claim=f"c{i}",
-            citation_or_path=f"https://x.example/{i}",
-        ))
-    store.register_experiment(ExperimentNode(
-        id="X1", hypothesis_id=h_id, name="X1", script_path="x.py",
-        metrics={"rmsle": 1.5},
-    ))
+        store.log_evidence(
+            EvidenceClaim(
+                id=f"ev{i}",
+                hypothesis_id=h_id,
+                evidence_level=EvidenceLevel(lvl),
+                source_confidence=SourceConfidence.V,
+                claim=f"c{i}",
+                citation_or_path=f"https://x.example/{i}",
+            )
+        )
+    store.register_experiment(
+        ExperimentNode(
+            id="X1",
+            hypothesis_id=h_id,
+            name="X1",
+            script_path="x.py",
+            metrics={"rmsle": 1.5},
+        )
+    )
 
 
 def test_audit_prompt_contains_criteria_and_evidence(tmp_path):
@@ -51,9 +73,14 @@ def test_inconclusive_on_unreachable_url(tmp_path):
 def test_deterministic_fail_without_llm(tmp_path):
     # broken provenance: no evidence/experiment -> G-gate violation; LLM must never be called
     store = _store(tmp_path)
-    store.register_hypothesis(HypothesisNode(
-        id="H_BAD", title="T", a_priori_mechanism="M", falsification_criteria="F",
-    ))
+    store.register_hypothesis(
+        HypothesisNode(
+            id="H_BAD",
+            title="T",
+            a_priori_mechanism="M",
+            falsification_criteria="F",
+        )
+    )
     store.update_hypothesis("H_BAD", status=HypothesisStatus.CONFIRMED)
 
     def boom(*a, **kw):  # any LLM attempt explodes the test

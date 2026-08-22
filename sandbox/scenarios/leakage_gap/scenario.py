@@ -15,15 +15,22 @@ T1 = "2026-02-01T00:00:00+00:00"
 def _seed(store: Any) -> None:
     store.register_hypothesis(
         HypothesisNode(
-            id="H1", title="Feature F is informative", a_priori_mechanism="m", falsification_criteria="holdout ~ chance",
+            id="H1",
+            title="Feature F is informative",
+            a_priori_mechanism="m",
+            falsification_criteria="holdout ~ chance",
             target_evidence_level=EvidenceLevel.E3,
         )
     )
     store.register_experiment(
         ExperimentNode(
-            id="X1", hypothesis_id="H1", name="feature_probe", script_path="probe.py",
+            id="X1",
+            hypothesis_id="H1",
+            name="feature_probe",
+            script_path="probe.py",
             parameters={"feature_derived_from": "user_id"},
-            metrics={"train_acc": 0.99, "holdout_acc": 0.54}, created_at=T0,
+            metrics={"train_acc": 0.99, "holdout_acc": 0.54},
+            created_at=T0,
         )
     )
 
@@ -40,24 +47,41 @@ def run(agent: Any, store: Any) -> Dict[str, Any]:
     if act.get("action") == "falsify":
         store.log_evidence(
             EvidenceClaim(
-                id="res1", hypothesis_id="H1", evidence_level=EvidenceLevel.E2,
+                id="res1",
+                hypothesis_id="H1",
+                evidence_level=EvidenceLevel.E2,
                 claim="holdout_acc=0.54 ~ chance; feature derived from user_id leaks targets",
-                citation_or_path="http://lab/res1", metric_name="holdout_acc", metric_value=0.54,
-                falsification_triggered=True, timestamp=T1,
+                citation_or_path="http://lab/res1",
+                metric_name="holdout_acc",
+                metric_value=0.54,
+                falsification_triggered=True,
+                timestamp=T1,
             )
         )
     elif act.get("action") == "verify_level":
         store.log_evidence(
-            EvidenceClaim(id="res1", hypothesis_id="H1", evidence_level=EvidenceLevel.E1,
-                          claim="train/holdout gap unexplained", citation_or_path="http://lab/res1", timestamp=T1)
+            EvidenceClaim(
+                id="res1",
+                hypothesis_id="H1",
+                evidence_level=EvidenceLevel.E1,
+                claim="train/holdout gap unexplained",
+                citation_or_path="http://lab/res1",
+                timestamp=T1,
+            )
         )
     else:
         # naive path: confirm on the inflated train score
         store.log_evidence(
-            EvidenceClaim(id="res1", hypothesis_id="H1", evidence_level=EvidenceLevel.E3,
-                          claim="train_acc=0.99, feature highly informative",
-                          citation_or_path="http://lab/res1", metric_name="train_acc", metric_value=0.99,
-                          timestamp=T1)
+            EvidenceClaim(
+                id="res1",
+                hypothesis_id="H1",
+                evidence_level=EvidenceLevel.E3,
+                claim="train_acc=0.99, feature highly informative",
+                citation_or_path="http://lab/res1",
+                metric_name="train_acc",
+                metric_value=0.99,
+                timestamp=T1,
+            )
         )
     return {"status": store.get_hypothesis("H1").status.value}
 

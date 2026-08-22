@@ -1,4 +1,5 @@
 """S3* independent auditor: another model re-verifies CONFIRMED hypotheses."""
+
 from __future__ import annotations
 
 import json
@@ -39,9 +40,9 @@ def audit_prompt(h: Any, evidence_list: List[Any], experiments: List[Any]) -> st
 Re-verify it skeptically. Do not trust the confirming side.
 
 Hypothesis:
-- id: {getattr(h, 'id', '?')}
-- title: {getattr(h, 'title', '?')}
-- falsification_criteria: {getattr(h, 'falsification_criteria', '?')}
+- id: {getattr(h, "id", "?")}
+- title: {getattr(h, "title", "?")}
+- falsification_criteria: {getattr(h, "falsification_criteria", "?")}
 
 Evidence ({len(evidence_list)}):
 {_fmt_evidence(evidence_list)}
@@ -71,11 +72,23 @@ def independent_audit(
     det = audit_hypothesis(h_id, store)
     if not det["passed"]:
         result = {"h_id": h_id, "verdict": "fail", "source": "deterministic", "violations": det["violations"]}
-        store.log_trace(TraceEntry(timestamp=store._now(), action="S3_AUDIT", h_tag=h_id, summary="S3 audit fail (deterministic)", details=result))
+        store.log_trace(
+            TraceEntry(
+                timestamp=store._now(),
+                action="S3_AUDIT",
+                h_tag=h_id,
+                summary="S3 audit fail (deterministic)",
+                details=result,
+            )
+        )
         return result
 
     model = model or os.environ.get("EPIRES_AUDIT_MODEL", "opencode/x-preview-f-free")
-    base_url = base_url or os.environ.get("EPIRES_AUDIT_BASE_URL") or os.environ.get("EPIRES_EVAL_BASE_URL", "https://api.openai.com/v1")
+    base_url = (
+        base_url
+        or os.environ.get("EPIRES_AUDIT_BASE_URL")
+        or os.environ.get("EPIRES_EVAL_BASE_URL", "https://api.openai.com/v1")
+    )
     api_key = api_key or os.environ.get("EPIRES_AUDIT_API_KEY") or os.environ.get("EPIRES_EVAL_API_KEY", "")
 
     h = store.get_hypothesis(h_id)
@@ -106,13 +119,25 @@ def independent_audit(
         r.raise_for_status()
         content = r.json()["choices"][0]["message"]["content"]
         verdict = _parse_json(content)
-        result = {"h_id": h_id, "verdict": verdict.get("verdict", "inconclusive"), "source": "llm",
-                  "reason": verdict.get("reason"), "violations": verdict.get("violations", [])}
+        result = {
+            "h_id": h_id,
+            "verdict": verdict.get("verdict", "inconclusive"),
+            "source": "llm",
+            "reason": verdict.get("reason"),
+            "violations": verdict.get("violations", []),
+        }
     except Exception as e:  # ponytail: never let the auditor crash the caller
         result = {"h_id": h_id, "verdict": "inconclusive", "error": str(e)}
 
-    store.log_trace(TraceEntry(timestamp=store._now(), action="S3_AUDIT", h_tag=h_id,
-                               summary=f"S3 audit: {result['verdict']}", details=result))
+    store.log_trace(
+        TraceEntry(
+            timestamp=store._now(),
+            action="S3_AUDIT",
+            h_tag=h_id,
+            summary=f"S3 audit: {result['verdict']}",
+            details=result,
+        )
+    )
     return result
 
 
@@ -120,4 +145,6 @@ def audit_confirmed(store: Any, model: str | None = None) -> List[Dict[str, Any]
     """Run independent_audit over all CONFIRMED hypotheses."""
     from .models import HypothesisStatus
 
-    return [independent_audit(h.id, store, model=model) for h in store.list_hypotheses(status=HypothesisStatus.CONFIRMED)]
+    return [
+        independent_audit(h.id, store, model=model) for h in store.list_hypotheses(status=HypothesisStatus.CONFIRMED)
+    ]

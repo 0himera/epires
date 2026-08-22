@@ -65,6 +65,7 @@ class AutoTracer:
         # ponytail: Bateson filter — file gets only decision-changing events; SQLite keeps full ledger
         try:
             from .stigmergy import bateson_filter
+
             # registration/bulk/falsify actions are differences by definition
             forced = entry.action.upper().startswith(("REGISTER_", "BULK_", "FALSIFY"))
             if not forced and not bateson_filter(entry):

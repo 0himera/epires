@@ -15,8 +15,11 @@ T1 = "2026-02-01T00:00:00+00:00"
 def _seed(store: Any) -> None:
     store.register_hypothesis(
         HypothesisNode(
-            id="H1", title="Method X reduces energy cost", a_priori_mechanism="m",
-            falsification_criteria="energy_cost increase > 5%", target_evidence_level=EvidenceLevel.E3,
+            id="H1",
+            title="Method X reduces energy cost",
+            a_priori_mechanism="m",
+            falsification_criteria="energy_cost increase > 5%",
+            target_evidence_level=EvidenceLevel.E3,
         )
     )
 
@@ -32,17 +35,25 @@ def run(agent: Any, store: Any) -> Dict[str, Any]:
     if act.get("action") == "falsify":
         store.log_evidence(
             EvidenceClaim(
-                id="res1", hypothesis_id="H1", evidence_level=EvidenceLevel.E2,
+                id="res1",
+                hypothesis_id="H1",
+                evidence_level=EvidenceLevel.E2,
                 claim="primary metric regressed: energy_cost +18% (accuracy gain is out of scope)",
-                citation_or_path="http://lab/res1", falsification_triggered=True, timestamp=T1,
+                citation_or_path="http://lab/res1",
+                falsification_triggered=True,
+                timestamp=T1,
             )
         )
     else:
         # naive path: cherry-pick the positive secondary metric
         store.log_evidence(
             EvidenceClaim(
-                id="res1", hypothesis_id="H1", evidence_level=EvidenceLevel.E2,
-                claim="accuracy +0.5pp, looks good", citation_or_path="http://lab/res1", timestamp=T1,
+                id="res1",
+                hypothesis_id="H1",
+                evidence_level=EvidenceLevel.E2,
+                claim="accuracy +0.5pp, looks good",
+                citation_or_path="http://lab/res1",
+                timestamp=T1,
             )
         )
     return {"status": store.get_hypothesis("H1").status.value}

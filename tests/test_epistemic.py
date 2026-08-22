@@ -24,9 +24,7 @@ from epires_core.tms import add_justification, add_premise, init_tms_tables, pro
 
 
 def make_h(hid: str = "H1", criteria: str = "metric > 0.5") -> HypothesisNode:
-    return HypothesisNode(
-        id=hid, title=f"hyp {hid}", a_priori_mechanism="m", falsification_criteria=criteria
-    )
+    return HypothesisNode(id=hid, title=f"hyp {hid}", a_priori_mechanism="m", falsification_criteria=criteria)
 
 
 def make_ev(hid: str, eid: str, **kw) -> EvidenceClaim:
@@ -63,12 +61,24 @@ def test_gates_no_evidence_is_e0():
 def test_gates_ci95_above_threshold_reaches_e4():
     h = make_h(criteria="metric > 0.5")
     evs = [
-        make_ev("H1", f"ev{i}", ci_95_lower=0.7, ci_95_upper=0.9, prediction="acc > 0.5", assumption_ids=["a1"], timestamp="2026-01-01T00:00:00Z")
+        make_ev(
+            "H1",
+            f"ev{i}",
+            ci_95_lower=0.7,
+            ci_95_upper=0.9,
+            prediction="acc > 0.5",
+            assumption_ids=["a1"],
+            timestamp="2026-01-01T00:00:00Z",
+        )
         for i in range(3)
     ]
     exp = ExperimentNode(
-        id="X1", hypothesis_id="H1", name="n", script_path="s.py",
-        parameters={"held_out_hash": "abc"}, created_at="",
+        id="X1",
+        hypothesis_id="H1",
+        name="n",
+        script_path="s.py",
+        parameters={"held_out_hash": "abc"},
+        created_at="",
     )
     assert compute_level(evs, h, experiments=[exp]) == EvidenceLevel.E4
 
@@ -76,12 +86,18 @@ def test_gates_ci95_above_threshold_reaches_e4():
 def test_gates_ci95_below_threshold_caps_at_e3():
     h = make_h(criteria="metric > 0.5")
     evs = [
-        make_ev("H1", f"ev{i}", ci_95_lower=0.3, ci_95_upper=0.4, prediction="acc > 0.5", timestamp="2026-01-01T00:00:00Z")
+        make_ev(
+            "H1", f"ev{i}", ci_95_lower=0.3, ci_95_upper=0.4, prediction="acc > 0.5", timestamp="2026-01-01T00:00:00Z"
+        )
         for i in range(3)
     ]
     exp = ExperimentNode(
-        id="X1", hypothesis_id="H1", name="n", script_path="s.py",
-        parameters={"held_out_hash": "abc"}, created_at="",
+        id="X1",
+        hypothesis_id="H1",
+        name="n",
+        script_path="s.py",
+        parameters={"held_out_hash": "abc"},
+        created_at="",
     )
     assert compute_level(evs, h, experiments=[exp]) == EvidenceLevel.E3
 
@@ -220,17 +236,11 @@ def test_store_registers_tms_and_conversation(store):
     store.add_relation(RelationEdge(source_id="H1", target_id="H2", relation_type=RelationType.CONFLICTS_WITH))
 
     with store._get_connection() as conn:
-        conv = conn.execute(
-            "SELECT a_id, b_id FROM conversations WHERE a_id='H1' AND b_id='H2'"
-        ).fetchone()
+        conv = conn.execute("SELECT a_id, b_id FROM conversations WHERE a_id='H1' AND b_id='H2'").fetchone()
         assert conv is not None
-        just = conn.execute(
-            "SELECT id FROM justifications WHERE consequent='H2' AND id LIKE 'j_%'"
-        ).fetchone()
+        just = conn.execute("SELECT id FROM justifications WHERE consequent='H2' AND id LIKE 'j_%'").fetchone()
         assert just is not None
-        premise = conn.execute(
-            "SELECT id FROM justifications WHERE consequent='H1' AND id='p_H1'"
-        ).fetchone()
+        premise = conn.execute("SELECT id FROM justifications WHERE consequent='H1' AND id='p_H1'").fetchone()
         assert premise is not None
 
 
@@ -241,9 +251,7 @@ def test_audit_passes_on_clean_hypothesis(store):
     store.register_hypothesis(make_h("H1"))
     for i in range(3):
         store.log_evidence(make_ev("H1", f"ev{i}"))
-    store.register_experiment(
-        ExperimentNode(id="X1", hypothesis_id="H1", name="n", script_path="s.py")
-    )
+    store.register_experiment(ExperimentNode(id="X1", hypothesis_id="H1", name="n", script_path="s.py"))
     report = audit_hypothesis("H1", store)
     assert report["passed"] is True
     assert report["violations"] == []

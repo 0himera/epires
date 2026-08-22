@@ -1,4 +1,5 @@
 """Pask conversation for CONFLICTS_WITH — asserted→in_conversation→resolved."""
+
 from __future__ import annotations
 import sqlite3
 import uuid
@@ -51,9 +52,7 @@ def add_turn(conv_id: str, agent: str, content: str, conn: sqlite3.Connection) -
         conn.execute("UPDATE conversations SET status=? WHERE id=?", ("in_conversation", conv_id))
 
 
-def resolve_conversation(
-    conv_id: str, resolution: str, merged_id: str | None, conn: sqlite3.Connection
-) -> None:
+def resolve_conversation(conv_id: str, resolution: str, merged_id: str | None, conn: sqlite3.Connection) -> None:
     if resolution not in _VALID:
         raise ValueError(f"resolution must be one of {_VALID}, got {resolution!r}")
     if resolution == "merge" and not merged_id:

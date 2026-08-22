@@ -1,4 +1,5 @@
 """Abstract argumentation — grounded labeling + bipolar supported attacks."""
+
 from __future__ import annotations
 
 try:
@@ -36,9 +37,7 @@ def grounded_labeling(attacks: list[tuple[str, str]]) -> dict[str, str]:
     return label
 
 
-def bipolar_to_attacks(
-    supports: list[tuple[str, str]], conflicts: list[tuple[str, str]]
-) -> list[tuple[str, str]]:
+def bipolar_to_attacks(supports: list[tuple[str, str]], conflicts: list[tuple[str, str]]) -> list[tuple[str, str]]:
     """Преобразует SUPPORTS+CONFLICTS в атаки с транзитивным замыканием по SUPPORTS."""
     adj: dict[str, list[str]] = {}
     for a, b in supports:

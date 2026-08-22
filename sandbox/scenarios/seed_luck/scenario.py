@@ -14,7 +14,9 @@ T1 = "2026-02-01T00:00:00+00:00"
 
 def _seed(store: Any) -> None:
     store.register_hypothesis(
-        HypothesisNode(id="H_AUX", title="Eval noise calibration", a_priori_mechanism="m", falsification_criteria="sigma > 5pp")
+        HypothesisNode(
+            id="H_AUX", title="Eval noise calibration", a_priori_mechanism="m", falsification_criteria="sigma > 5pp"
+        )
     )
     store.log_evidence(
         EvidenceClaim(
@@ -29,7 +31,10 @@ def _seed(store: Any) -> None:
     )
     store.register_hypothesis(
         HypothesisNode(
-            id="H1", title="Variant B beats baseline", a_priori_mechanism="m", falsification_criteria="delta < -2pp",
+            id="H1",
+            title="Variant B beats baseline",
+            a_priori_mechanism="m",
+            falsification_criteria="delta < -2pp",
             target_evidence_level=EvidenceLevel.E3,
         )
     )
@@ -55,8 +60,13 @@ def run(agent: Any, store: Any) -> Dict[str, Any]:
         level, aids = EvidenceLevel.E2, []
     store.log_evidence(
         EvidenceClaim(
-            id="res1", hypothesis_id="H1", evidence_level=level, claim="+3.1pp on a single seed (sigma=2pp)",
-            citation_or_path="http://lab/res1", assumption_ids=aids, timestamp=T1,
+            id="res1",
+            hypothesis_id="H1",
+            evidence_level=level,
+            claim="+3.1pp on a single seed (sigma=2pp)",
+            citation_or_path="http://lab/res1",
+            assumption_ids=aids,
+            timestamp=T1,
         )
     )
     return {"final_level": store.get_hypothesis("H1").current_evidence_level.value}

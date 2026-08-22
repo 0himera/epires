@@ -1,4 +1,5 @@
 """TMS JTMS minimal — premises, justifications, IN/OUT propagation."""
+
 from __future__ import annotations
 
 import sqlite3

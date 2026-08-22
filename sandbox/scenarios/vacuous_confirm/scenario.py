@@ -15,14 +15,21 @@ T1 = "2026-02-01T00:00:00+00:00"
 def _seed(store: Any) -> None:
     store.register_hypothesis(
         HypothesisNode(
-            id="H1", title="e-fold CV >= k-fold", a_priori_mechanism="m", falsification_criteria="delta < 0",
+            id="H1",
+            title="e-fold CV >= k-fold",
+            a_priori_mechanism="m",
+            falsification_criteria="delta < 0",
             target_evidence_level=EvidenceLevel.E3,
         )
     )
     store.register_experiment(
         ExperimentNode(
-            id="X1", hypothesis_id="H1", name="cv_compare", script_path="run_cv.py",
-            parameters={"baseline_rerun": False}, created_at=T0,
+            id="X1",
+            hypothesis_id="H1",
+            name="cv_compare",
+            script_path="run_cv.py",
+            parameters={"baseline_rerun": False},
+            created_at=T0,
         )
     )
 
@@ -47,9 +54,13 @@ def run(agent: Any, store: Any) -> Dict[str, Any]:
         level, aids = EvidenceLevel.E3, []
     store.log_evidence(
         EvidenceClaim(
-            id="res1", hypothesis_id="H1", evidence_level=level,
+            id="res1",
+            hypothesis_id="H1",
+            evidence_level=level,
             claim="e-fold outperforms k-fold (baseline not rerun)",
-            citation_or_path="http://lab/res1", assumption_ids=aids, timestamp=T1,
+            citation_or_path="http://lab/res1",
+            assumption_ids=aids,
+            timestamp=T1,
         )
     )
     return {"final_level": store.get_hypothesis("H1").current_evidence_level.value}

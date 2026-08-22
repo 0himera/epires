@@ -96,7 +96,12 @@ def eig_score(candidate_evidence: dict[str, Any], hypothesis_distribution: dict[
 
     # fallback: H(q)*coverage — ponytail: LLM outcome model is ceiling
     h = _entropy(q)
-    targets = candidate_evidence.get("targets") or candidate_evidence.get("hypotheses") or candidate_evidence.get("hypothesis_ids") or []
+    targets = (
+        candidate_evidence.get("targets")
+        or candidate_evidence.get("hypotheses")
+        or candidate_evidence.get("hypothesis_ids")
+        or []
+    )
     if isinstance(targets, list) and targets:
         coverage = min(1.0, max(0.0, sum(q.get(str(t), 0) for t in targets)))
         return float(h * coverage * 0.5)
@@ -148,7 +153,17 @@ def gupta_test(candidates: list[dict[str, Any]], q: dict[str, float], cost: dict
     orig = [cid for cid, _ in score_candidates(candidates, q, cost)]
     shuffled = copy.deepcopy(candidates)
     field = None
-    for k in ("outcome_probs", "likelihood", "likelihoods", "posteriors", "expected_outcomes", "outcomes", "eig", "power", "relevance"):
+    for k in (
+        "outcome_probs",
+        "likelihood",
+        "likelihoods",
+        "posteriors",
+        "expected_outcomes",
+        "outcomes",
+        "eig",
+        "power",
+        "relevance",
+    ):
         if any(k in c for c in candidates):
             field = k
             break

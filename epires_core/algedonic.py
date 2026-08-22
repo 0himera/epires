@@ -1,13 +1,20 @@
 """Algedonic bypass — contradiction / audit_fail / n_failures / budget."""
+
 from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict, List
+
 ALGEDONIC_TRIGGERS = ["contradiction", "audit_fail", "n_failures", "budget_exhausted"]
+
+
 def _downstream_ids(store: Any, node_id: str) -> List[str]:
     if hasattr(store, "_get_connection"):
         try:
             with store._get_connection() as conn:  # type: ignore
-                cur = conn.execute("WITH RECURSIVE downstream AS (SELECT source_id AS child_id FROM relations WHERE target_id=? AND relation_type='DEPENDS_ON' UNION SELECT r.source_id FROM relations r JOIN downstream d ON r.target_id=d.child_id WHERE r.relation_type='DEPENDS_ON') SELECT child_id FROM downstream;", (node_id,))
+                cur = conn.execute(
+                    "WITH RECURSIVE downstream AS (SELECT source_id AS child_id FROM relations WHERE target_id=? AND relation_type='DEPENDS_ON' UNION SELECT r.source_id FROM relations r JOIN downstream d ON r.target_id=d.child_id WHERE r.relation_type='DEPENDS_ON') SELECT child_id FROM downstream;",
+                    (node_id,),
+                )
                 return [r["child_id"] for r in cur.fetchall()]
         except Exception:
             pass
@@ -31,6 +38,8 @@ def _downstream_ids(store: Any, node_id: str) -> List[str]:
         return out
     except Exception:
         return []
+
+
 def check_triggers(store: Any, n_failures_threshold: int = 3) -> List[Dict[str, str]]:
     out: List[Dict[str, str]] = []
     try:
@@ -77,6 +86,8 @@ def check_triggers(store: Any, n_failures_threshold: int = 3) -> List[Dict[str, 
     except Exception:
         pass
     return out
+
+
 def freeze_branch(node_id: str, store: Any) -> List[str]:
     if hasattr(store, "_cascade_falsification"):
         try:

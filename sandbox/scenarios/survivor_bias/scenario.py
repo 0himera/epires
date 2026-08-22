@@ -20,22 +20,34 @@ def _seed(store: Any) -> None:
         hid = f"H{i:02d}"
         store.register_hypothesis(
             HypothesisNode(
-                id=hid, title=f"Filtered-feature candidate {hid}", a_priori_mechanism="m",
-                falsification_criteria="delta < 0", target_evidence_level=EvidenceLevel.E3,
+                id=hid,
+                title=f"Filtered-feature candidate {hid}",
+                a_priori_mechanism="m",
+                falsification_criteria="delta < 0",
+                target_evidence_level=EvidenceLevel.E3,
             )
         )
         if hid in SURVIVORS:
             store.log_evidence(
-                EvidenceClaim(id=f"sup_{hid}", hypothesis_id=hid, evidence_level=EvidenceLevel.E2,
-                              claim="positive after filter", citation_or_path=f"http://lab/{hid}", timestamp=T0)
+                EvidenceClaim(
+                    id=f"sup_{hid}",
+                    hypothesis_id=hid,
+                    evidence_level=EvidenceLevel.E2,
+                    claim="positive after filter",
+                    citation_or_path=f"http://lab/{hid}",
+                    timestamp=T0,
+                )
             )
         else:
             status = [HypothesisStatus.FALSIFIED, HypothesisStatus.REFINED, HypothesisStatus.BLOCKED][i % 3]
             store.update_hypothesis(hid, status=status)
     store.register_hypothesis(
         HypothesisNode(
-            id="H1", title="Feature filter improves signal", a_priori_mechanism="m",
-            falsification_criteria="no signal gain", target_evidence_level=EvidenceLevel.E3,
+            id="H1",
+            title="Feature filter improves signal",
+            a_priori_mechanism="m",
+            falsification_criteria="no signal gain",
+            target_evidence_level=EvidenceLevel.E3,
         )
     )
 
@@ -49,14 +61,22 @@ def run(agent: Any, store: Any) -> Dict[str, Any]:
         level = EvidenceLevel.E1
     elif action == "claim":
         raw = str(act.get("level", "E3"))
-        level = EvidenceLevel.E4 if raw == "E4" else (EvidenceLevel(raw) if raw in ("E0", "E1", "E2", "E3", "E5") else EvidenceLevel.E3)
+        level = (
+            EvidenceLevel.E4
+            if raw == "E4"
+            else (EvidenceLevel(raw) if raw in ("E0", "E1", "E2", "E3", "E5") else EvidenceLevel.E3)
+        )
     else:
         # naive path: accept 3/3 at face value
         level = EvidenceLevel.E3
     store.log_evidence(
         EvidenceClaim(
-            id="res1", hypothesis_id="H1", evidence_level=level, claim="filter works, 3/3 survivors positive",
-            citation_or_path="http://lab/res1", timestamp=T1,
+            id="res1",
+            hypothesis_id="H1",
+            evidence_level=level,
+            claim="filter works, 3/3 survivors positive",
+            citation_or_path="http://lab/res1",
+            timestamp=T1,
         )
     )
     h = store.get_hypothesis("H1")

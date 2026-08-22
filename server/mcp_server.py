@@ -520,7 +520,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     @mcp.tool()
     def calibrated_p(agent_id: str, stated_p: float) -> str:
         """Compute the calibration-corrected probability for an agent's stated probability."""
-        return json.dumps({"agent_id": agent_id, "stated_p": stated_p, "calibrated_p": store.calibrated_p(agent_id, stated_p)})
+        return json.dumps(
+            {"agent_id": agent_id, "stated_p": stated_p, "calibrated_p": store.calibrated_p(agent_id, stated_p)}
+        )
 
     @mcp.tool()
     def pheromone_rank() -> str:

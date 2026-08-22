@@ -39,7 +39,11 @@ class EpiresStore:
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.trace_md_path = Path(trace_md_path) if trace_md_path else None
-        if os.getenv("PYTEST_CURRENT_TEST") and self.trace_md_path and str(self.trace_md_path).endswith("docs/agent-trace.md"):
+        if (
+            os.getenv("PYTEST_CURRENT_TEST")
+            and self.trace_md_path
+            and str(self.trace_md_path).endswith("docs/agent-trace.md")
+        ):
             self.trace_md_path = None  # ponytail: no docs write in pytest
         self.vsa = BipolarVSA(dim=vsa_dim)
         self.encoder = HypergraphEncoder(self.vsa)
@@ -144,6 +148,7 @@ class EpiresStore:
             # ponytail: TMS tables are optional, never block store init
             try:
                 from .tms import init_tms_tables
+
                 init_tms_tables(conn)
             except Exception:
                 pass
@@ -302,6 +307,7 @@ class EpiresStore:
             # ponytail: mirror DEPENDS_ON into JTMS-lite justifications
             try:
                 from .tms import add_premise, add_justification
+
                 if h.parent_ids:
                     add_justification(h.id, h.parent_ids, conn)
                 else:
@@ -603,13 +609,21 @@ class EpiresStore:
             if ev.falsification_triggered:
                 try:
                     from .attribution import attribute_anomaly
+
                     verdict = attribute_anomaly(ev, self)
                     if verdict.startswith("attributed:auxiliary"):
                         h.status = HypothesisStatus.BLOCKED  # ponytail: blame auxiliary, no cascade
                         self.register_hypothesis(h, allow_status_override=True, emit_trace=False)
-                        self.log_trace(TraceEntry(timestamp=self._now(), action="ANOMALY_ATTRIBUTED", agent_role="System-DAG",
-                            h_tag=ev.hypothesis_id, summary=f"Anomaly attributed to auxiliary ({verdict}); hypothesis BLOCKED, no cascade",
-                            details={"evidence_id": ev.id, "verdict": verdict}))
+                        self.log_trace(
+                            TraceEntry(
+                                timestamp=self._now(),
+                                action="ANOMALY_ATTRIBUTED",
+                                agent_role="System-DAG",
+                                h_tag=ev.hypothesis_id,
+                                summary=f"Anomaly attributed to auxiliary ({verdict}); hypothesis BLOCKED, no cascade",
+                                details={"evidence_id": ev.id, "verdict": verdict},
+                            )
+                        )
                         return ev, []
                 except Exception:
                     pass
@@ -1034,6 +1048,7 @@ class EpiresStore:
             if self._index is None or len(getattr(self._index, "_ids", ())) != len(rows):
                 try:
                     from .search_index import BinaryIndex
+
                     idx = BinaryIndex(dim=self.vsa.dim)
                     for hid, vec in zip(ids, vectors):
                         idx.add(hid, vec)  # BinaryIndex packs bipolar int8 itself

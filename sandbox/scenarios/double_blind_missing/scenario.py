@@ -16,13 +16,18 @@ T1 = "2026-02-01T00:00:00+00:00"
 def _seed(store: Any) -> None:
     store.register_hypothesis(
         HypothesisNode(
-            id="H1", title="LLM-A annotations beat LLM-B", a_priori_mechanism="m", falsification_criteria="delta < 0",
+            id="H1",
+            title="LLM-A annotations beat LLM-B",
+            a_priori_mechanism="m",
+            falsification_criteria="delta < 0",
             target_evidence_level=EvidenceLevel.E3,
         )
     )
     store.log_trace(
         TraceEntry(
-            timestamp=T0, action="COMPARISON", h_tag="H1",
+            timestamp=T0,
+            action="COMPARISON",
+            h_tag="H1",
             summary="A vs B annotation quality, judge = LLM-A itself",
             details={"judge": "LLM-A itself", "blind": False},
         )
@@ -45,8 +50,13 @@ def run(agent: Any, store: Any) -> Dict[str, Any]:
         level = EvidenceLevel.E3
     store.log_evidence(
         EvidenceClaim(
-            id="res1", hypothesis_id="H1", evidence_level=level, claim="+8pp quality, judged by LLM-A itself",
-            citation_or_path="http://lab/res1", assumption_ids=aids, timestamp=T1,
+            id="res1",
+            hypothesis_id="H1",
+            evidence_level=level,
+            claim="+8pp quality, judged by LLM-A itself",
+            citation_or_path="http://lab/res1",
+            assumption_ids=aids,
+            timestamp=T1,
         )
     )
     h = store.get_hypothesis("H1")

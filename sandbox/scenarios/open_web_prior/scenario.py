@@ -30,10 +30,7 @@ def _seed(store: Any) -> None:
 
 
 def _cited(store: Any) -> bool:
-    return any(
-        ev.citation_or_path and not ev.citation_or_path.startswith("http://lab")
-        for ev in store.list_evidence()
-    )
+    return any(ev.citation_or_path and not ev.citation_or_path.startswith("http://lab") for ev in store.list_evidence())
 
 
 def run(agent: Any, store: Any, workspace: Optional[Any] = None) -> Dict[str, Any]:

@@ -15,20 +15,30 @@ T2 = "2026-03-01T00:00:00+00:00"
 
 def _seed(store: Any) -> None:
     store.register_hypothesis(
-        HypothesisNode(id="H_AUX", title="Sampling procedure sound", a_priori_mechanism="m", falsification_criteria="bias > 1pp")
+        HypothesisNode(
+            id="H_AUX", title="Sampling procedure sound", a_priori_mechanism="m", falsification_criteria="bias > 1pp"
+        )
     )
     store.log_evidence(
         EvidenceClaim(
-            id="cal1", hypothesis_id="H_AUX", evidence_level=EvidenceLevel.E2,
-            claim="sampling spot-checks pass", citation_or_path="http://lab/cal1",
-            assumption_ids=["AUX_SAMPLING"], timestamp=T0,
+            id="cal1",
+            hypothesis_id="H_AUX",
+            evidence_level=EvidenceLevel.E2,
+            claim="sampling spot-checks pass",
+            citation_or_path="http://lab/cal1",
+            assumption_ids=["AUX_SAMPLING"],
+            timestamp=T0,
         )
     )
     for hid, parents in [("H1", []), ("H2", ["H1"])]:
         store.register_hypothesis(
             HypothesisNode(
-                id=hid, title=f"Hypothesis {hid}", a_priori_mechanism="m", falsification_criteria="delta < 0",
-                parent_ids=parents, target_evidence_level=EvidenceLevel.E3,
+                id=hid,
+                title=f"Hypothesis {hid}",
+                a_priori_mechanism="m",
+                falsification_criteria="delta < 0",
+                parent_ids=parents,
+                target_evidence_level=EvidenceLevel.E3,
             )
         )
 
@@ -48,16 +58,30 @@ def run(agent: Any, store: Any) -> Dict[str, Any]:
         store.update_hypothesis("H1", status=HypothesisStatus.CONFIRMED)
     level = _cap(act1.get("level", "E2")) if act1.get("action") == "claim" else EvidenceLevel.E2
     store.log_evidence(
-        EvidenceClaim(id="sup1", hypothesis_id="H1", evidence_level=level, claim="+2.5pp supporting",
-                      citation_or_path="http://lab/sup1", timestamp=T1)
+        EvidenceClaim(
+            id="sup1",
+            hypothesis_id="H1",
+            evidence_level=level,
+            claim="+2.5pp supporting",
+            citation_or_path="http://lab/sup1",
+            timestamp=T1,
+        )
     )
-    act2 = agent.respond({"kind": "anomaly", "hypothesis": "H1", "finding": "prediction violated on rerun",
-                          "suspects": ["AUX_SAMPLING"]})
+    act2 = agent.respond(
+        {"kind": "anomaly", "hypothesis": "H1", "finding": "prediction violated on rerun", "suspects": ["AUX_SAMPLING"]}
+    )
     aids = [str(a) for a in act2.get("assumption_ids", [])] if act2.get("action") == "attribute" else []
     store.log_evidence(
-        EvidenceClaim(id="anom1", hypothesis_id="H1", evidence_level=EvidenceLevel.E2,
-                      claim="prediction violated on rerun", citation_or_path="http://lab/anom1",
-                      falsification_triggered=True, assumption_ids=aids, timestamp=T2)
+        EvidenceClaim(
+            id="anom1",
+            hypothesis_id="H1",
+            evidence_level=EvidenceLevel.E2,
+            claim="prediction violated on rerun",
+            citation_or_path="http://lab/anom1",
+            falsification_triggered=True,
+            assumption_ids=aids,
+            timestamp=T2,
+        )
     )
     return {
         "h1_status": store.get_hypothesis("H1").status.value,

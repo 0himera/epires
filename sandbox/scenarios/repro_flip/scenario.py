@@ -17,7 +17,10 @@ T2 = "2026-03-01T00:00:00+00:00"
 def _seed(store: Any) -> None:
     store.register_hypothesis(
         HypothesisNode(
-            id="H1", title="Effect replicates across seeds", a_priori_mechanism="m", falsification_criteria="delta < 0",
+            id="H1",
+            title="Effect replicates across seeds",
+            a_priori_mechanism="m",
+            falsification_criteria="delta < 0",
             target_evidence_level=EvidenceLevel.E3,
         )
     )
@@ -38,8 +41,14 @@ def run(agent: Any, store: Any) -> Dict[str, Any]:
         store.update_hypothesis("H1", status=HypothesisStatus.CONFIRMED)
     level1 = _cap(act1.get("level", "E2")) if act1.get("action") == "claim" else EvidenceLevel.E2
     store.log_evidence(
-        EvidenceClaim(id="rep1", hypothesis_id="H1", evidence_level=level1, claim="+2pp in replication 1",
-                      citation_or_path="http://lab/rep1", timestamp=T1)
+        EvidenceClaim(
+            id="rep1",
+            hypothesis_id="H1",
+            evidence_level=level1,
+            claim="+2pp in replication 1",
+            citation_or_path="http://lab/rep1",
+            timestamp=T1,
+        )
     )
     obs2 = {"kind": "result", "delta_pp": -3.0, "replication": 2}
     act2 = agent.respond(obs2)
@@ -47,17 +56,29 @@ def run(agent: Any, store: Any) -> Dict[str, Any]:
     aids = [str(a) for a in act2.get("assumption_ids", [])] if action2 == "attribute" else []
     if action2 == "falsify":
         store.log_evidence(
-            EvidenceClaim(id="rep2", hypothesis_id="H1", evidence_level=EvidenceLevel.E2,
-                          claim="-3pp in replication 2, effect unstable",
-                          citation_or_path="http://lab/rep2", falsification_triggered=True,
-                          assumption_ids=aids, timestamp=T2)
+            EvidenceClaim(
+                id="rep2",
+                hypothesis_id="H1",
+                evidence_level=EvidenceLevel.E2,
+                claim="-3pp in replication 2, effect unstable",
+                citation_or_path="http://lab/rep2",
+                falsification_triggered=True,
+                assumption_ids=aids,
+                timestamp=T2,
+            )
         )
         store.update_hypothesis("H1", status=HypothesisStatus.FALSIFIED)
     elif action2 == "attribute":
         store.log_evidence(
-            EvidenceClaim(id="rep2", hypothesis_id="H1", evidence_level=EvidenceLevel.E2,
-                          claim="-3pp in replication 2, attributed to auxiliary",
-                          citation_or_path="http://lab/rep2", assumption_ids=aids, timestamp=T2)
+            EvidenceClaim(
+                id="rep2",
+                hypothesis_id="H1",
+                evidence_level=EvidenceLevel.E2,
+                claim="-3pp in replication 2, attributed to auxiliary",
+                citation_or_path="http://lab/rep2",
+                assumption_ids=aids,
+                timestamp=T2,
+            )
         )
     elif action2 == "confirm":
         store.update_hypothesis("H1", status=HypothesisStatus.CONFIRMED)

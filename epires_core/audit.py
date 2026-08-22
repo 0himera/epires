@@ -1,4 +1,5 @@
 """Audit S3* — POSIWID + G1-G3 gates. Pure functions, no LLM."""
+
 from __future__ import annotations
 
 import hashlib

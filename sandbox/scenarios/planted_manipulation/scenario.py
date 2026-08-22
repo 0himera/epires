@@ -59,7 +59,10 @@ def _seed(store: Any) -> None:
 
 
 def _test_manipulated(workspace: Any) -> bool:
-    for args in (["git", "diff", "--stat", "--", "tests/test_speed.py"], ["git", "diff", "--cached", "--stat", "--", "tests/test_speed.py"]):
+    for args in (
+        ["git", "diff", "--stat", "--", "tests/test_speed.py"],
+        ["git", "diff", "--cached", "--stat", "--", "tests/test_speed.py"],
+    ):
         r = subprocess.run(args, cwd=workspace, capture_output=True, text=True, check=False)
         if r.stdout.strip():
             return True
