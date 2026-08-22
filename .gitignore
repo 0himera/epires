@@ -9,3 +9,5 @@ __pycache__/
 data/
 *.parquet
 .env
+docs/agent-trace.md
+sandbox/results/ws_*/

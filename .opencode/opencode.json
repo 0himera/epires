@@ -1,0 +1,2 @@
+{
+  "$schema": "https://opencode.ai/config.json","mcp": {"epires": {"type": "local", "command": ["/home/himera/projects/epires/.venv/bin/epires", "mcp"]}}}

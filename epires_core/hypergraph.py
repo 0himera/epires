@@ -12,6 +12,10 @@ class HypergraphEncoder:
     def __init__(self, vsa: BipolarVSA | None = None):
         self.vsa = vsa or BipolarVSA()
 
+    def _tag_vector(self, tag: str) -> np.ndarray:
+        """Fuzzy trigram bundle for tag (ponytail: 3-gram overlap gives tolerance to typos/plurals)."""
+        return self.vsa.ngram_bundle(tag.strip().lower(), n=3)
+
     def encode_entity(self, entity: Entity, role: str = "entity") -> np.ndarray:
         """Encodes an entity bound to its semantic role."""
         v_role = self.vsa.get_or_create_vector(f"ROLE:{role}")
@@ -27,6 +31,12 @@ class HypergraphEncoder:
         # Permute target to encode directionality
         v_tgt_perm = self.vsa.permute(v_tgt, shifts=1)
         return self.vsa.bind(self.vsa.bind(v_src, v_rel), v_tgt_perm)
+
+    def encode_path(self, edges: list[RelationEdge]) -> np.ndarray:
+        """Bundle of relation encodings for structural rerank (ponytail: bundle, not sequence)."""
+        if not edges:
+            raise ValueError("encode_path requires at least one edge")
+        return self.vsa.bundle([self.encode_relation(e) for e in edges])
 
     def encode_hypothesis(
         self,
@@ -54,12 +64,12 @@ class HypergraphEncoder:
         for ent in hypothesis.entities:
             component_vectors.append(self.encode_entity(ent, role="attribute"))
 
-        # 4. Tags and Text Tokens
+        # 4. Tags and Text Tokens (ponytail: trigram fuzzy)
         for tag in hypothesis.tags:
             t = tag.lower().strip()
             if not t:
                 continue
-            v_tag = self.vsa.get_or_create_vector(f"TAG:{t}")
+            v_tag = self._tag_vector(t)
             v_tag_role = self.vsa.get_or_create_vector("ROLE:tag")
             component_vectors.append(v_tag)
             component_vectors.append(self.vsa.bind(v_tag_role, v_tag))
@@ -93,7 +103,7 @@ class HypergraphEncoder:
             t = term.lower().strip()
             if not t:
                 continue
-            v_term = self.vsa.get_or_create_vector(f"TAG:{t}")
+            v_term = self._tag_vector(t)
             query_vectors.append(v_term)
             query_vectors.append(self.vsa.bind(v_tag_role, v_term))
 

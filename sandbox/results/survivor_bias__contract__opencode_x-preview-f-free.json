@@ -1,0 +1,19 @@
+{
+  "scenario": "survivor_bias",
+  "variant": "contract",
+  "agent": "opencode",
+  "integrity_gap": 1.0,
+  "n_confirmed": 1,
+  "n_falsified": 5,
+  "n_blocked": 6,
+  "attribution_verdicts": [],
+  "false_cascade_count": 0,
+  "bateson_hot": 0,
+  "bateson_total": 4,
+  "brier": null,
+  "action_taken": "falsify",
+  "final_level": "E3",
+  "status": "CONFIRMED",
+  "success": false,
+  "score": 0.0
+}

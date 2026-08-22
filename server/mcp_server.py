@@ -1,6 +1,6 @@
 """FastMCP Server for Epires Research Harness.
 
-Exposes 20 deterministic tools for LLM agents:
+Exposes 28 deterministic tools for LLM agents:
 - epires_get_schema (Canonical data format & python migration template)
 - epires_register_hypothesis (Popperian criteria & DAG cycle detection)
 - epires_register_experiment (Explicit reproducibility metadata & execution parameters)
@@ -20,7 +20,7 @@ Exposes 20 deterministic tools for LLM agents:
 - epires_parallel_web_search (Multi-query literature search via parallel-web)
 - epires_parallel_extract (Guaranteed JSON markdown extraction from URLs)
 - epires_record_trace (Real-time operational audit trail)
-- epires_system_status (Harness version, database status, and tools inventory)
+ - epires_system_status (Harness version, database status, and tools inventory)
 """
 
 from __future__ import annotations
@@ -68,7 +68,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
                 "db_path": str(db_path),
                 "total_hypotheses": len(hypotheses),
                 "parallel_auth": bool(p_key),
-                "tools_count": 20,
+                "tools_count": 28,
                 "status": "ready",
             },
             indent=2,
@@ -491,6 +491,74 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             action=action, summary=summary, h_tag=h_tag, agent_role=agent_role, details=parsed_details
         )
         return f"Logged trace entry #{entry.id or 'auto'}: [{entry.action}] {entry.summary}"
+
+    @mcp.tool()
+    def audit_hypothesis(hypothesis_id: str) -> str:
+        """Run an audit pass over a hypothesis (checks invariants, provenance, and ledger consistency)."""
+        return json.dumps(store.audit_pass(hypothesis_id), indent=2)
+
+    @mcp.tool()
+    def algedonic_check(n_failures_threshold: int = 3) -> str:
+        """Check algedonic triggers (pain signals) across the graph, filtered by failure threshold."""
+        triggers = [t for t in store.check_algedonic() if t.get("n_failures", 0) >= n_failures_threshold]
+        return json.dumps(triggers, indent=2)
+
+    @mcp.tool()
+    def algedonic_freeze(node_id: str) -> str:
+        """Freeze a hypothesis branch (cascade FROZEN status down the DAG subtree)."""
+        from epires_core.algedonic import freeze_branch
+
+        frozen = freeze_branch(node_id, store)
+        return f"Frozen branch rooted at {node_id}: {', '.join(frozen)}"
+
+    @mcp.tool()
+    def score_experiments(candidates: List[Dict[str, Any]], q: Dict[str, float]) -> str:
+        """Score candidate experiment configs against a quality weight vector q."""
+        ranked = store.score_experiments(candidates, q)
+        return json.dumps([{"id": cid, "score": round(score, 4)} for cid, score in ranked], indent=2)
+
+    @mcp.tool()
+    def calibrated_p(agent_id: str, stated_p: float) -> str:
+        """Compute the calibration-corrected probability for an agent's stated probability."""
+        return json.dumps(
+            {"agent_id": agent_id, "stated_p": stated_p, "calibrated_p": store.calibrated_p(agent_id, stated_p)}
+        )
+
+    @mcp.tool()
+    def pheromone_rank() -> str:
+        """Rank hypotheses by stigmergic pheromone weight (reinforcement from activity)."""
+        from epires_core.stigmergy import pheromone_weight
+
+        ranked = store.pheromone_rank()
+        return json.dumps(
+            [{"id": h.id, "title": h.title, "weight": round(pheromone_weight(h.id, store), 4)} for h in ranked],
+            indent=2,
+            ensure_ascii=False,
+        )
+
+    @mcp.tool()
+    def compute_evidence_level(evidence_ids: List[str], hypothesis_id: str) -> str:
+        """Recompute the aggregated EvidenceLevel for a hypothesis from specific evidence claim IDs."""
+        from epires_core.gates import compute_level
+
+        hypothesis = store.get_hypothesis(hypothesis_id)
+        if not hypothesis:
+            return f"Hypothesis '{hypothesis_id}' not found."
+        evidence = []
+        for ev_id in evidence_ids:
+            ev = store.get_evidence(ev_id)
+            if not ev:
+                return f"Evidence '{ev_id}' not found."
+            evidence.append(ev)
+        level = compute_level(evidence, hypothesis)
+        return json.dumps({"hypothesis_id": hypothesis_id, "evidence_count": len(evidence), "level": level.value})
+
+    @mcp.tool()
+    def s3_audit_confirmed() -> str:
+        """Run the independent S3* auditor over all CONFIRMED hypotheses."""
+        from epires_core.auditor import audit_confirmed
+
+        return json.dumps(audit_confirmed(store), indent=2)
 
     return mcp
 

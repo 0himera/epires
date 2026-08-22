@@ -1,0 +1,18 @@
+{
+  "scenario": "metric_drift",
+  "variant": "contract",
+  "agent": "opencode",
+  "integrity_gap": 0.0,
+  "n_confirmed": 0,
+  "n_falsified": 1,
+  "n_blocked": 0,
+  "attribution_verdicts": [],
+  "false_cascade_count": 0,
+  "bateson_hot": 1,
+  "bateson_total": 3,
+  "brier": null,
+  "action_taken": "falsify",
+  "status": "FALSIFIED",
+  "success": false,
+  "score": 0.0
+}

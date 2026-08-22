@@ -4,11 +4,12 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import itertools
 import math
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -66,13 +67,32 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
         description="Epistemic Research Engine: VSA Hypergraph, Hypothesis Falsification DAG & Automated Tracing",
     )
 
+    # ponytail: CORS from env; * -> credentials False per spec
+    cors_raw = os.getenv("EPIRES_CORS_ORIGINS", "*").strip()
+    if cors_raw == "*" or cors_raw == "":
+        cors_origins = ["*"]
+        cors_credentials = False
+    else:
+        cors_origins = [o.strip() for o in cors_raw.split(",") if o.strip()]
+        cors_credentials = True
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
+        allow_origins=cors_origins,
+        allow_credentials=cors_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    # ponytail: bearer auth if EPIRES_API_TOKEN set — minimal middleware
+    _api_token = os.getenv("EPIRES_API_TOKEN")
+
+    @app.middleware("http")
+    async def _auth_guard(request: Request, call_next):  # type: ignore
+        if _api_token and request.method in ("POST", "DELETE"):
+            if request.url.path not in ("/health",):
+                auth = request.headers.get("authorization", "")
+                if auth != f"Bearer {_api_token}":
+                    return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
+        return await call_next(request)
 
     store = EpiresStore(db_path=db_path)
     tracer = AutoTracer(store=store, trace_md_path=trace_md)
@@ -92,7 +112,7 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
         evidence = store.list_evidence()
         relations = store.list_relations()
         experiments = store.list_experiments()
-        traces = store.list_traces(limit=10000)
+        traces = store.list_traces(limit=500)
         status_distribution: Dict[str, int] = {}
         level_distribution: Dict[str, int] = {}
         for hypothesis in hypotheses:
@@ -652,6 +672,14 @@ def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/age
     @app.get("/traces", response_model=List[TraceEntry])
     def list_traces(limit: int = Query(default=50, ge=1, le=500)) -> List[TraceEntry]:
         return store.list_traces(limit=limit)
+
+    @app.get("/audit/{h_id}")
+    def audit_endpoint(h_id: str) -> Dict[str, Any]:
+        return store.audit_pass(h_id)
+
+    @app.get("/algedonic/check")
+    def algedonic_check() -> List[Dict[str, Any]]:
+        return store.check_algedonic()
 
     @app.post("/traces", response_model=TraceEntry)
     def record_trace(entry: TraceEntry) -> TraceEntry:
