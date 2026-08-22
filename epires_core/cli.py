@@ -467,6 +467,37 @@ def main():
     ev_parser.add_argument("--commit", default=None, help="Git commit SHA associated with evidence")
     ev_parser.add_argument("--artifact", default=None, help="Path to primary artifact")
 
+    # Scaffold Experiment
+    scaffold_parser = subparsers.add_parser(
+        "scaffold", help="Generate an automated Python experiment runner template for a hypothesis"
+    )
+    scaffold_parser.add_argument("hypothesis_id", help="Target hypothesis ID (e.g. H92-T1)")
+    scaffold_parser.add_argument("--out", "-o", default=None, help="Output script file path")
+
+    # Verify Gates
+    verify_parser = subparsers.add_parser(
+        "verify-gates", help="Verify experiment JSON artifact against falsification criteria and G0-G8 gates"
+    )
+    verify_parser.add_argument("artifact", help="Path to experiment JSON artifact (e.g. artifacts/metrics/h92_t1.json)")
+    verify_parser.add_argument("--hypothesis", "-H", default=None, help="Hypothesis ID override")
+    verify_parser.add_argument(
+        "--apply", action="store_true", help="Automatically log verified EvidenceClaim and update hypothesis status"
+    )
+    verify_parser.add_argument(
+        "--level",
+        "-l",
+        choices=["E0", "E1", "E2", "E3", "E4", "E5"],
+        default="E3",
+        help="Evidence level (default: E3)",
+    )
+    verify_parser.add_argument(
+        "--source",
+        "-s",
+        choices=["V", "P", "D"],
+        default="V",
+        help="Source confidence: [V]erified, [P]roposed, [D]erived (default: V)",
+    )
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -855,6 +886,71 @@ def main():
             print(
                 f"    [!] Cascaded invalidation: BLOCKED {len(blocked_children)} child hypotheses: {blocked_children}"
             )
+
+    elif args.command == "scaffold":
+        import re
+        from .scaffold import generate_experiment_scaffold
+
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+
+        h = store.get_hypothesis(args.hypothesis_id.strip())
+        title = h.title if h else "Experiment"
+        mech = h.a_priori_mechanism if h else "Theoretical basis"
+        crit = h.falsification_criteria if h else "delta < 0"
+
+        code = generate_experiment_scaffold(
+            hypothesis_id=args.hypothesis_id.strip(),
+            title=title,
+            mechanism=mech,
+            falsification_criteria=crit,
+            primary_metric=config.primary_metric,
+        )
+
+        hid_clean = re.sub(r"[^a-zA-Z0-9_]", "_", args.hypothesis_id.lower())
+        out_file = Path(args.out).resolve() if args.out else (root / "scripts" / f"eval_{hid_clean}.py")
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+        out_file.write_text(code, encoding="utf-8")
+        try:
+            out_file.chmod(0o755)
+        except Exception:
+            pass
+        rel_str = out_file.relative_to(root) if out_file.is_relative_to(root) else out_file
+        print(f"[+] Generated experiment scaffold: {rel_str}")
+        print(f"    Run via: python {rel_str} --help")
+
+    elif args.command == "verify-gates":
+        from .verifier import verify_experiment_artifact
+
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+
+        res = verify_experiment_artifact(
+            artifact_path=args.artifact,
+            store=store,
+            hypothesis_id=args.hypothesis,
+            apply=args.apply,
+            evidence_level=args.level,
+            source_confidence=args.source,
+        )
+
+        icon = "🟢" if res["passed_all_gates"] else "🔴" if res["falsification_triggered"] else "🟡"
+        print(f"\n==================== GATE VERIFICATION: {res['hypothesis_id']} ====================")
+        print(f"Artifact: {res['artifact_file']}")
+        print(f"Verdict:  {icon} {res['verdict_status']} (Passed all gates: {res['passed_all_gates']})")
+        if res.get("falsification_reason"):
+            print(f"Refutation: {res['falsification_reason']}")
+        print(f"Gates:    {res['gates']}")
+        print(f"Metrics:  {res['metrics']}")
+        if res.get("applied"):
+            print(f"[+] Successfully logged EvidenceClaim [{res['evidence_id']}] to research hypergraph.")
+            if res.get("blocked_children"):
+                print(f"    Cascaded invalidation: BLOCKED {len(res['blocked_children'])} child hypotheses.")
+        else:
+            print("Run with --apply to commit evidence and update status in database.")
+        print("========================================================================\n")
 
     else:
         parser.print_help()
