@@ -128,3 +128,19 @@ class SearchQuery(BaseModel):
     entities: Optional[List[Entity]] = None
     status: Optional[HypothesisStatus] = None
     limit: int = 10
+
+
+class FalsificationCondition(BaseModel):
+    metric: Optional[str] = None
+    operator: str = ">"  # ">", "<", ">=", "<=", "==", "!=", "degradation"
+    threshold: float = 0.0
+    unit: Optional[str] = None  # e.g., "%", "pp", "ms"
+    raw_text: Optional[str] = None
+
+
+class AuditVerdict(BaseModel):
+    verdict: str  # "pass", "flag", "fail", "inconclusive"
+    reason: Optional[str] = None
+    violations: List[str] = Field(default_factory=list)
+    source: Optional[str] = None
+

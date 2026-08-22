@@ -353,6 +353,29 @@ def main():
         "--upsert", action="store_true", default=True, help="Upsert existing hypotheses (default: True)"
     )
 
+    # Audit
+    audit_parser = subparsers.add_parser("audit", help="Run deterministic/S3* audit on hypotheses")
+    audit_parser.add_argument("--h-id", "-H", default=None, help="Specific hypothesis ID to audit")
+    audit_parser.add_argument("--deep", action="store_true", help="Run S3* LLM independent audit on target")
+    audit_parser.add_argument("--strict", action="store_true", help="Enforce strict gate rules (EPIRES_STRICT_GATES=1)")
+
+    # POSIWID
+    posiwid_parser = subparsers.add_parser("posiwid", help="Compute POSIWID integrity metrics and status distribution")
+    posiwid_parser.add_argument("--json", action="store_true", help="Output raw JSON format")
+
+    # Algedonic
+    algedonic_parser = subparsers.add_parser(
+        "algedonic", help="Check algedonic bypass pain signals and freeze failing subtrees"
+    )
+    algedonic_parser.add_argument("--threshold", type=int, default=3, help="Cascade failures threshold (default: 3)")
+    algedonic_parser.add_argument("--freeze", default=None, help="Freeze downstream branch for given hypothesis ID")
+
+    # Synthesis
+    synthesis_parser = subparsers.add_parser(
+        "synthesis", help="Generate comprehensive Markdown Epistemic Synthesis Report"
+    )
+    synthesis_parser.add_argument("--out", "-o", default=None, help="Output markdown file path (default: stdout)")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -536,5 +559,106 @@ def main():
         store = EpiresStore(db_path=str(root / config.paths.db_path))
         print(store.export_mermaid_dag())
 
+    elif args.command == "audit":
+        import os
+        from .audit import audit_hypothesis
+        from .models import HypothesisStatus
+
+        if args.strict:
+            os.environ["EPIRES_STRICT_GATES"] = "1"
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+
+        if args.h_id:
+            if args.deep:
+                from .auditor import independent_audit
+
+                print(f"[*] Running S3* LLM Independent Audit on '{args.h_id}' ...")
+                res = independent_audit(args.h_id, store)
+                print(json.dumps(res, indent=2, ensure_ascii=False))
+            else:
+                res = audit_hypothesis(args.h_id, store)
+                icon = "🟢" if res["passed"] else "🔴"
+                print(f"{icon} Audit for '{args.h_id}': {'PASSED' if res['passed'] else 'FAILED'}")
+                if res.get("violations"):
+                    print("  Violations:")
+                    for v in res["violations"]:
+                        print(f"    - {v}")
+                if res.get("gates"):
+                    print(f"  Gates: {res['gates']}")
+        else:
+            confirmed = store.list_hypotheses(status=HypothesisStatus.CONFIRMED)
+            print(f"\n[*] Auditing all {len(confirmed)} CONFIRMED hypotheses ...")
+            passed_cnt = 0
+            for h in confirmed:
+                res = audit_hypothesis(h.id, store)
+                icon = "🟢" if res["passed"] else "🔴"
+                print(f"  {icon} [{h.id}] {h.title} (Passed: {res['passed']})")
+                if not res["passed"]:
+                    for v in res.get("violations", []):
+                        print(f"       Violation: {v}")
+                else:
+                    passed_cnt += 1
+            print(f"\n[+] Audit summary: {passed_cnt}/{len(confirmed)} passed.\n")
+
+    elif args.command == "posiwid":
+        from .audit import posiwid_report
+
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        rep = posiwid_report(store)
+        if args.json:
+            print(json.dumps(rep, indent=2, ensure_ascii=False))
+        else:
+            print(f"\n==================== POSIWID INTEGRITY: {config.project_name.upper()} ====================")
+            gap = rep.get("integrity_gap", 0.0) * 100.0
+            print(f"Integrity Gap:       {gap:.1f}% (violated confirmed / total confirmed)")
+            print(f"Confirmed Total:     {rep.get('total_confirmed', 0)}")
+            print(f"Violated Confirmed:  {rep.get('violated_confirmed', 0)}")
+            print(f"Total Hypotheses:    {rep.get('total_hypotheses', 0)}")
+            print("\nStatus Distribution:")
+            for st, cnt in sorted(rep.get("status_distribution", {}).items(), key=lambda x: -x[1]):
+                print(f"  - {st:<15}: {cnt}")
+            print("========================================================================\n")
+
+    elif args.command == "algedonic":
+        from .algedonic import check_triggers, freeze_branch
+
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        if args.freeze:
+            blocked = freeze_branch(args.freeze, store)
+            print(f"[!] Algedonic freeze triggered on '{args.freeze}': blocked {len(blocked)} downstream hypotheses.")
+            for b in blocked:
+                print(f"    - ⚫ {b}")
+        else:
+            alerts = check_triggers(store, n_failures_threshold=args.threshold)
+            print(f"\n==================== ALGEDONIC ALERTS: {config.project_name.upper()} ====================")
+            if not alerts:
+                print("🟢 No active pain triggers. Research graph is operating normally.")
+            else:
+                for a in alerts:
+                    sev = a.get("severity", "medium").upper()
+                    print(f"🔴 [{sev}] Trigger: {a.get('trigger')} on Node: {a.get('node_id')}")
+            print("========================================================================\n")
+
+    elif args.command == "synthesis":
+        from .synthesis import generate_synthesis_report
+
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        report_md = generate_synthesis_report(store, project_name=config.project_name)
+        if args.out:
+            out_file = Path(args.out).resolve()
+            out_file.write_text(report_md, encoding="utf-8")
+            print(f"[+] Epistemic synthesis report generated and written to {out_file}")
+        else:
+            print(report_md)
+
     else:
         parser.print_help()
+

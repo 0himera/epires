@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Any, Dict, List
 
-from .models import TraceEntry
+from .models import AuditVerdict, TraceEntry
 from .audit import audit_hypothesis
 
 
@@ -52,13 +53,70 @@ Experiments ({len(experiments)}):
 
 Check for: insufficient/misleading evidence, missing CIs, train-vs-holdout leakage,
 selection bias, unfalsifiable criteria, claims not supported by experiments.
-Return ONLY JSON: {{"verdict": "pass|flag|fail", "reason": "...", "violations": ["..."]}}
+Return ONLY valid JSON matching this schema:
+{{
+  "verdict": "pass" | "flag" | "fail",
+  "reason": "summary explanation",
+  "violations": ["violation 1", "violation 2"]
+}}
 """
 
 
+def parse_audit_verdict(content: str) -> AuditVerdict:
+    """Robustly parses an LLM response into an AuditVerdict instance.
+
+    Handles markdown fences, extraneous text, and missing keys.
+    """
+    cleaned = (content or "").strip()
+    # Strip markdown code blocks
+    if "```" in cleaned:
+        match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", cleaned, re.IGNORECASE)
+        if match:
+            cleaned = match.group(1).strip()
+
+    # Extract JSON between outermost braces
+    try:
+        start = cleaned.index("{")
+        end = cleaned.rindex("}") + 1
+        raw_obj = json.loads(cleaned[start:end])
+    except Exception as e:
+        return AuditVerdict(
+            verdict="inconclusive",
+            reason=f"Failed to parse JSON from auditor output: {e}",
+            violations=[],
+            source="llm",
+        )
+
+    if not isinstance(raw_obj, dict):
+        return AuditVerdict(
+            verdict="inconclusive",
+            reason="Auditor response is not a JSON object",
+            violations=[],
+            source="llm",
+        )
+
+    raw_verdict = str(raw_obj.get("verdict", "")).lower().strip()
+    if raw_verdict not in ("pass", "flag", "fail", "inconclusive"):
+        raw_verdict = "inconclusive"
+
+    raw_violations = raw_obj.get("violations", [])
+    if isinstance(raw_violations, str):
+        raw_violations = [raw_violations]
+    elif not isinstance(raw_violations, list):
+        raw_violations = []
+
+    return AuditVerdict(
+        verdict=raw_verdict,
+        reason=str(raw_obj.get("reason", "")) if raw_obj.get("reason") else None,
+        violations=[str(v) for v in raw_violations if v],
+        source="llm",
+    )
+
+
 def _parse_json(content: str) -> Dict[str, Any]:
-    # ponytail: naive brace slice like LLMAgent; structured outputs if this breaks
-    return json.loads(content[content.index("{") : content.rindex("}") + 1])
+    """Backwards-compatible dict extraction delegating to parse_audit_verdict."""
+    return parse_audit_verdict(content).model_dump()
+
 
 
 def independent_audit(
@@ -104,27 +162,42 @@ def independent_audit(
     try:
         import httpx
 
-        r = httpx.post(
-            f"{base_url}/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}"},
-            json={
-                "model": model,
-                "messages": [
-                    {"role": "system", "content": "You are a skeptical independent auditor. Return only JSON."},
-                    {"role": "user", "content": audit_prompt(h, evs, exps)},
-                ],
-            },
-            timeout=120,
-        )
-        r.raise_for_status()
+        payload: Dict[str, Any] = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": "You are a skeptical independent auditor. Return only valid JSON."},
+                {"role": "user", "content": audit_prompt(h, evs, exps)},
+            ],
+            "response_format": {"type": "json_object"},
+        }
+
+        try:
+            r = httpx.post(
+                f"{base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}"},
+                json=payload,
+                timeout=120,
+            )
+            r.raise_for_status()
+        except Exception:
+            # Fallback without response_format if provider does not support it
+            payload.pop("response_format", None)
+            r = httpx.post(
+                f"{base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}"},
+                json=payload,
+                timeout=120,
+            )
+            r.raise_for_status()
+
         content = r.json()["choices"][0]["message"]["content"]
-        verdict = _parse_json(content)
+        audit_obj = parse_audit_verdict(content)
         result = {
             "h_id": h_id,
-            "verdict": verdict.get("verdict", "inconclusive"),
-            "source": "llm",
-            "reason": verdict.get("reason"),
-            "violations": verdict.get("violations", []),
+            "verdict": audit_obj.verdict,
+            "source": audit_obj.source or "llm",
+            "reason": audit_obj.reason,
+            "violations": audit_obj.violations,
         }
     except Exception as e:  # ponytail: never let the auditor crash the caller
         result = {"h_id": h_id, "verdict": "inconclusive", "error": str(e)}

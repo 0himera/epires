@@ -226,26 +226,36 @@ def setup_codex(project_dir: str | Path = ".") -> List[Path]:
 
 
 def setup_antigravity(project_dir: str | Path = ".") -> List[Path]:
-    """Configures Google Antigravity (.gemini/mcp.json & skills)."""
+    """Configures Google Antigravity (.agents/ & .gemini/ workspace customizations, MCP, and skills)."""
     root = Path(project_dir).resolve()
     configured = []
-
-    # 1. .gemini/mcp.json
-    mcp_file = root / ".gemini" / "mcp.json"
 
     def update_agy_mcp(d: Dict[str, Any]):
         if "mcpServers" not in d or not isinstance(d["mcpServers"], dict):
             d["mcpServers"] = {}
         d["mcpServers"]["epires"] = {"command": "epires", "args": ["mcp"], "cwd": str(root)}
 
-    _merge_json(mcp_file, update_agy_mcp)
-    configured.append(mcp_file)
+    # 1. Canonical AGY workspace MCP config: .agents/mcp_config.json
+    agents_mcp_file = root / ".agents" / "mcp_config.json"
+    _merge_json(agents_mcp_file, update_agy_mcp)
+    configured.append(agents_mcp_file)
 
-    # 2. .gemini/skills/epires/SKILL.md
-    skill_file = root / ".gemini" / "skills" / "epires" / "SKILL.md"
-    skill_file.parent.mkdir(parents=True, exist_ok=True)
-    skill_file.write_text(get_skill_content(), encoding="utf-8")
-    configured.append(skill_file)
+    # 2. Canonical AGY workspace skill: .agents/skills/epires/SKILL.md
+    agents_skill_file = root / ".agents" / "skills" / "epires" / "SKILL.md"
+    agents_skill_file.parent.mkdir(parents=True, exist_ok=True)
+    agents_skill_file.write_text(get_skill_content(), encoding="utf-8")
+    configured.append(agents_skill_file)
+
+    # 3. Gemini / AGY legacy compatibility: .gemini/mcp.json
+    gemini_mcp_file = root / ".gemini" / "mcp.json"
+    _merge_json(gemini_mcp_file, update_agy_mcp)
+    configured.append(gemini_mcp_file)
+
+    # 4. Gemini / AGY legacy skill compatibility: .gemini/skills/epires/SKILL.md
+    gemini_skill_file = root / ".gemini" / "skills" / "epires" / "SKILL.md"
+    gemini_skill_file.parent.mkdir(parents=True, exist_ok=True)
+    gemini_skill_file.write_text(get_skill_content(), encoding="utf-8")
+    configured.append(gemini_skill_file)
 
     return configured
 

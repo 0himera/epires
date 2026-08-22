@@ -8,12 +8,17 @@ from datetime import datetime
 from typing import Any
 
 from .models import EvidenceClaim, EvidenceLevel, HypothesisNode, SourceConfidence
+from .criteria import parse_falsification_criteria
 
 # ponytail: minimal pure predicates, filesystem probe skipped — non-empty citation counts as resolvable
 STRICT = os.getenv("EPIRES_STRICT_GATES") == "1"
 
 
 def _thr(crit: str) -> float | None:
+    conditions = parse_falsification_criteria(crit)
+    for cond in conditions:
+        if cond.threshold != 0.0 or cond.operator in (">", "<", ">=", "<="):
+            return cond.threshold
     m = re.search(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", crit or "")
     if not m:
         return None

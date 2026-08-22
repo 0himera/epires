@@ -69,9 +69,15 @@ def test_setup_codex():
 def test_setup_antigravity():
     with tempfile.TemporaryDirectory() as tmpdir:
         paths = setup_antigravity(tmpdir)
-        assert len(paths) >= 2
+        assert len(paths) >= 4
         mcp_file = Path(tmpdir) / ".gemini" / "mcp.json"
         assert mcp_file.exists()
+        agents_mcp = Path(tmpdir) / ".agents" / "mcp_config.json"
+        assert agents_mcp.exists()
+        agents_skill = Path(tmpdir) / ".agents" / "skills" / "epires" / "SKILL.md"
+        assert agents_skill.exists()
+        gemini_skill = Path(tmpdir) / ".gemini" / "skills" / "epires" / "SKILL.md"
+        assert gemini_skill.exists()
 
 
 def test_setup_all_merges_preserving_existing():
