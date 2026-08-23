@@ -125,7 +125,7 @@ def test_strict_gates_hot_path_aggregates_all_evidence(tmp_path, monkeypatch):
             metric_name="metric",
             metric_value=0.9,
             delta_vs_baseline=0.1,
-            timestamp=f"2026-01-0{i+1}T00:00:00Z",
+            timestamp=f"2026-01-0{i + 1}T00:00:00Z",
         )
         store.log_evidence(ev, emit_trace=False)
 
@@ -175,8 +175,12 @@ def test_automatic_falsification_on_metric_violation(tmp_path):
 def test_vsa_index_invalidation_on_update(tmp_path):
     """Updating a hypothesis invalidates cached BinaryIndex."""
     store = EpiresStore(db_path=tmp_path / "vsa.db", trace_md_path=None)
-    h1 = HypothesisNode(id="H1", title="Original Title", a_priori_mechanism="M1", falsification_criteria="F1", tags=["alpha"])
-    h2 = HypothesisNode(id="H2", title="Second Title", a_priori_mechanism="M2", falsification_criteria="F2", tags=["beta"])
+    h1 = HypothesisNode(
+        id="H1", title="Original Title", a_priori_mechanism="M1", falsification_criteria="F1", tags=["alpha"]
+    )
+    h2 = HypothesisNode(
+        id="H2", title="Second Title", a_priori_mechanism="M2", falsification_criteria="F2", tags=["beta"]
+    )
     store.register_hypothesis(h1)
     store.register_hypothesis(h2)
 
@@ -186,7 +190,9 @@ def test_vsa_index_invalidation_on_update(tmp_path):
     assert store._index is not None
 
     # Update H1 tags/title (same total number of hypotheses in DB)
-    h1_updated = HypothesisNode(id="H1", title="Rewritten Title", a_priori_mechanism="M1", falsification_criteria="F1", tags=["gamma"])
+    h1_updated = HypothesisNode(
+        id="H1", title="Rewritten Title", a_priori_mechanism="M1", falsification_criteria="F1", tags=["gamma"]
+    )
     store.register_hypothesis(h1_updated)
 
     # _index must be invalidated
