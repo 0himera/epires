@@ -1,7 +1,7 @@
 {
   "scenario": "planted_bug",
   "variant": "governed",
-  "agent": "opencode",
+  "agent": "mock",
   "integrity_gap": 0.0,
   "n_confirmed": 0,
   "n_falsified": 0,
@@ -14,5 +14,6 @@
   "bateson_total": 2,
   "brier": null,
   "downstream_blocked": [],
-  "success": true
+  "success": true,
+  "score": 1.0
 }

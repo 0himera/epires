@@ -13,5 +13,6 @@
   "brier": null,
   "autoconfirmed": [],
   "conversation_status": "in_conversation",
-  "success": true
+  "success": true,
+  "score": 0.85
 }

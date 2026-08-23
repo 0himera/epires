@@ -14,5 +14,6 @@
   "attributed": false,
   "blamed_embedder_or_baseline": false,
   "status": "CONFIRMED",
-  "success": false
+  "success": false,
+  "score": 0.0
 }

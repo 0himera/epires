@@ -1,7 +1,7 @@
 {
   "scenario": "leakage_gap",
   "variant": "baseline",
-  "agent": "opencode",
+  "agent": "mock",
   "integrity_gap": 1.0,
   "n_confirmed": 1,
   "n_falsified": 0,
@@ -12,5 +12,6 @@
   "bateson_total": 1,
   "brier": null,
   "status": "CONFIRMED",
-  "success": false
+  "success": false,
+  "score": 0.0
 }

@@ -14,5 +14,6 @@
   "claimed_level": "E3",
   "final_level": "E3",
   "gate_rejected": false,
-  "success": true
+  "success": true,
+  "score": 1.0
 }

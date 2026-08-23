@@ -31,21 +31,27 @@ def load_variant(name: str) -> str:
     return (SANDBOX / "variants" / f"{name}.md").read_text(encoding="utf-8")
 
 
-def make_agent(kind: str, variant_text: str, scenario_description: str) -> Any:
+def make_agent(kind: str, variant_text: str, scenario_description: str, model: Optional[str] = None) -> Any:
     from .agents import LLMAgent, MockAgent
 
     if kind == "mock":
         return MockAgent(variant_text)
     if kind == "llm":
-        return LLMAgent(variant_text, scenario_description)
+        return LLMAgent(variant_text, scenario_description, model=model)
     if kind == "opencode":
         from .agents import OpencodeAgent
 
-        return OpencodeAgent(variant_text)
+        return OpencodeAgent(variant_text, model=model)
     raise ValueError(f"unknown agent kind: {kind}")
 
 
-def run_one(scenario: str, variant: str, agent_kind: str = "mock", results_dir: Optional[str | Path] = None) -> dict:
+def run_one(
+    scenario: str,
+    variant: str,
+    agent_kind: str = "mock",
+    results_dir: Optional[str | Path] = None,
+    model: Optional[str] = None,
+) -> dict:
     from epires_core.store import EpiresStore
 
     from .metrics import collect, grade
@@ -53,10 +59,11 @@ def run_one(scenario: str, variant: str, agent_kind: str = "mock", results_dir: 
     mod = load_scenario(scenario)
     rdir = Path(results_dir) if results_dir else RESULTS_DIR
     rdir.mkdir(parents=True, exist_ok=True)
+    active_model = model or os.environ.get("EPIRES_EVAL_MODEL", "unknown")
     if agent_kind == "opencode":
         # persistent workspace: store lives there so the agent can inspect it via MCP
         td = None
-        mtag = os.environ.get("EPIRES_EVAL_MODEL", "unknown").replace("/", "_")
+        mtag = active_model.replace("/", "_")
         ws = rdir / f"ws_{scenario}__{variant}__{mtag}"
         if ws.exists():
             shutil.rmtree(ws)  # ponytail: fresh state — append-only ledger breaks reseeding
@@ -68,7 +75,7 @@ def run_one(scenario: str, variant: str, agent_kind: str = "mock", results_dir: 
         db_path = ws / "eval.db"
     try:
         store = EpiresStore(db_path=db_path, trace_md_path=None)
-        agent = make_agent(agent_kind, load_variant(variant), getattr(mod, "DESCRIPTION", ""))
+        agent = make_agent(agent_kind, load_variant(variant), getattr(mod, "DESCRIPTION", ""), model=model)
         extra = mod.run(agent, store, ws) if len(inspect.signature(mod.run).parameters) > 2 else mod.run(agent, store)
         result = {"scenario": scenario, "variant": variant, "agent": agent_kind, **collect(store, scenario), **extra}
     finally:
@@ -78,7 +85,7 @@ def run_one(scenario: str, variant: str, agent_kind: str = "mock", results_dir: 
     result["score"] = round(grade(result, scenario), 2)
     model_tag = ""
     if agent_kind == "opencode":
-        model_tag = "__" + os.environ.get("EPIRES_EVAL_MODEL", "unknown").replace("/", "_")
+        model_tag = "__" + active_model.replace("/", "_")
     (rdir / f"{scenario}__{variant}{model_tag}.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     return result
 

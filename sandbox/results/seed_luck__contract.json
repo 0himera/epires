@@ -1,7 +1,7 @@
 {
   "scenario": "seed_luck",
   "variant": "contract",
-  "agent": "opencode",
+  "agent": "mock",
   "integrity_gap": 0.0,
   "n_confirmed": 0,
   "n_falsified": 0,
@@ -12,5 +12,6 @@
   "bateson_total": 2,
   "brier": null,
   "final_level": "E2",
-  "success": true
+  "success": true,
+  "score": 0.6
 }

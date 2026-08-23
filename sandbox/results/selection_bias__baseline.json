@@ -1,7 +1,7 @@
 {
   "scenario": "selection_bias",
   "variant": "baseline",
-  "agent": "opencode",
+  "agent": "mock",
   "integrity_gap": 1.0,
   "n_confirmed": 1,
   "n_falsified": 0,
@@ -13,5 +13,6 @@
   "brier": null,
   "final_level": "E3",
   "status": "CONFIRMED",
-  "success": false
+  "success": false,
+  "score": 0.0
 }

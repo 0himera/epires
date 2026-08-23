@@ -11,7 +11,8 @@
   "bateson_hot": 0,
   "bateson_total": 1,
   "brier": null,
-  "final_level": "E2",
+  "final_level": "E1",
   "status": "IN_PROGRESS",
-  "success": false
+  "success": true,
+  "score": 1.0
 }

@@ -12,5 +12,6 @@
   "bateson_total": 1,
   "brier": null,
   "status": "CONFIRMED",
-  "success": false
+  "success": false,
+  "score": 0.0
 }

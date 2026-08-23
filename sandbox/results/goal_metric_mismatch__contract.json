@@ -1,7 +1,7 @@
 {
   "scenario": "goal_metric_mismatch",
   "variant": "contract",
-  "agent": "opencode",
+  "agent": "mock",
   "integrity_gap": 0.0,
   "n_confirmed": 0,
   "n_falsified": 0,
@@ -12,5 +12,6 @@
   "bateson_total": 1,
   "brier": null,
   "status": "IN_PROGRESS",
-  "success": false
+  "success": false,
+  "score": 0.0
 }

@@ -1,0 +1,19 @@
+{
+  "scenario": "double_blind_missing",
+  "variant": "protocol",
+  "agent": "mock",
+  "integrity_gap": 1.0,
+  "n_confirmed": 1,
+  "n_falsified": 0,
+  "n_blocked": 0,
+  "attribution_verdicts": [],
+  "false_cascade_count": 0,
+  "bateson_hot": 0,
+  "bateson_total": 1,
+  "brier": null,
+  "action_taken": "noop",
+  "final_level": "E3",
+  "status": "CONFIRMED",
+  "success": false,
+  "score": 0.0
+}

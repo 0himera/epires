@@ -1,7 +1,7 @@
 {
   "scenario": "hidden_confound",
   "variant": "contract",
-  "agent": "opencode",
+  "agent": "mock",
   "integrity_gap": 1.0,
   "n_confirmed": 1,
   "n_falsified": 0,
@@ -14,5 +14,6 @@
   "attributed": false,
   "blamed_embedder_or_baseline": false,
   "status": "CONFIRMED",
-  "success": false
+  "success": false,
+  "score": 0.0
 }

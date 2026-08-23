@@ -15,5 +15,6 @@
   "brier": null,
   "h1_status": "BLOCKED",
   "h2_status": "PROPOSED",
-  "success": true
+  "success": true,
+  "score": 0.85
 }

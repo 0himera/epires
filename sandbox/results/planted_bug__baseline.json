@@ -1,18 +1,20 @@
 {
   "scenario": "planted_bug",
   "variant": "baseline",
-  "agent": "opencode",
+  "agent": "mock",
   "integrity_gap": 0.0,
   "n_confirmed": 0,
-  "n_falsified": 0,
-  "n_blocked": 1,
-  "attribution_verdicts": [
-    "attributed:auxiliary:AUX_TOOL_X"
-  ],
-  "false_cascade_count": 0,
+  "n_falsified": 1,
+  "n_blocked": 2,
+  "attribution_verdicts": [],
+  "false_cascade_count": 2,
   "bateson_hot": 1,
   "bateson_total": 2,
   "brier": null,
-  "downstream_blocked": [],
-  "success": true
+  "downstream_blocked": [
+    "H2",
+    "H3"
+  ],
+  "success": false,
+  "score": 0.0
 }

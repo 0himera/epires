@@ -15,5 +15,6 @@
     "HA"
   ],
   "conversation_status": "asserted",
-  "success": false
+  "success": false,
+  "score": 0.0
 }
