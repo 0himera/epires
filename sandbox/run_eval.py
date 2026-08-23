@@ -133,6 +133,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     ap.add_argument("--scenario")
     ap.add_argument("--variant", default="baseline")
     ap.add_argument("--agent", default="mock", choices=["mock", "llm", "opencode"])
+    ap.add_argument("--model", default=None, help="LLM or opencode model identifier (e.g. opencode/hy3-free)")
     ap.add_argument("--all", action="store_true", help="run all scenarios x all variants")
     ap.add_argument("--report", action="store_true", help="print table of stored results")
     args = ap.parse_args(argv)
@@ -141,9 +142,9 @@ def main(argv: Optional[List[str]] = None) -> None:
         report()
         return
     if args.all:
-        results = run_all(args.agent)
+        results = [run_one(s, v, args.agent, model=args.model) for s in SCENARIOS for v in VARIANTS]
     elif args.scenario:
-        results = [run_one(args.scenario, args.variant, args.agent)]
+        results = [run_one(args.scenario, args.variant, args.agent, model=args.model)]
     else:
         ap.error("choose --scenario NAME or --all (or --report)")
     for r in results:

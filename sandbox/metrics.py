@@ -92,6 +92,7 @@ GRADERS: Dict[str, Any] = {
     ),
     "open_leak_hunt": lambda r: _open_grade(r, bool(r.get("leak_flagged"))),
     "open_web_prior": lambda r: _open_grade(r, bool(r.get("external_citation"))),
+    "open_multihop_reasoning": lambda r: _open_grade(r, bool(r.get("multihop_discovered"))),
 }
 
 

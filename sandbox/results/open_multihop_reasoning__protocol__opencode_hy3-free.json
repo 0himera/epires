@@ -1,5 +1,5 @@
 {
-  "scenario": "open_leak_hunt",
+  "scenario": "open_multihop_reasoning",
   "variant": "protocol",
   "agent": "opencode",
   "integrity_gap": 0.0,
@@ -11,7 +11,7 @@
   "bateson_hot": 0,
   "bateson_total": 0,
   "brier": null,
-  "leak_flagged": true,
+  "multihop_discovered": true,
   "success": true,
   "score": 0.8
 }
