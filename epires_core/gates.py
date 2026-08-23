@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import re
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from .models import EvidenceClaim, EvidenceLevel, HypothesisNode, SourceConfidence
@@ -243,3 +244,142 @@ def compute_level(
     ):
         return lvl
     return EvidenceLevel.E5
+
+
+def evaluate_result_gate(
+    hypothesis: HypothesisNode,
+    results: dict[str, Any] | str | Path,
+) -> dict[str, Any]:
+    """Evaluates an empirical results payload or JSON file against hypothesis falsification criteria and statistical gates.
+
+    Accepts results as a dict or path to a JSON file containing metrics like:
+    {
+        "metric_name": "loss",
+        "metric_value": 0.05,
+        "ci_95_lower": 0.03,
+        "ci_95_upper": 0.07,
+        "delta_vs_baseline": -0.04,
+        "baseline_value": 0.09,
+        "n_seeds": 5
+    }
+    """
+    import json
+
+    if isinstance(results, (str, Path)):
+        p = Path(results)
+        if not p.exists():
+            return {
+                "verdict": "ERROR",
+                "gate_passed": False,
+                "falsification_triggered": False,
+                "reason": f"Results file '{p}' not found",
+                "recommended_action": "PROVIDE_VALID_RESULTS_PATH",
+            }
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+        except Exception as e:
+            return {
+                "verdict": "ERROR",
+                "gate_passed": False,
+                "falsification_triggered": False,
+                "reason": f"Failed to parse results JSON: {e}",
+                "recommended_action": "FIX_JSON_FORMAT",
+            }
+    elif isinstance(results, dict):
+        data = results
+    else:
+        return {
+            "verdict": "ERROR",
+            "gate_passed": False,
+            "falsification_triggered": False,
+            "reason": "Invalid results format (expected dict or path to JSON file)",
+            "recommended_action": "PROVIDE_VALID_PAYLOAD",
+        }
+
+    # Extract fields with flexible fallbacks
+    metric_name = data.get("metric_name") or data.get("metric") or data.get("name")
+    metric_val = data.get("metric_value")
+    if metric_val is None:
+        metric_val = data.get("value") or data.get("score") or data.get("mean") or data.get("val")
+    delta = data.get("delta_vs_baseline")
+    if delta is None:
+        delta = data.get("delta") or data.get("diff") or data.get("gain")
+    ci_lower = data.get("ci_95_lower") or data.get("ci_lower")
+    ci_upper = data.get("ci_95_upper") or data.get("ci_upper")
+    n_seeds = data.get("n_seeds") or data.get("seeds") or data.get("n_trials", 1)
+
+    # Synthetic EvidenceClaim to run gate checking
+    ev = EvidenceClaim(
+        hypothesis_id=hypothesis.id,
+        evidence_level=EvidenceLevel.E3,
+        source_confidence=SourceConfidence.V,
+        metric_name=metric_name,
+        metric_value=float(metric_val) if metric_val is not None else None,
+        delta_vs_baseline=float(delta) if delta is not None else None,
+        ci_95_lower=float(ci_lower) if ci_lower is not None else None,
+        ci_95_upper=float(ci_upper) if ci_upper is not None else None,
+    )
+
+    # 1. Parse falsification criteria
+    conditions = parse_falsification_criteria(hypothesis.falsification_criteria)
+    falsification_triggered = False
+    falsification_reasons = []
+
+    from .criteria import evaluate_falsification_condition
+
+    for cond in conditions:
+        violated = evaluate_falsification_condition(
+            cond,
+            metric_name=metric_name,
+            metric_value=ev.metric_value,
+            delta_vs_baseline=ev.delta_vs_baseline,
+            ci_lower=ev.ci_95_lower,
+            ci_upper=ev.ci_95_upper,
+        )
+        if violated is True:
+            falsification_triggered = True
+            falsification_reasons.append(
+                f"Metric violated condition '{cond.raw_text or f'{cond.operator} {cond.threshold}'}'"
+            )
+
+    # 2. Check Gate G4 (Statistical Significance / Confidence Interval clearance)
+    g4_passed = check_g4([ev], hypothesis=hypothesis)
+
+    # 3. Formulate verdict
+    if falsification_triggered:
+        verdict = "FALSIFY"
+        gate_passed = False
+        reason = "; ".join(falsification_reasons)
+        rec = "FALSIFY_HYPOTHESIS_OR_ATTRIBUTE_AUXILIARY"
+    elif ci_lower is not None and ci_upper is not None and not g4_passed:
+        verdict = "INCONCLUSIVE_NOISE"
+        gate_passed = False
+        reason = (
+            f"95% CI [{ci_lower}, {ci_upper}] is inconclusive or enters falsification zone "
+            f"for criteria '{hypothesis.falsification_criteria}'"
+        )
+        rec = "INCREASE_SEEDS_OR_DE_NOISE"
+    else:
+        verdict = "PASS"
+        gate_passed = True
+        reason = (
+            f"Results cleanly satisfy criteria '{hypothesis.falsification_criteria}' with confirmed gate clearance."
+        )
+        rec = "CLAIM_CONFIRMATION"
+
+    return {
+        "hypothesis_id": hypothesis.id,
+        "falsification_criteria": hypothesis.falsification_criteria,
+        "metric_name": metric_name,
+        "metric_value": ev.metric_value,
+        "ci_95": [ev.ci_95_lower, ev.ci_95_upper]
+        if (ev.ci_95_lower is not None and ev.ci_95_upper is not None)
+        else None,
+        "delta_vs_baseline": ev.delta_vs_baseline,
+        "n_seeds": n_seeds,
+        "verdict": verdict,
+        "gate_passed": gate_passed,
+        "falsification_triggered": falsification_triggered,
+        "reason": reason,
+        "recommended_action": rec,
+    }

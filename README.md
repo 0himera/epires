@@ -146,7 +146,7 @@ epires dag
 * `tools/web_search.py` — Multi-query literature and web search gateway powered by `parallel-web 1.3.0` SDK.
 * `server/app.py` — FastAPI REST API & Web Dashboard backend (CRUD, Gap Analysis, Stratigraphy, Provenance, WebSockets).
 * `server/static/` — Research Atlas SPA frontend (interactive DAG visualizer, dossier, timeline, artifacts explorer).
-* `server/mcp_server.py` — FastMCP server exposing 28 research tools to AI agents.
+* `server/mcp_server.py` — FastMCP server exposing 30 research tools to AI agents.
 * `skills/epires_researcher/SKILL.md` — Cognitive protocol and operational standard for the Lead Principal Investigator.
 
 ---
@@ -321,7 +321,7 @@ v0.4.0 turns the declared methodology into enforced, measurable machinery.
 ### Decision quality
 - **Experiment scoring by expected information gain** — `score_experiments(candidates, q)` replaces intuition-driven selection.
 - **Pask conversations** — `CONFLICTS_WITH` opens a structured conversation node (`merge/split/add_condition`) instead of a dead-end label.
-- **28 MCP tools** expose all of the above to coding agents.
+- **30 MCP tools** expose all of the above to coding agents.
 
 ## 6. CLI Command Reference
 
@@ -367,15 +367,18 @@ epires dag
 
 ## 7. Model Context Protocol (MCP) Specification
 
-Epires exposes 28 deterministic MCP tools for AI agents:
+Epires exposes 30 deterministic MCP tools for AI agents:
 
 | MCP Tool | Description |
 | :--- | :--- |
+| `epires_system_status` | Returns harness version, database status, and search connectivity |
+| `epires_summary` | Aggregated lightweight (<1 KB) research state overview (status matrix, active frontier, blocked branches) |
+| `epires_compute_gate` | Automatically evaluates experiment results / bootstrap CI against falsification criteria and statistical gates |
 | `epires_get_schema` | Returns canonical JSON schema, supported enum values, and migration template |
-| `epires_register_hypothesis` | Registers a hypothesis with a priori proof and falsification criteria (with DAG cycle detection) |
+| `epires_register_hypothesis` | Registers a hypothesis with a priori proof and falsification criteria (flexible string/list tags and entities) |
 | `epires_register_experiment` | Registers reproducible experiment runs with parameters, metrics, script path, and git commit |
 | `epires_list_experiments` | Lists recorded experiments with metrics and artifacts |
-| `epires_log_evidence` | Logs empirical evidence, metrics, CI95, and cascades falsification |
+| `epires_log_evidence` | Logs empirical evidence, metrics, CI95, and cascades falsification (auto-generated claim fallback) |
 | `epires_retract_evidence` | Retracts erroneous evidence, recalculates evidence level, and cascades unblocking |
 | `epires_update_hypothesis` | Explicitly updates hypothesis status (REFINED, PAUSED), target level, tags, or text |
 | `epires_add_relation` | Links hypotheses, experiments, and evidence with semantic relations (SUPERSEDES, CONFLICTS_WITH, REFINES, BLOCKS, GATED_BY) |
@@ -383,14 +386,13 @@ Epires exposes 28 deterministic MCP tools for AI agents:
 | `epires_bulk_import` | Ingests a batch of hypotheses, evidence, relations, experiments, and traces in a single fast transaction |
 | `epires_export_graph` | Exports entire research memory to portable versioned JSON with SHA256 checksum |
 | `epires_import_graph` | Reproducibly imports research graph bundle from JSON with full entity fidelity |
-| `epires_query_graph` | Queries hypotheses by ID or status (CONFIRMED, FALSIFIED, BLOCKED) |
+| `epires_query_graph` | Queries hypotheses by ID or status with compact mode support to prevent context bloat |
 | `epires_find_gaps` | Discovers untested combinations and research white spots in VSA hypergraph |
 | `epires_associative_search` | Hybrid full-text (SQLite FTS5) + VSA cosine similarity search across research memory |
 | `epires_parallel_web_search`| Multi-query parallel literature/web search via SDK `parallel-web 1.3.0` |
 | `epires_parallel_extract` | Structured full text/markdown extraction from specific URLs |
-| `epires_export_mermaid_dag` | Exports knowledge graph DAG into Mermaid Markdown (with full relation type styling) |
+| `epires_export_mermaid_dag` | Exports knowledge graph DAG into Mermaid Markdown with subtree filtering (`root_id`, `depth`) |
 | `epires_record_trace` | Logs strategic rationale into SQLite traces and Markdown ledger |
-| `epires_system_status` | Returns harness version, database status, and search connectivity |
 
 ---
 

@@ -14,6 +14,7 @@ SCENARIOS = [
     "reward_hack",
     "inconclusive_ci",
     "cascade_quarantine",
+    "gate_bootstrap",
 ]
 
 NEW_SCENARIOS = [
@@ -34,6 +35,7 @@ NEW_SCENARIOS = [
     "planted_manipulation",
     "inconclusive_ci",
     "cascade_quarantine",
+    "gate_bootstrap",
 ]
 
 

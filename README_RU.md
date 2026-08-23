@@ -143,7 +143,7 @@ epires dag
 * `tools/web_search.py` — многопоточный поисковый шлюз на базе SDK `parallel-web 1.3.0`.
 * `server/app.py` — бэкенд FastAPI REST API и Веб-Дашборда (CRUD, Gap Analysis, Стратиграфия, Provenance, WebSockets).
 * `server/static/` — фронтенд Research Atlas SPA (интерактивный визуализатор DAG, досье, таймлайн, просмотрщик артефактов).
-* `server/mcp_server.py` — FastMCP сервер инструментов для AI-агентов (28 детерминированных инструментов).
+* `server/mcp_server.py` — FastMCP сервер инструментов для AI-агентов (30 детерминированных инструментов).
 * `skills/epires_researcher/SKILL.md` — протокол Главного Исследователя (Lead-PI).
 
 ---
@@ -347,15 +347,18 @@ epires dag
 
 ## 6. Model Context Protocol (MCP) Спецификация
 
-Epires предоставляет AI-агентам 28 детерминированных инструментов:
+Epires предоставляет AI-агентам 30 детерминированных инструментов:
 
 | MCP Tool | Описание |
 | :--- | :--- |
+| `epires_system_status` | Проверка версии харнесса, статуса базы данных и подключения к Parallel |
+| `epires_summary` | Легковесная (<1 КБ) сводка графа (матрица статусов, фронтир, заблокированные ветви) |
+| `epires_compute_gate` | Автоматическая оценка метрик и bootstrap CI против критериев фальсификации и шлюзов |
 | `epires_get_schema` | Возвращает каноническую JSON-схему, энумы и шаблон Python-миграции для агента |
-| `epires_register_hypothesis` | Регистрация гипотезы с априорным механизмом и критерием фальсификации (с проверкой на циклы в DAG) |
+| `epires_register_hypothesis` | Регистрация гипотезы с априорным механизмом и критерием фальсификации (гибкие теги и сущности) |
 | `epires_register_experiment` | Фиксация воспроизводимого вычислительного эксперимента (параметры, скрипт, метрики, git commit) |
 | `epires_list_experiments` | Выгрузка списка проведенных экспериментов и их артефактов |
-| `epires_log_evidence` | Фиксация эмпирических метрик, CI95 и триггера каскадной фальсификации |
+| `epires_log_evidence` | Фиксация эмпирических метрик, CI95 и триггера каскадной фальсификации (авто-fallback для claim) |
 | `epires_retract_evidence` | Отзыв ошибочных свидетельств, пересчет уровня доказательности и каскадный анблок |
 | `epires_update_hypothesis` | Явное обновление статуса гипотезы (REFINED, PAUSED), целевого уровня, тегов или текста |
 | `epires_add_relation` | Создание смысловых связей между гипотезами и сущностями (SUPERSEDES, CONFLICTS_WITH, REFINES, BLOCKS, GATED_BY) |
@@ -363,14 +366,13 @@ Epires предоставляет AI-агентам 28 детерминиров�
 | `epires_bulk_import` | Быстрый транзакционный импорт пачки гипотез, свидетельств, связей, экспериментов и трейсов |
 | `epires_export_graph` | Экспорт всей исследовательской памяти в переносимый JSON с SHA256-контрольной суммой |
 | `epires_import_graph` | Воспроизводимый импорт графа знаний из JSON-бандла со всеми сущностями |
-| `epires_query_graph` | Запрос состояния гипотез по ID или статусу (CONFIRMED, FALSIFIED, BLOCKED) |
+| `epires_query_graph` | Запрос состояния гипотез по ID или статусу (с поддержкой компактного режима `compact=True`) |
 | `epires_find_gaps` | Поиск белых пятен и неисследованных комбинаций в VSA-гиперграфе |
 | `epires_associative_search` | Гибридный поиск по базе знаний (SQLite FTS5 Full-Text + VSA косинусная близость) |
 | `epires_parallel_web_search`| Многопоточный поиск литературы и статей через SDK `parallel-web 1.3.0` |
 | `epires_parallel_extract` | Извлечение структурированного markdown/текста из веб-страниц и статей |
-| `epires_export_mermaid_dag` | Экспорт графа знаний в формат Mermaid Markdown (с поддержкой всех типов связей) |
+| `epires_export_mermaid_dag` | Экспорт графа знаний в формат Mermaid Markdown (с поддержкой поддеревьев `root_id` и `depth`) |
 | `epires_record_trace` | Запись авторской рефлексии и решений в операционный трейс |
-| `epires_system_status` | Проверка версии харнесса, статуса базы данных и подключения к Parallel |
 
 ---
 

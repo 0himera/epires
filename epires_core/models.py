@@ -1,9 +1,10 @@
 """Pydantic data models for hypotheses, experiments, evidence, DAG relations and traces."""
 
 from __future__ import annotations
+import re
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class EvidenceLevel(str, Enum):
@@ -57,14 +58,15 @@ class RelationEdge(BaseModel):
 
 
 from uuid import uuid4
+from pydantic import BaseModel, Field
 
 
 class EvidenceClaim(BaseModel):
     id: str = Field(default_factory=lambda: f"EV-{uuid4().hex[:8]}")
     hypothesis_id: str
-    evidence_level: EvidenceLevel
+    evidence_level: EvidenceLevel = EvidenceLevel.E1
     source_confidence: SourceConfidence = SourceConfidence.V
-    claim: str
+    claim: str = Field(default="")
     metric_name: Optional[str] = None
     metric_value: Optional[float] = None
     delta_vs_baseline: Optional[float] = None
@@ -79,6 +81,33 @@ class EvidenceClaim(BaseModel):
     stated_p: float | None = None
     assumption_ids: list[str] = Field(default_factory=list)
     prediction: str | None = None
+
+    @field_validator("claim", mode="before")
+    @classmethod
+    def _normalize_claim(cls, v: Any) -> str:
+        if v is None:
+            return ""
+        return str(v).strip()
+
+    @field_validator("assumption_ids", mode="before")
+    @classmethod
+    def _normalize_assumptions(cls, v: Any) -> list[str]:
+        if v is None:
+            return []
+        if isinstance(v, str):
+            return [x.strip() for x in v.split(",") if x.strip()]
+        if isinstance(v, (list, tuple, set)):
+            return [str(x).strip() for x in v if str(x).strip()]
+        return []
+
+    def model_post_init(self, __context: Any) -> None:
+        if not self.claim:
+            if self.metric_name is not None and self.metric_value is not None:
+                self.claim = f"Observed {self.metric_name}={self.metric_value}"
+                if self.delta_vs_baseline is not None:
+                    self.claim += f" (delta={self.delta_vs_baseline})"
+            else:
+                self.claim = f"Evidence record for {self.hypothesis_id}"
 
 
 class HypothesisNode(BaseModel):
@@ -96,6 +125,59 @@ class HypothesisNode(BaseModel):
     observation_context: str = ""
     created_at: str = ""
     updated_at: str = ""
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def _normalize_tags(cls, v: Any) -> list[str]:
+        if v is None:
+            return []
+        if isinstance(v, str):
+            return [x.strip() for x in re.split(r"[,;\s]+", v) if x.strip()]
+        if isinstance(v, (list, tuple, set)):
+            return [str(x).strip() for x in v if str(x).strip()]
+        return []
+
+    @field_validator("parent_ids", mode="before")
+    @classmethod
+    def _normalize_parents(cls, v: Any) -> list[str]:
+        if v is None:
+            return []
+        if isinstance(v, str):
+            return [x.strip() for x in re.split(r"[,;\s]+", v) if x.strip()]
+        if isinstance(v, (list, tuple, set)):
+            return [str(x).strip() for x in v if str(x).strip()]
+        return []
+
+    @field_validator("entities", mode="before")
+    @classmethod
+    def _normalize_entities(cls, v: Any) -> list[Any]:
+        if v is None:
+            return []
+        if isinstance(v, str):
+            items = []
+            for part in v.split(","):
+                part = part.strip()
+                if ":" in part:
+                    t, val = part.split(":", 1)
+                    items.append({"type": t.strip(), "value": val.strip()})
+                elif part:
+                    items.append({"type": "General", "value": part})
+            return items
+        if isinstance(v, (list, tuple)):
+            norm = []
+            for item in v:
+                if isinstance(item, str):
+                    if ":" in item:
+                        t, val = item.split(":", 1)
+                        norm.append({"type": t.strip(), "value": val.strip()})
+                    else:
+                        norm.append({"type": "General", "value": item.strip()})
+                elif isinstance(item, dict):
+                    norm.append(item)
+                elif hasattr(item, "type") and hasattr(item, "value"):
+                    norm.append(item)
+            return norm
+        return []
 
 
 class ExperimentNode(BaseModel):

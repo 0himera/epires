@@ -285,8 +285,9 @@ def main():
     # MCP (Stdio Server)
     subparsers.add_parser("mcp", help="Start MCP stdio server for AI agents")
 
-    # Status
+    # Status & Summary
     subparsers.add_parser("status", help="Print summary of research graph & evidence")
+    subparsers.add_parser("summary", help="Print compact JSON summary of research state")
 
     # Mermaid DAG
     dag_parser = subparsers.add_parser("dag", help="Print Mermaid diagram of hypothesis DAG")
@@ -300,6 +301,31 @@ def main():
         default=None,
         help="Comma-separated status filter (e.g. 'CONFIRMED,IN_PROGRESS')",
     )
+    dag_parser.add_argument(
+        "--root",
+        "-r",
+        default=None,
+        help="Root hypothesis ID to extract connected subtree",
+    )
+    dag_parser.add_argument(
+        "--depth",
+        "-d",
+        type=int,
+        default=-1,
+        help="Max hop depth from root hypothesis (-1 for full connected component)",
+    )
+
+    # Compute Gate
+    gate_parser = subparsers.add_parser(
+        "compute-gate", help="Evaluate results against hypothesis falsification criteria and statistical gates"
+    )
+    gate_parser.add_argument("hypothesis_id", help="Target hypothesis ID")
+    gate_parser.add_argument("--results", "-r", default=None, help="Path to results.json")
+    gate_parser.add_argument("--metric-name", "-m", default=None, help="Observed metric name")
+    gate_parser.add_argument("--metric-value", "-v", type=float, default=None, help="Observed metric value")
+    gate_parser.add_argument("--delta", default=None, type=float, help="Delta vs baseline")
+    gate_parser.add_argument("--ci-lower", type=float, default=None, help="95% CI lower bound")
+    gate_parser.add_argument("--ci-upper", type=float, default=None, help="95% CI upper bound")
 
     # Doctor
     subparsers.add_parser("doctor", help="Run comprehensive diagnostic checks on MCP, SQLite, and configuration")
@@ -680,7 +706,44 @@ def main():
         config = EpiresProjectConfig.load(root)
         store = EpiresStore(db_path=str(root / config.paths.db_path))
         statuses = [s.strip() for s in args.status.split(",") if s.strip()] if args.status else None
-        print(store.export_mermaid_dag(frontier_only=args.frontier, statuses=statuses))
+        print(
+            store.export_mermaid_dag(
+                frontier_only=args.frontier,
+                statuses=statuses,
+                root_id=args.root,
+                depth=args.depth,
+            )
+        )
+
+    elif args.command == "summary":
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        print(json.dumps(store.get_summary(), indent=2, ensure_ascii=False))
+
+    elif args.command == "compute-gate":
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        h = store.get_hypothesis(args.hypothesis_id)
+        if not h:
+            print(f"[!] Hypothesis '{args.hypothesis_id}' not found in research graph.")
+            sys.exit(1)
+        from .gates import evaluate_result_gate
+
+        payload = (
+            args.results
+            if args.results
+            else {
+                "metric_name": args.metric_name,
+                "metric_value": args.metric_value,
+                "delta_vs_baseline": args.delta,
+                "ci_95_lower": args.ci_lower,
+                "ci_95_upper": args.ci_upper,
+            }
+        )
+        res = evaluate_result_gate(hypothesis=h, results=payload)
+        print(json.dumps(res, indent=2, ensure_ascii=False))
 
     elif args.command == "audit":
         import os

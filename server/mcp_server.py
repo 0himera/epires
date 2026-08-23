@@ -68,11 +68,22 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
                 "db_path": str(db_path),
                 "total_hypotheses": len(hypotheses),
                 "parallel_auth": bool(p_key),
-                "tools_count": 28,
+                "tools_count": 30,
                 "status": "ready",
             },
             indent=2,
         )
+
+    @mcp.tool()
+    def epires_summary() -> str:
+        """Get an aggregated, lightweight (<1 KB) status overview of the research graph.
+
+        Returns total hypotheses, counts by status (CONFIRMED, PROPOSED, IN_PROGRESS, FALSIFIED, BLOCKED),
+        evidence levels distribution, active frontier hypotheses, and blocked branches.
+        Use this instead of query_graph when you need a fast and compact progress overview.
+        """
+        summary = store.get_summary()
+        return json.dumps(summary, indent=2, ensure_ascii=False)
 
     @mcp.tool()
     def epires_get_schema() -> str:
@@ -85,30 +96,47 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         title: str,
         a_priori_mechanism: str,
         falsification_criteria: str,
-        parent_ids: Optional[List[str]] = None,
-        entity_types: Optional[List[str]] = None,
-        entity_values: Optional[List[str]] = None,
+        parent_ids: Optional[Union[List[str], str]] = None,
+        tags: Optional[Union[List[str], str]] = None,
+        entity_types: Optional[Union[List[str], str]] = None,
+        entity_values: Optional[Union[List[str], str]] = None,
+        entities: Optional[Union[List[Dict[str, str]], List[str], str]] = None,
+        target_evidence_level: str = "E3",
         proposed_by: str = "Lead-PI",
         initial_confidence: float = 0.5,
     ) -> str:
         """Register a new hypothesis in the VSA Hypergraph.
 
         Requires theoretical a_priori_mechanism and Popperian falsification_criteria.
+        Supports flexible list or comma-separated string tags, entities, and parent_ids.
         """
-        entity_types = entity_types or []
-        entity_values = entity_values or []
-        if len(entity_types) != len(entity_values):
-            raise ValueError("entity_types and entity_values must contain the same number of items")
+        # Parse entities
+        ents: List[Any] = []
+        if entities is not None:
+            ents = entities if isinstance(entities, list) else [entities]
+        elif entity_types is not None or entity_values is not None:
+            t_list = [entity_types] if isinstance(entity_types, str) else (entity_types or [])
+            v_list = [entity_values] if isinstance(entity_values, str) else (entity_values or [])
+            if len(t_list) != len(v_list):
+                raise ValueError("entity_types and entity_values must contain the same number of items")
+            for t, v in zip(t_list, v_list):
+                ents.append(Entity(type=str(t), value=str(v)))
+
+        target_enum = (
+            EvidenceLevel(target_evidence_level)
+            if target_evidence_level in EvidenceLevel._value2member_map_
+            else EvidenceLevel.E3
+        )
+
         node = HypothesisNode(
             id=id,
             title=title,
             a_priori_mechanism=a_priori_mechanism,
             falsification_criteria=falsification_criteria,
             parent_ids=parent_ids or [],
-            entities=[
-                Entity(type=entity_type, value=entity_value)
-                for entity_type, entity_value in zip(entity_types, entity_values)
-            ],
+            entities=ents,
+            tags=tags or [],
+            target_evidence_level=target_enum,
             current_evidence_level=EvidenceLevel.E0,
             status=HypothesisStatus.PROPOSED,
         )
@@ -167,7 +195,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     @mcp.tool()
     def epires_log_evidence(
         hypothesis_id: str,
-        claim: str,
+        claim: Optional[str] = None,
         evidence_level: str = "E2",
         source_confidence: str = "V",
         metric_name: Optional[str] = None,
@@ -178,13 +206,24 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         falsification_triggered: bool = False,
         citation_or_path: str = "",
         artifact_hash: Optional[str] = None,
+        assumption_ids: Optional[Union[List[str], str]] = None,
     ) -> str:
         """Record empirical evidence for a hypothesis.
 
-        If falsification_triggered is True, the hypothesis is marked FALSIFIED and all
-        dependent child hypotheses in the DAG are automatically BLOCKED.
+        claim: Optional descriptive summary. If omitted, will be auto-generated from metric_name/metric_value.
+        If falsification_triggered is True (or metrics violate falsification_criteria),
+        the hypothesis is marked FALSIFIED and all dependent child hypotheses in the DAG are automatically BLOCKED.
         """
-        claim_hash = hashlib.sha256(claim.encode("utf-8")).hexdigest()[:8]
+        claim_str = (claim or "").strip()
+        if not claim_str:
+            if metric_name and metric_value is not None:
+                claim_str = f"Observed {metric_name}={metric_value}"
+                if delta_vs_baseline is not None:
+                    claim_str += f" (delta={delta_vs_baseline})"
+            else:
+                claim_str = f"Evidence claim for {hypothesis_id}"
+
+        claim_hash = hashlib.sha256(claim_str.encode("utf-8")).hexdigest()[:8]
         timestamp_ms = int(time.time() * 1000)
         ev_id = f"ev_{hypothesis_id}_{timestamp_ms}_{claim_hash}"
 
@@ -193,7 +232,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             hypothesis_id=hypothesis_id,
             evidence_level=EvidenceLevel(evidence_level),
             source_confidence=SourceConfidence(source_confidence),
-            claim=claim,
+            claim=claim_str,
             metric_name=metric_name,
             metric_value=metric_value,
             delta_vs_baseline=delta_vs_baseline,
@@ -202,11 +241,12 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             falsification_triggered=falsification_triggered,
             citation_or_path=citation_or_path,
             artifact_hash=artifact_hash,
+            assumption_ids=assumption_ids or [],
         )
         saved_ev, blocked_children = store.log_evidence(claim_obj)
 
         msg = f"Evidence [{saved_ev.evidence_level.value}, {saved_ev.source_confidence.value}] recorded for {hypothesis_id}."
-        if falsification_triggered:
+        if saved_ev.falsification_triggered:
             msg += f"\n[ALERT] Falsification triggered! Marked {hypothesis_id} as FALSIFIED."
             if blocked_children:
                 msg += f"\n[DAG CASCADE] Automatically BLOCKED downstream dependent hypotheses: {', '.join(blocked_children)}"
@@ -365,8 +405,12 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     def epires_query_graph(
         status: Optional[str] = None,
         h_id: Optional[str] = None,
+        compact: bool = True,
     ) -> str:
-        """Query hypotheses in the research graph by status (PROPOSED, CONFIRMED, FALSIFIED, BLOCKED) or ID."""
+        """Query hypotheses in the research graph by status (PROPOSED, CONFIRMED, FALSIFIED, BLOCKED) or ID.
+
+        compact: If True (default), returns compact summary (id, title, status, level, parents) without verbose mechanisms.
+        """
         if h_id:
             h = store.get_hypothesis(h_id)
             if not h:
@@ -382,17 +426,74 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         hypotheses = store.list_hypotheses(status=stat_enum)
         summary_list = []
         for h in hypotheses:
-            summary_list.append(
-                {
-                    "id": h.id,
-                    "title": h.title,
-                    "status": h.status.value,
-                    "current_level": h.current_evidence_level.value,
-                    "parents": h.parent_ids,
-                    "falsification_criteria": h.falsification_criteria,
-                }
-            )
+            if compact:
+                summary_list.append(
+                    {
+                        "id": h.id,
+                        "title": h.title,
+                        "status": h.status.value,
+                        "level": h.current_evidence_level.value,
+                        "parents": h.parent_ids,
+                        "tags": h.tags,
+                    }
+                )
+            else:
+                summary_list.append(
+                    {
+                        "id": h.id,
+                        "title": h.title,
+                        "a_priori_mechanism": h.a_priori_mechanism,
+                        "falsification_criteria": h.falsification_criteria,
+                        "status": h.status.value,
+                        "current_level": h.current_evidence_level.value,
+                        "target_level": h.target_evidence_level.value,
+                        "parents": h.parent_ids,
+                        "tags": h.tags,
+                    }
+                )
         return json.dumps(summary_list, indent=2, ensure_ascii=False)
+
+    @mcp.tool()
+    def epires_compute_gate(
+        hypothesis_id: str,
+        results_path: Optional[str] = None,
+        metric_name: Optional[str] = None,
+        metric_value: Optional[float] = None,
+        delta_vs_baseline: Optional[float] = None,
+        ci_95_lower: Optional[float] = None,
+        ci_95_upper: Optional[float] = None,
+        metrics_json: Optional[str] = None,
+    ) -> str:
+        """Automatically evaluate experiment results / bootstrap CI against hypothesis falsification criteria and statistical gates.
+
+        Accepts either results_path (path to results.json), metrics_json (JSON string), or direct metric fields.
+        Returns a structured verdict (PASS, FALSIFY, INCONCLUSIVE_NOISE) and actionable recommendations.
+        """
+        h = store.get_hypothesis(hypothesis_id)
+        if not h:
+            return json.dumps({"verdict": "ERROR", "reason": f"Hypothesis '{hypothesis_id}' not found"}, indent=2)
+
+        payload: Dict[str, Any] = {}
+        if results_path:
+            payload = results_path  # evaluate_result_gate handles path
+        elif metrics_json:
+            try:
+                payload = json.loads(metrics_json)
+            except Exception as e:
+                return json.dumps({"verdict": "ERROR", "reason": f"Invalid metrics_json: {e}"}, indent=2)
+        else:
+            payload = {
+                "metric_name": metric_name,
+                "metric_value": metric_value,
+                "delta_vs_baseline": delta_vs_baseline,
+                "ci_95_lower": ci_95_lower,
+                "ci_95_upper": ci_95_upper,
+            }
+
+        from epires_core.gates import evaluate_result_gate
+
+        res = evaluate_result_gate(hypothesis=h, results=payload)
+        return json.dumps(res, indent=2, ensure_ascii=False)
 
     @mcp.tool()
     def epires_find_gaps(
@@ -423,9 +524,32 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         return json.dumps(output, indent=2, ensure_ascii=False)
 
     @mcp.tool()
-    def epires_export_mermaid_dag() -> str:
-        """Export the complete hypothesis dependency DAG as Mermaid markdown for visualization."""
-        return store.export_mermaid_dag()
+    def epires_export_mermaid_dag(
+        root_id: Optional[str] = None,
+        depth: int = -1,
+        frontier_only: bool = False,
+        status_filter: Optional[Union[List[str], str]] = None,
+    ) -> str:
+        """Export the hypothesis dependency DAG as Mermaid markdown for visualization.
+
+        root_id: Optional root hypothesis ID to export only its connected subtree / neighborhood.
+        depth: Maximum hop depth from root_id (-1 for all reachable nodes).
+        frontier_only: If True, only includes active hypotheses and their immediate parents.
+        status_filter: Optional list or comma-separated string of statuses (e.g. 'CONFIRMED,IN_PROGRESS').
+        """
+        statuses = None
+        if status_filter:
+            if isinstance(status_filter, str):
+                statuses = [s.strip() for s in status_filter.split(",") if s.strip()]
+            else:
+                statuses = status_filter
+
+        return store.export_mermaid_dag(
+            root_id=root_id,
+            depth=depth,
+            frontier_only=frontier_only,
+            statuses=statuses,
+        )
 
     @mcp.tool()
     def epires_parallel_web_search(
