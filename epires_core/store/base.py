@@ -34,6 +34,9 @@ class StoreBase:
         self.vsa = BipolarVSA(dim=vsa_dim)
         self.encoder = HypergraphEncoder(self.vsa)
         self._index: Any = None  # ponytail: lazy BinaryIndex, rebuilt on size mismatch or vector update
+        self._dual_vsa: Any = None
+        self._shard_router: Any = None
+        self._compressor: Any = None
         self._init_db()
 
     @contextmanager

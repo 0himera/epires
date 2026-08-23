@@ -1,5 +1,5 @@
 {
-  "scenario": "baseline_stale",
+  "scenario": "conflicting",
   "variant": "protocol",
   "agent": "opencode",
   "integrity_gap": 1.0,
@@ -9,11 +9,12 @@
   "attribution_verdicts": [],
   "false_cascade_count": 0,
   "bateson_hot": 0,
-  "bateson_total": 1,
+  "bateson_total": 3,
   "brier": null,
-  "action_taken": "noop",
-  "final_level": "E3",
-  "status": "CONFIRMED",
+  "autoconfirmed": [
+    "HA"
+  ],
+  "conversation_status": "asserted",
   "success": false,
   "score": 0.0
 }

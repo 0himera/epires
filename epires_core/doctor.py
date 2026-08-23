@@ -145,6 +145,9 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
             "epires_system_status",
             "epires_summary",
             "epires_compute_gate",
+            "epires_vsa_multihop_query",
+            "epires_sharded_search",
+            "epires_compress_context",
         ]
         registered_count = len(tool_names)
         missing = [t for t in expected_tools if t not in tool_names]

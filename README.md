@@ -146,7 +146,7 @@ epires dag
 * `tools/web_search.py` — Multi-query literature and web search gateway powered by `parallel-web 1.3.0` SDK.
 * `server/app.py` — FastAPI REST API & Web Dashboard backend (CRUD, Gap Analysis, Stratigraphy, Provenance, WebSockets).
 * `server/static/` — Research Atlas SPA frontend (interactive DAG visualizer, dossier, timeline, artifacts explorer).
-* `server/mcp_server.py` — FastMCP server exposing 30 research tools to AI agents.
+* `server/mcp_server.py` — FastMCP server exposing 33 research tools to AI agents.
 * `skills/epires_researcher/SKILL.md` — Cognitive protocol and operational standard for the Lead Principal Investigator.
 
 ---
@@ -321,7 +321,7 @@ v0.4.0 turns the declared methodology into enforced, measurable machinery.
 ### Decision quality
 - **Experiment scoring by expected information gain** — `score_experiments(candidates, q)` replaces intuition-driven selection.
 - **Pask conversations** — `CONFLICTS_WITH` opens a structured conversation node (`merge/split/add_condition`) instead of a dead-end label.
-- **30 MCP tools** expose all of the above to coding agents.
+- **33 MCP tools** expose all of the above to coding agents.
 
 ## 6. CLI Command Reference
 
@@ -367,13 +367,16 @@ epires dag
 
 ## 7. Model Context Protocol (MCP) Specification
 
-Epires exposes 30 deterministic MCP tools for AI agents:
+Epires exposes 33 deterministic MCP tools for AI agents:
 
 | MCP Tool | Description |
 | :--- | :--- |
 | `epires_system_status` | Returns harness version, database status, and search connectivity |
 | `epires_summary` | Aggregated lightweight (<1 KB) research state overview (status matrix, active frontier, blocked branches) |
 | `epires_compute_gate` | Automatically evaluates experiment results / bootstrap CI against falsification criteria and statistical gates |
+| `epires_vsa_multihop_query` | Dual-Codebook ($C_{\text{head}} \perp C_{\text{tail}}$) 2-hop causal relational query with intermediate cleanup (VSAR-034) |
+| `epires_sharded_search` | Multi-agent isolated memory search with zero cross-agent context contamination (VSAR-032/033) |
+| `epires_compress_context` | Episodic context token compressor reducing prompt footprint by $\ge 50\%$ (VSAR-007) |
 | `epires_get_schema` | Returns canonical JSON schema, supported enum values, and migration template |
 | `epires_register_hypothesis` | Registers a hypothesis with a priori proof and falsification criteria (flexible string/list tags and entities) |
 | `epires_register_experiment` | Registers reproducible experiment runs with parameters, metrics, script path, and git commit |

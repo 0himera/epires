@@ -1,0 +1,20 @@
+{
+  "scenario": "gate_bootstrap",
+  "variant": "baseline",
+  "agent": "mock",
+  "integrity_gap": 0.0,
+  "n_confirmed": 0,
+  "n_falsified": 1,
+  "n_blocked": 0,
+  "attribution_verdicts": [],
+  "false_cascade_count": 0,
+  "bateson_hot": 1,
+  "bateson_total": 1,
+  "brier": null,
+  "gate_verdict": "FALSIFY",
+  "action": "claim",
+  "status": "FALSIFIED",
+  "falsified_count": 1,
+  "success": false,
+  "score": 0.0
+}

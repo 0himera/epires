@@ -68,7 +68,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
                 "db_path": str(db_path),
                 "total_hypotheses": len(hypotheses),
                 "parallel_auth": bool(p_key),
-                "tools_count": 30,
+                "tools_count": 33,
                 "status": "ready",
             },
             indent=2,
@@ -522,6 +522,55 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             for h, score in results
         ]
         return json.dumps(output, indent=2, ensure_ascii=False)
+
+    @mcp.tool()
+    def epires_vsa_multihop_query(
+        head_id: str,
+        relation_1: str,
+        relation_2: str,
+        top_k: int = 5,
+    ) -> str:
+        """Execute a 2-hop causal/relational query on the knowledge graph using Dual-Codebook VSA (VSAR-034).
+
+        Example: head_id='H1', relation_1='BLOCKS', relation_2='GATED_BY' finds all targets satisfying
+        (H1 -BLOCKS-> ?mid -GATED_BY-> target) with intermediate cleanup.
+        """
+        results = store.query_2hop_relations(
+            head_id=head_id,
+            relation_1=relation_1,
+            relation_2=relation_2,
+            top_k=top_k,
+        )
+        return json.dumps(results, indent=2, ensure_ascii=False)
+
+    @mcp.tool()
+    def epires_sharded_search(
+        query: str,
+        agent_role: str = "Lead-PI",
+        top_k: int = 5,
+        allowed_roles: Optional[Union[List[str], str]] = None,
+    ) -> str:
+        """Perform multi-agent isolated memory search with zero cross-agent context contamination (VSAR-032/033)."""
+        roles_list: Optional[List[str]] = None
+        if allowed_roles:
+            if isinstance(allowed_roles, str):
+                roles_list = [r.strip() for r in allowed_roles.split(",") if r.strip()]
+            else:
+                roles_list = allowed_roles
+
+        results = store.sharded_search(
+            query_text=query,
+            agent_role=agent_role,
+            top_k=top_k,
+            allowed_roles=roles_list,
+        )
+        return json.dumps(results, indent=2, ensure_ascii=False)
+
+    @mcp.tool()
+    def epires_compress_context(limit: int = 50) -> str:
+        """Compress recent execution traces and notes into a dense VSA semantic digest, cutting tokens by >=50% (VSAR-007)."""
+        res = store.compress_trace_context(limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
 
     @mcp.tool()
     def epires_export_mermaid_dag(

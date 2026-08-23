@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from ..models import (
@@ -165,3 +165,78 @@ class SearchMixin:
                     }
                 )
         return gaps
+
+    def query_2hop_relations(
+        self,
+        head_id: str,
+        relation_1: str,
+        relation_2: str,
+        top_k: int = 5,
+    ) -> List[Dict[str, Any]]:
+        """Executes a 2-hop causal query on the relation graph using Dual-Codebook VSA (VSAR-034)."""
+        if self._dual_vsa is None:
+            from ..vsa_dual import DualCodebookVSA
+
+            self._dual_vsa = DualCodebookVSA(dim=self.vsa.dim)
+
+        relations = self.list_relations()
+        if not relations:
+            return []
+
+        triples = [(r.source_id, r.relation_type.value, r.target_id) for r in relations]
+        memory_bundle = self._dual_vsa.bundle_triples(triples)
+
+        # Collect all unique entity/hypothesis IDs in the graph
+        entities = list({r.source_id for r in relations} | {r.target_id for r in relations})
+
+        scores = self._dual_vsa.query_2hop(
+            memory=memory_bundle,
+            head=head_id,
+            relation_1=relation_1,
+            relation_2=relation_2,
+            all_entities=entities,
+            top_k=top_k,
+        )
+
+        return [{"target_id": tid, "similarity": round(sim, 4)} for tid, sim in scores]
+
+    def sharded_search(
+        self,
+        query_text: str,
+        agent_role: str = "Lead-PI",
+        top_k: int = 5,
+        allowed_roles: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Executes a multi-agent sharded search with zero cross-agent contamination (VSAR-032/033)."""
+        if self._shard_router is None:
+            from ..sharding import HierarchicalShardRouter
+
+            self._shard_router = HierarchicalShardRouter(dim=self.vsa.dim, total_shards=16)
+            # Seed shards from current hypotheses
+            hypotheses = self.list_hypotheses()
+            workloads: Dict[str, int] = {}
+            for h in hypotheses:
+                role = "Lead-PI"
+                workloads[role] = workloads.get(role, 0) + 1
+                vec = self.vsa.ngram_bundle(f"{h.title} {h.a_priori_mechanism}")
+                self._shard_router.insert(
+                    h.id, vec, agent_role=role, metadata={"title": h.title, "status": h.status.value}
+                )
+
+        query_vec = self.vsa.ngram_bundle(query_text)
+        results = self._shard_router.query(query_vec, agent_role=agent_role, top_k=top_k, allowed_roles=allowed_roles)
+        return [{"id": item_id, "similarity": round(sim, 4), **meta} for item_id, sim, meta in results]
+
+    def compress_trace_context(self, limit: int = 50) -> Dict[str, Any]:
+        """Compresses latest execution traces into a dense VSA semantic digest (VSAR-007)."""
+        if self._compressor is None:
+            from ..compressor import EpisodicVSACompressor
+
+            self._compressor = EpisodicVSACompressor(dim=self.vsa.dim)
+
+        raw_traces = self.list_traces(limit=limit)
+        trace_dicts = [t.model_dump() for t in raw_traces]
+        res = self._compressor.compress_traces(trace_dicts)
+        # Drop raw numpy vector from user response for JSON serializability
+        res.pop("state_vector", None)
+        return res

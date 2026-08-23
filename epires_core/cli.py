@@ -327,6 +327,21 @@ def main():
     gate_parser.add_argument("--ci-lower", type=float, default=None, help="95% CI lower bound")
     gate_parser.add_argument("--ci-upper", type=float, default=None, help="95% CI upper bound")
 
+    # Multihop VSA
+    multihop_parser = subparsers.add_parser(
+        "multihop", help="Execute 2-hop relational causal query on VSA knowledge graph"
+    )
+    multihop_parser.add_argument("head_id", help="Source/Head hypothesis ID")
+    multihop_parser.add_argument("rel1", help="First relation type (e.g. BLOCKS)")
+    multihop_parser.add_argument("rel2", help="Second relation type (e.g. GATED_BY)")
+    multihop_parser.add_argument("--top-k", "-k", type=int, default=5, help="Number of top candidates")
+
+    # Context Compressor
+    compress_parser = subparsers.add_parser(
+        "compress", help="Compress recent trace history into dense VSA semantic digest"
+    )
+    compress_parser.add_argument("--limit", "-n", type=int, default=50, help="Number of recent traces to compress")
+
     # Doctor
     subparsers.add_parser("doctor", help="Run comprehensive diagnostic checks on MCP, SQLite, and configuration")
 
@@ -743,6 +758,25 @@ def main():
             }
         )
         res = evaluate_result_gate(hypothesis=h, results=payload)
+        print(json.dumps(res, indent=2, ensure_ascii=False))
+
+    elif args.command == "multihop":
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        results = store.query_2hop_relations(
+            head_id=args.head_id,
+            relation_1=args.rel1,
+            relation_2=args.rel2,
+            top_k=args.top_k,
+        )
+        print(json.dumps(results, indent=2, ensure_ascii=False))
+
+    elif args.command == "compress":
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        res = store.compress_trace_context(limit=args.limit)
         print(json.dumps(res, indent=2, ensure_ascii=False))
 
     elif args.command == "audit":

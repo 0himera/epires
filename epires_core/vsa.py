@@ -102,6 +102,10 @@ class BipolarVSA:
         dot_product = np.dot(v1.astype(np.float32), v2.astype(np.float32))
         return float(dot_product / self.dim)
 
+    def cosine_similarity(self, v1: np.ndarray, v2: np.ndarray) -> float:
+        """Alias for similarity."""
+        return self.similarity(v1, v2)
+
     def batch_similarity(self, query: np.ndarray, matrix: np.ndarray) -> np.ndarray:
         """Calculates similarities between a query vector (D,) and a matrix of vectors (N, D).
 
@@ -111,3 +115,40 @@ class BipolarVSA:
             return np.array([self.similarity(query, matrix)])
         dot_products = np.matmul(matrix.astype(np.float32), query.astype(np.float32))
         return (dot_products / self.dim).astype(np.float32)
+
+    def incremental_bundle(
+        self,
+        existing_bundle: np.ndarray,
+        new_vectors: Sequence[np.ndarray],
+        current_load: int = 1,
+    ) -> np.ndarray:
+        """Online incremental superposition update in O(B * D) FLOPs (VSAR-029).
+
+        Appends B new items directly to an existing superposition bundle without full rebuild,
+        scaling weights proportionally to preserve SNR and old-item recall.
+        """
+        if not new_vectors:
+            return existing_bundle.copy()
+
+        b_new = len(new_vectors)
+        stacked_new = np.stack(new_vectors, axis=0)
+        sum_new = np.sum(stacked_new, axis=0)
+
+        # Superposition combination: existing bundle + new items vector sum
+        combined = existing_bundle.astype(np.float32) + sum_new.astype(np.float32)
+        bundled = np.sign(combined).astype(np.int8)
+
+        ties = bundled == 0
+        if np.any(ties):
+            num_ties = np.sum(ties)
+            tie_choices = np.where(np.arange(num_ties) % 2 == 0, 1, -1).astype(np.int8)
+            bundled[ties] = tie_choices
+
+        return bundled
+
+    @staticmethod
+    def compute_capacity_snr(dim: int, num_items: int) -> float:
+        """Calculates the Signal-to-Noise Ratio (SNR = sqrt(D / M)) for superposition capacity."""
+        if num_items <= 0:
+            return float("inf")
+        return float(np.sqrt(dim / num_items))

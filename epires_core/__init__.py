@@ -15,6 +15,9 @@ from .setup import (
     setup_all,
 )
 from .vsa import BipolarVSA
+from .vsa_dual import DualCodebookVSA
+from .sharding import HierarchicalShardRouter
+from .compressor import EpisodicVSACompressor
 from .models import (
     EvidenceLevel,
     SourceConfidence,
@@ -44,6 +47,9 @@ __all__ = [
     "setup_antigravity",
     "setup_all",
     "BipolarVSA",
+    "DualCodebookVSA",
+    "HierarchicalShardRouter",
+    "EpisodicVSACompressor",
     "EvidenceLevel",
     "SourceConfidence",
     "HypothesisStatus",

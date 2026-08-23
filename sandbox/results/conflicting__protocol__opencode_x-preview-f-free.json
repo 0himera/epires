@@ -2,19 +2,17 @@
   "scenario": "conflicting",
   "variant": "protocol",
   "agent": "opencode",
-  "integrity_gap": 1.0,
-  "n_confirmed": 1,
+  "integrity_gap": 0.0,
+  "n_confirmed": 0,
   "n_falsified": 0,
   "n_blocked": 0,
   "attribution_verdicts": [],
   "false_cascade_count": 0,
   "bateson_hot": 0,
-  "bateson_total": 3,
+  "bateson_total": 0,
   "brier": null,
-  "autoconfirmed": [
-    "HA"
-  ],
-  "conversation_status": "asserted",
-  "success": false,
-  "score": 0.0
+  "autoconfirmed": [],
+  "conversation_status": "in_conversation",
+  "success": true,
+  "score": 0.85
 }

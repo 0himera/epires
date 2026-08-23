@@ -143,7 +143,7 @@ epires dag
 * `tools/web_search.py` — многопоточный поисковый шлюз на базе SDK `parallel-web 1.3.0`.
 * `server/app.py` — бэкенд FastAPI REST API и Веб-Дашборда (CRUD, Gap Analysis, Стратиграфия, Provenance, WebSockets).
 * `server/static/` — фронтенд Research Atlas SPA (интерактивный визуализатор DAG, досье, таймлайн, просмотрщик артефактов).
-* `server/mcp_server.py` — FastMCP сервер инструментов для AI-агентов (30 детерминированных инструментов).
+* `server/mcp_server.py` — FastMCP сервер инструментов для AI-агентов (33 детерминированных инструментов).
 * `skills/epires_researcher/SKILL.md` — протокол Главного Исследователя (Lead-PI).
 
 ---
@@ -347,13 +347,16 @@ epires dag
 
 ## 6. Model Context Protocol (MCP) Спецификация
 
-Epires предоставляет AI-агентам 30 детерминированных инструментов:
+Epires предоставляет AI-агентам 33 детерминированных инструментов:
 
 | MCP Tool | Описание |
 | :--- | :--- |
 | `epires_system_status` | Проверка версии харнесса, статуса базы данных и подключения к Parallel |
 | `epires_summary` | Легковесная (<1 КБ) сводка графа (матрица статусов, фронтир, заблокированные ветви) |
 | `epires_compute_gate` | Автоматическая оценка метрик и bootstrap CI против критериев фальсификации и шлюзов |
+| `epires_vsa_multihop_query` | Dual-Codebook ($C_{\text{head}} \perp C_{\text{tail}}$) 2-hop ассоциативный поиск по графу связей без шума (VSAR-034) |
+| `epires_sharded_search` | Изолированный поиск по памяти субагентов с нулевой кросс-контаминацией (VSAR-032/033) |
+| `epires_compress_context` | Сжатие истории трейсов и контекста агента в гипервекторы с экономией $\ge 50\%$ токенов (VSAR-007) |
 | `epires_get_schema` | Возвращает каноническую JSON-схему, энумы и шаблон Python-миграции для агента |
 | `epires_register_hypothesis` | Регистрация гипотезы с априорным механизмом и критерием фальсификации (гибкие теги и сущности) |
 | `epires_register_experiment` | Фиксация воспроизводимого вычислительного эксперимента (параметры, скрипт, метрики, git commit) |
