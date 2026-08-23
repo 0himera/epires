@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import re
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, field_validator
@@ -195,7 +196,7 @@ class ExperimentNode(BaseModel):
 
 class TraceEntry(BaseModel):
     id: Optional[int] = None
-    timestamp: str
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     action: str  # e.g. "REGISTER_HYPOTHESIS", "RUN_EXPERIMENT", "FALSIFY", "DELEGATE"
     agent_role: str = "Lead-PI"  # "Lead-PI", "Coder-Subagent", "Reviewer"
     h_tag: Optional[str] = None
