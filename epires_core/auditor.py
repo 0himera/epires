@@ -140,7 +140,7 @@ def independent_audit(
         )
         return result
 
-    model = model or os.environ.get("EPIRES_AUDIT_MODEL", "opencode/x-preview-f-free")
+    model = model or os.environ.get("EPIRES_AUDIT_MODEL") or os.environ.get("EPIRES_EVAL_MODEL", "gpt-4o-mini")
     base_url = (
         base_url
         or os.environ.get("EPIRES_AUDIT_BASE_URL")

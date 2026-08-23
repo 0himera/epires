@@ -60,10 +60,13 @@ class WebSearchRequest(BaseModel):
     max_chars: Optional[int] = None
 
 
+from epires_core import __version__
+
+
 def create_app(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/agent-trace.md") -> FastAPI:
     app = FastAPI(
         title="Epires Research Engine",
-        version="0.1.0",
+        version=__version__,
         description="Epistemic Research Engine: VSA Hypergraph, Hypothesis Falsification DAG & Automated Tracing",
     )
 

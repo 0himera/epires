@@ -116,13 +116,42 @@ def check_g3(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
 def check_g4(evidence: Any, hypothesis: Any = None, experiments: Any = None, traces: Any = None, **kw: Any) -> bool:
     if hypothesis is None:
         return False
-    thr = _thr(getattr(hypothesis, "falsification_criteria", ""))
-    for ev in _evs(evidence):
+    evs = _evs(evidence)
+    if not evs:
+        return False
+
+    crit = getattr(hypothesis, "falsification_criteria", "") or ""
+    conditions = parse_falsification_criteria(crit)
+
+    for ev in evs:
         if getattr(ev, "ci_95_lower", None) is None or getattr(ev, "ci_95_upper", None) is None:
             return False
-        if thr is not None and not (ev.ci_95_lower > thr):  # type: ignore
-            return False
-    return bool(_evs(evidence))
+
+        ci_lower = float(ev.ci_95_lower)
+        ci_upper = float(ev.ci_95_upper)
+
+        if conditions:
+            for cond in conditions:
+                op = cond.operator
+                thr = cond.threshold
+                if op in (">", ">="):
+                    # Falsified if value >= thr -> confirmation requires CI upper <= thr
+                    if ci_upper > thr:
+                        return False
+                elif op in ("<", "<="):
+                    # Falsified if value <= thr -> confirmation requires CI lower >= thr
+                    if ci_lower < thr:
+                        return False
+                elif op == "degradation":
+                    # Falsified if delta < 0 -> confirmation requires CI lower > 0
+                    if ci_lower <= 0.0:
+                        return False
+        else:
+            thr = _thr(crit)
+            if thr is not None and not (ci_lower > thr):
+                return False
+
+    return True
 
 
 def check_g5(evidence: Any, hypothesis: Any = None, experiments: Any = None, traces: Any = None, **kw: Any) -> bool:

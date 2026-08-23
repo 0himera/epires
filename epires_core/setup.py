@@ -46,11 +46,45 @@ import shutil
 
 
 def _clean_jsonc_and_load(text: str) -> Dict[str, Any]:
-    """Strips JSONC single-line/block comments and trailing commas before parsing."""
-    # Strip block comments /* ... */
-    clean = re.sub(r"/\*[\s\S]*?\*/", "", text)
-    # Strip single line comments // ...
-    clean = re.sub(r"//.*", "", clean)
+    """Strips JSONC single-line/block comments and trailing commas while preserving string literals."""
+    out = []
+    i = 0
+    n = len(text)
+    in_string = False
+    escape = False
+
+    while i < n:
+        c = text[i]
+        if in_string:
+            out.append(c)
+            if escape:
+                escape = False
+            elif c == "\\":
+                escape = True
+            elif c == '"':
+                in_string = False
+            i += 1
+        else:
+            if c == '"':
+                in_string = True
+                out.append(c)
+                i += 1
+            elif c == "/" and i + 1 < n and text[i + 1] == "/":
+                # Skip line comment until newline
+                i += 2
+                while i < n and text[i] != "\n":
+                    i += 1
+            elif c == "/" and i + 1 < n and text[i + 1] == "*":
+                # Skip block comment until */
+                i += 2
+                while i + 1 < n and not (text[i] == "*" and text[i + 1] == "/"):
+                    i += 1
+                i += 2  # skip */
+            else:
+                out.append(c)
+                i += 1
+
+    clean = "".join(out)
     # Strip trailing commas before closing braces/brackets
     clean = re.sub(r",\s*([\}\]])", r"\1", clean)
     return json.loads(clean)
@@ -78,17 +112,18 @@ def _merge_json(file_path: Path, mutator_fn) -> None:
 
 
 def _merge_toml_codex(file_path: Path, project_root: Path) -> None:
-    """Merges or creates .codex/config.toml for modern OpenAI Codex."""
+    """Merges or creates .codex/config.toml for modern OpenAI Codex with POSIX/escaped path."""
     file_path.parent.mkdir(parents=True, exist_ok=True)
     existing_content = ""
     if file_path.exists():
         existing_content = file_path.read_text(encoding="utf-8")
 
+    cwd_str = project_root.as_posix() if hasattr(project_root, "as_posix") else str(project_root).replace("\\", "/")
     epires_toml_block = f"""
 [mcp_servers.epires]
 command = "epires"
 args = ["mcp"]
-cwd = "{project_root}"
+cwd = "{cwd_str}"
 """.strip()
 
     if "[mcp_servers.epires]" not in existing_content:
@@ -221,6 +256,12 @@ def setup_codex(project_dir: str | Path = ".") -> List[Path]:
     instr_file.parent.mkdir(parents=True, exist_ok=True)
     instr_file.write_text(get_skill_content(), encoding="utf-8")
     configured.append(instr_file)
+
+    # 4. Canonical OpenAI Codex AGENTS.md
+    agents_file = root / "AGENTS.md"
+    if not agents_file.exists():
+        agents_file.write_text(get_skill_content(), encoding="utf-8")
+        configured.append(agents_file)
 
     return configured
 

@@ -18,7 +18,7 @@ def _seed(store: Any) -> None:
             id="H1",
             title="Model beats baseline out-of-time",
             a_priori_mechanism="m",
-            falsification_criteria="metric > 0.5",
+            falsification_criteria="metric < 0.5",
             target_evidence_level=EvidenceLevel.E4,
         )
     )

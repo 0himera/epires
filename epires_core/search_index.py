@@ -81,8 +81,8 @@ class BinaryIndex:
                 for dist, idx in zip(dists[0], idxs[0]):
                     if int(idx) < 0 or int(idx) >= len(self._ids):
                         continue
-                    # ponytail: score = 1 - hamming/dim (higher = closer)
-                    score = (self.dim - int(dist)) / self.dim
+                    # Bipolar cosine similarity: (D - 2*Hamming) / D in [-1, 1]
+                    score = (self.dim - 2 * int(dist)) / self.dim
                     out.append((self._ids[int(idx)], float(score)))
                 # fallback if FAISS returned <k due to IDMap quirks
                 if out:
@@ -94,7 +94,7 @@ class BinaryIndex:
         scores: list[tuple[str, float]] = []
         for hid, blob in zip(self._ids, self._blobs):
             h = _hamming(q_blob, blob)
-            score = (self.dim - h) / self.dim
+            score = (self.dim - 2 * h) / self.dim
             scores.append((hid, float(score)))
         scores.sort(key=lambda x: x[1], reverse=True)
         return scores[:k]

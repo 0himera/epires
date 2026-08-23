@@ -146,7 +146,7 @@ epires dag
 * `tools/web_search.py` — Multi-query literature and web search gateway powered by `parallel-web 1.3.0` SDK.
 * `server/app.py` — FastAPI REST API & Web Dashboard backend (CRUD, Gap Analysis, Stratigraphy, Provenance, WebSockets).
 * `server/static/` — Research Atlas SPA frontend (interactive DAG visualizer, dossier, timeline, artifacts explorer).
-* `server/mcp_server.py` — FastMCP server exposing 10 research tools to AI agents.
+* `server/mcp_server.py` — FastMCP server exposing 28 research tools to AI agents.
 * `skills/epires_researcher/SKILL.md` — Cognitive protocol and operational standard for the Lead Principal Investigator.
 
 ---
@@ -367,7 +367,7 @@ epires dag
 
 ## 7. Model Context Protocol (MCP) Specification
 
-Epires exposes 20 deterministic MCP tools for AI agents:
+Epires exposes 28 deterministic MCP tools for AI agents:
 
 | MCP Tool | Description |
 | :--- | :--- |

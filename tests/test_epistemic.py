@@ -23,7 +23,7 @@ from epires_core.store import EpiresStore, RelationEdge, RelationType
 from epires_core.tms import add_justification, add_premise, init_tms_tables, propagate_status
 
 
-def make_h(hid: str = "H1", criteria: str = "metric > 0.5") -> HypothesisNode:
+def make_h(hid: str = "H1", criteria: str = "metric < 0.5") -> HypothesisNode:
     return HypothesisNode(id=hid, title=f"hyp {hid}", a_priori_mechanism="m", falsification_criteria=criteria)
 
 
@@ -59,7 +59,7 @@ def test_gates_no_evidence_is_e0():
 
 
 def test_gates_ci95_above_threshold_reaches_e4():
-    h = make_h(criteria="metric > 0.5")
+    h = make_h(criteria="metric < 0.5")
     evs = [
         make_ev(
             "H1",
@@ -84,7 +84,7 @@ def test_gates_ci95_above_threshold_reaches_e4():
 
 
 def test_gates_ci95_below_threshold_caps_at_e3():
-    h = make_h(criteria="metric > 0.5")
+    h = make_h(criteria="metric < 0.5")
     evs = [
         make_ev(
             "H1", f"ev{i}", ci_95_lower=0.3, ci_95_upper=0.4, prediction="acc > 0.5", timestamp="2026-01-01T00:00:00Z"

@@ -143,7 +143,7 @@ epires dag
 * `tools/web_search.py` — многопоточный поисковый шлюз на базе SDK `parallel-web 1.3.0`.
 * `server/app.py` — бэкенд FastAPI REST API и Веб-Дашборда (CRUD, Gap Analysis, Стратиграфия, Provenance, WebSockets).
 * `server/static/` — фронтенд Research Atlas SPA (интерактивный визуализатор DAG, досье, таймлайн, просмотрщик артефактов).
-* `server/mcp_server.py` — FastMCP сервер инструментов для AI-агентов (10 детерминированных инструментов).
+* `server/mcp_server.py` — FastMCP сервер инструментов для AI-агентов (28 детерминированных инструментов).
 * `skills/epires_researcher/SKILL.md` — протокол Главного Исследователя (Lead-PI).
 
 ---
@@ -347,7 +347,7 @@ epires dag
 
 ## 6. Model Context Protocol (MCP) Спецификация
 
-Epires предоставляет AI-агентам 20 детерминированных инструментов:
+Epires предоставляет AI-агентам 28 детерминированных инструментов:
 
 | MCP Tool | Описание |
 | :--- | :--- |

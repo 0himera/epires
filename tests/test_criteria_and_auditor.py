@@ -112,8 +112,8 @@ class TestGatesWithStructuredCriteria:
             evidence_level=EvidenceLevel.E3,
             source_confidence=SourceConfidence.V,
             claim="Significant pass",
-            ci_95_lower=0.15,
-            ci_95_upper=0.25,
+            ci_95_lower=0.01,
+            ci_95_upper=0.05,
         )
         ev_fail = EvidenceClaim(
             id="ev2",
