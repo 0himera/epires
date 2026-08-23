@@ -85,7 +85,14 @@ class OpencodeAgent:
             subprocess.run(["git", "init", "-q"], cwd=workspace, check=False)
             subprocess.run(["git", "add", "-A"], cwd=workspace, check=False)
             subprocess.run(["git", "commit", "-qm", "ws"], cwd=workspace, check=False)
-        epires_bin = str((PROJECT_ROOT / ".venv" / "bin" / "epires").resolve())
+        venv_bin = PROJECT_ROOT / ".venv" / "bin" / "epires"
+        if venv_bin.exists():
+            epires_bin = str(venv_bin.resolve())
+        else:
+            import shutil
+
+            epires_bin = shutil.which("epires") or "epires"
+
         (cfg_dir / "opencode.json").write_text(
             json.dumps({"mcp": {"epires": {"type": "local", "command": [epires_bin, "mcp"]}}}),
             encoding="utf-8",
@@ -99,8 +106,12 @@ class OpencodeAgent:
         env = dict(os.environ)
         abs_ws = str(Path(workspace).resolve())
         env["PWD"] = abs_ws
+        cmd = ["opencode", "run"]
+        if self.model:
+            cmd.extend(["-m", self.model])
+        cmd.extend(["Execute the task described in AGENTS.md.", "--format", "json"])
         r = subprocess.run(
-            ["opencode", "run", "Execute the task described in AGENTS.md.", "--format", "json"],
+            cmd,
             cwd=abs_ws,
             env=env,
             timeout=600,
