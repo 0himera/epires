@@ -1,6 +1,7 @@
 """Smoke: eval harness must be prompt-sensitive — governed passes, baseline fails on all scenarios."""
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -112,7 +113,7 @@ def test_opencode_agent_seeds_workspace(tmp_path):
     a.seed(tmp_path, "task text")
     cfg = jsonlib.loads((tmp_path / ".opencode" / "opencode.json").read_text())
     cmd = cfg["mcp"]["epires"]["command"]
-    assert cmd[0].endswith("epires") and cmd[1] == "mcp"
+    assert Path(cmd[0]).stem.lower() == "epires" and cmd[1] == "mcp"
     agents_md = (tmp_path / "AGENTS.md").read_text()
     assert "verify assumptions first" in agents_md and "task text" in agents_md
 
