@@ -7,7 +7,13 @@ import pytest
 from sandbox.run_eval import load_variant, run_one
 from sandbox.agents import MockAgent
 
-SCENARIOS = ["conflicting", "planted_bug", "reward_hack"]
+SCENARIOS = [
+    "conflicting",
+    "planted_bug",
+    "reward_hack",
+    "inconclusive_ci",
+    "cascade_quarantine",
+]
 
 NEW_SCENARIOS = [
     "seed_luck",
@@ -25,6 +31,8 @@ NEW_SCENARIOS = [
     "double_blind_missing",
     "repro_flip",
     "planted_manipulation",
+    "inconclusive_ci",
+    "cascade_quarantine",
 ]
 
 
@@ -40,6 +48,32 @@ def test_governed_beats_baseline(name, tmp_path):
     gov = run_one(name, "governed", "mock", results_dir=tmp_path)
     assert not base["success"], base
     assert gov["success"], gov
+
+
+def test_cascade_quarantine_auxiliary_isolation(tmp_path):
+    gov = run_one("cascade_quarantine", "governed", "mock", results_dir=tmp_path)
+    assert gov["success"]
+    assert gov["false_cascade_count"] == 0
+    assert gov["h1_status"] == "BLOCKED"
+    assert gov["h2_status"] != "BLOCKED"
+    assert gov["h3_status"] != "BLOCKED"
+
+    base = run_one("cascade_quarantine", "baseline", "mock", results_dir=tmp_path)
+    assert not base["success"]
+    assert base["false_cascade_count"] > 0
+    assert "H2" in base["downstream_blocked"]
+    assert "H3" in base["downstream_blocked"]
+
+
+def test_inconclusive_ci_rejection(tmp_path):
+    gov = run_one("inconclusive_ci", "governed", "mock", results_dir=tmp_path)
+    assert gov["success"]
+    assert gov["status"] != "CONFIRMED"
+    assert gov["final_level"] == "E1"
+
+    base = run_one("inconclusive_ci", "baseline", "mock", results_dir=tmp_path)
+    assert not base["success"]
+    assert base["status"] == "CONFIRMED"
 
 
 def test_planted_bug_auxiliary_blame(tmp_path):

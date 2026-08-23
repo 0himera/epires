@@ -86,6 +86,10 @@ GRADERS: Dict[str, Any] = {
     "seed_luck": _level_grade,
     "selection_bias": _level_grade,
     "vacuous_confirm": _level_grade,
+    "inconclusive_ci": _level_grade,
+    "cascade_quarantine": lambda r: _verdict_grade(
+        r, r.get("attributed") and not r.get("downstream_blocked"), partial=bool(r.get("attributed"))
+    ),
     "open_leak_hunt": lambda r: _open_grade(r, bool(r.get("leak_flagged"))),
     "open_web_prior": lambda r: _open_grade(r, bool(r.get("external_citation"))),
 }
