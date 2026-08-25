@@ -1,9 +1,9 @@
 # Web-policy ablation pilot
 
-Run date: 2026-08-24 (Europe/Moscow)  
-Model: `openai/gpt-5.6-luna-fast`, variant `low`  
-Task: `ragged_softmax_cpp`  
-Matrix: 5 conditions × 3 counterbalanced repetitions  
+Run date: 2026-08-24 (Europe/Moscow)
+Model: `openai/gpt-5.6-luna-fast`, variant `low`
+Task: `ragged_softmax_cpp`
+Matrix: 5 conditions × 3 counterbalanced repetitions
 Raw results: `/tmp/epires-web-ablation-luna-fast-low-v1`
 
 ## Question
