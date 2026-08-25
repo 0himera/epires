@@ -1,0 +1,11 @@
+{
+  "id": "ragged_softmax_cpp",
+  "version": 1,
+  "language": "cpp",
+  "submitted_paths": ["src/kernel.cpp"],
+  "public_check": ["make", "check"],
+  "public_benchmark": ["make", "bench"],
+  "primary_metric": "hidden_geomean_speedup",
+  "metric_goal": "maximize",
+  "correctness_gate": true
+}

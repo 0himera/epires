@@ -11,3 +11,11 @@ python -m sandbox.run_eval --report
 
 Each scenario x variant gets a persistent workspace at `sandbox/results/ws_<scenario>__<variant>/`
 with `.opencode/opencode.json` (MCP: epires) and `AGENTS.md`; the store lives there too.
+
+## External outcome A/B
+
+`sandbox/perf_ab/` is the tool-neutral product benchmark. It runs the same
+standalone optimization project through bare OpenCode and OpenCode initialized
+with Epires, then grades the final patch using an external hidden verifier.
+Unlike the scenario suite above, it does not reward Epires-specific answers or
+ledger actions. See [`perf_ab/README.md`](perf_ab/README.md).

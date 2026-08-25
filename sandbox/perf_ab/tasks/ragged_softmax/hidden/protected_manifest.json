@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "sha256": {
+    "Makefile": "a56adbdf06b4c10789cdada8d9ad1af420ba0843f43d4e02ec15f317102ff989",
+    "README.md": "a0f39b8b536e2dee85f3fccd18928b3a7e8c23187c6e2db8cc5d2f3a8b5ca913",
+    "TASK.md": "e0a8d1f946a70beb76256558fa0c09849f15155a62dae31d63c25811dd59973d",
+    "include/ragged_softmax.h": "a295648465bc7ef994f5fe7489cf382939bbd23bd93b7a9925e96be9e1bdce5f",
+    "src/baseline.cpp": "12b46e48dbb00bea3ec7065ada7787c8f75e8a1170cedae1163c099a90f68293",
+    "src/public_bench.cpp": "6a039be653b8593e20613fd2837f7f0780859657bda70ad7de35538fd2b3758c"
+  }
+}
