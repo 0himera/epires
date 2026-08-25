@@ -104,6 +104,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         target_evidence_level: str = "E3",
         proposed_by: str = "Lead-PI",
         initial_confidence: float = 0.5,
+        preregistration_artifact: Optional[str] = None,
     ) -> str:
         """Register a new hypothesis in the VSA Hypergraph.
 
@@ -140,7 +141,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             current_evidence_level=EvidenceLevel.E0,
             status=HypothesisStatus.PROPOSED,
         )
-        saved = store.register_hypothesis(node)
+        saved = store.register_hypothesis(node, preregistration_artifact=preregistration_artifact)
         return f"Successfully registered hypothesis '{saved.id}': {saved.title} (Level: {saved.current_evidence_level.value})"
 
     @mcp.tool()
@@ -319,6 +320,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
 
         Supported relation_type values:
         - DEPENDS_ON: Target depends on source premise (strict DAG dependency)
+        - REPLICATES: Source independently repeats target; it is not a dependency
         - SUPERSEDES: Source hypothesis replaces/improves upon target
         - CONFLICTS_WITH: Source and target are competing/mutually exclusive
         - REFINES: Source provides higher precision / parameter specialization over target

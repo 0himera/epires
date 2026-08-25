@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+from pathlib import Path
 import sqlite3
 from typing import Any, Dict, List, Optional
 import numpy as np
@@ -24,8 +26,19 @@ class HypothesisMixin:
     """Hypothesis and Relation CRUD and bulk import operations."""
 
     def register_hypothesis(
-        self, h: HypothesisNode, allow_status_override: bool = False, emit_trace: bool = True
+        self,
+        h: HypothesisNode,
+        allow_status_override: bool = False,
+        emit_trace: bool = True,
+        preregistration_artifact: str | None = None,
     ) -> HypothesisNode:
+        preregistration_hash: str | None = None
+        if preregistration_artifact:
+            artifact = Path(preregistration_artifact)
+            if not artifact.is_file():
+                raise ValueError(f"Preregistration artifact is not a readable file: {preregistration_artifact}")
+            preregistration_hash = hashlib.sha256(artifact.read_bytes()).hexdigest()
+
         # Check DAG cycle safety
         self._check_dag_cycle(h.id, h.parent_ids)
 
@@ -137,6 +150,21 @@ class HypothesisMixin:
                     details={"a_priori": h.a_priori_mechanism, "falsification": h.falsification_criteria},
                 )
             )
+            if preregistration_artifact and preregistration_hash:
+                self.log_trace(
+                    TraceEntry(
+                        timestamp=now,
+                        action="PREREGISTRATION",
+                        agent_role="Lead-PI",
+                        h_tag=h.id,
+                        summary=f"Preregistered {h.id} with artifact {preregistration_artifact}",
+                        details={
+                            "artifact_path": preregistration_artifact,
+                            "artifact_hash": preregistration_hash,
+                            "hash_algorithm": "sha256",
+                        },
+                    )
+                )
         return h
 
     def update_hypothesis(

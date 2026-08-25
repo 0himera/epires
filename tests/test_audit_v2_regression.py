@@ -43,6 +43,7 @@ def test_gate_g4_direction_greater_than():
         evidence_level=EvidenceLevel.E3,
         source_confidence=SourceConfidence.V,
         claim="Low loss",
+        metric_name="loss",
         ci_95_lower=0.02,
         ci_95_upper=0.08,
     )
@@ -55,6 +56,7 @@ def test_gate_g4_direction_greater_than():
         evidence_level=EvidenceLevel.E3,
         source_confidence=SourceConfidence.V,
         claim="High loss",
+        metric_name="loss",
         ci_95_lower=0.08,
         ci_95_upper=0.15,
     )
@@ -76,6 +78,7 @@ def test_gate_g4_direction_less_than():
         evidence_level=EvidenceLevel.E3,
         source_confidence=SourceConfidence.V,
         claim="High accuracy",
+        metric_name="accuracy",
         ci_95_lower=0.85,
         ci_95_upper=0.92,
     )
@@ -88,6 +91,7 @@ def test_gate_g4_direction_less_than():
         evidence_level=EvidenceLevel.E3,
         source_confidence=SourceConfidence.V,
         claim="Low accuracy",
+        metric_name="accuracy",
         ci_95_lower=0.75,
         ci_95_upper=0.85,
     )

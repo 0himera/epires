@@ -16,6 +16,7 @@ def get_canonical_schema() -> Dict[str, Any]:
             "SourceConfidence": ["V", "P", "D"],
             "RelationType": [
                 "DEPENDS_ON",
+                "REPLICATES",
                 "SUPERSEDES",
                 "CONFLICTS_WITH",
                 "REFINES",

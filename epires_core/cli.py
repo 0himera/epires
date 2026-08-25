@@ -462,6 +462,11 @@ def main():
     )
     reg_parser.add_argument("--domain", default=None, help="Domain override")
     reg_parser.add_argument("--primary-metric", default=None, help="Primary metric override")
+    reg_parser.add_argument(
+        "--prereg-artifact",
+        default=None,
+        help="Path to a preregistration artifact; its SHA-256 is recorded in a PREREGISTRATION trace",
+    )
 
     # Log Evidence
     ev_parser = subparsers.add_parser(
@@ -903,7 +908,11 @@ def main():
             domain=args.domain or config.domain,
             primary_metric=args.primary_metric or config.primary_metric,
         )
-        saved = store.register_hypothesis(h, allow_status_override=True)
+        saved = store.register_hypothesis(
+            h,
+            allow_status_override=True,
+            preregistration_artifact=args.prereg_artifact,
+        )
         print(f"[+] Successfully registered hypothesis [{saved.id}]: '{saved.title}'")
         print(
             f"    Status: {saved.status.value} | Target Level: {saved.target_evidence_level.value} | Parents: {saved.parent_ids}"

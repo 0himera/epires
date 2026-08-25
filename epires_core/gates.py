@@ -83,9 +83,21 @@ def check_g2(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
         params = getattr(exp, "parameters", None)
         if isinstance(exp, dict):
             params = exp.get("parameters", {})
-        if not isinstance(params, dict) or "held_out_hash" not in params:
+        if not isinstance(params, dict):
+            continue
+        held_out_hash = params.get("held_out_hash")
+        held_out_hashes = params.get("held_out_hashes")
+        has_single_hash = isinstance(held_out_hash, str) and bool(held_out_hash.strip())
+        has_hash_list = (
+            isinstance(held_out_hashes, (list, tuple))
+            and bool(held_out_hashes)
+            and all(isinstance(value, str) and bool(value.strip()) for value in held_out_hashes)
+        )
+        if not (has_single_hash or has_hash_list):
             continue
         ets = _ts(getattr(exp, "created_at", "") or "")
+        if isinstance(exp, dict):
+            ets = _ts(exp.get("created_at", "") or "")
         if ets is None:
             return True
         if ets < earliest:
@@ -97,16 +109,44 @@ def check_g3(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
     evs = _evs(evidence)
     if any(getattr(e, "prediction", None) is not None for e in evs):
         return True
-    trs = traces if traces is not None else kw.get("traces")
-    if not trs:
-        return False
     times = [t for t in (_ts(getattr(e, "timestamp", "")) for e in evs) if t is not None]
     if not times:
         return False
-    earliest = min(times)
+    # E0 evidence can be the preregistration itself, so compare preregistration
+    # records to the first later evidence rather than to themselves.
+    result_times = [
+        _ts(getattr(e, "timestamp", ""))
+        for e in evs
+        if getattr(getattr(e, "evidence_level", None), "value", getattr(e, "evidence_level", None)) != "E0"
+    ]
+    result_times = [t for t in result_times if t is not None]
+    earliest = min(result_times or times)
+    hypothesis_id = getattr(hypothesis, "id", None)
+
+    for ev in evs:
+        level = getattr(getattr(ev, "evidence_level", None), "value", getattr(ev, "evidence_level", None))
+        ets = _ts(getattr(ev, "timestamp", ""))
+        if (
+            level == "E0"
+            and getattr(ev, "artifact_hash", None)
+            and getattr(ev, "citation_or_path", None)
+            and ets is not None
+            and ets <= earliest
+        ):
+            return True
+
+    trs = traces if traces is not None else kw.get("traces")
+    if not trs:
+        return False
     for tr in trs:
         act = getattr(tr, "action", "") if not isinstance(tr, dict) else tr.get("action", "")
         if "prereg" not in act.lower():
+            continue
+        trace_hypothesis_id = getattr(tr, "h_tag", "") if not isinstance(tr, dict) else tr.get("h_tag", "")
+        if hypothesis_id and trace_hypothesis_id != hypothesis_id:
+            continue
+        details = getattr(tr, "details", {}) if not isinstance(tr, dict) else tr.get("details", {})
+        if not isinstance(details, dict) or not isinstance(details.get("artifact_hash"), str) or not details["artifact_hash"].strip():
             continue
         tts = _ts(getattr(tr, "timestamp", "") if not isinstance(tr, dict) else tr.get("timestamp", "") or "")
         if tts is not None and tts < earliest:
@@ -124,7 +164,16 @@ def check_g4(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
     crit = getattr(hypothesis, "falsification_criteria", "") or ""
     conditions = parse_falsification_criteria(crit)
 
-    for ev in evs:
+    quantitative_evs = [
+        ev
+        for ev in evs
+        if getattr(getattr(ev, "evidence_level", None), "value", getattr(ev, "evidence_level", None)) in ("E3", "E4", "E5")
+        and bool((getattr(ev, "metric_name", "") or "").strip())
+    ]
+    if not quantitative_evs:
+        return False
+
+    for ev in quantitative_evs:
         if getattr(ev, "ci_95_lower", None) is None or getattr(ev, "ci_95_upper", None) is None:
             return False
 

@@ -112,6 +112,7 @@ class TestGatesWithStructuredCriteria:
             evidence_level=EvidenceLevel.E3,
             source_confidence=SourceConfidence.V,
             claim="Significant pass",
+            metric_name="loss",
             ci_95_lower=0.01,
             ci_95_upper=0.05,
         )
@@ -121,6 +122,7 @@ class TestGatesWithStructuredCriteria:
             evidence_level=EvidenceLevel.E3,
             source_confidence=SourceConfidence.V,
             claim="Borderline pass",
+            metric_name="loss",
             ci_95_lower=0.05,
             ci_95_upper=0.25,
         )

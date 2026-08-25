@@ -28,10 +28,11 @@ def make_h(hid: str = "H1", criteria: str = "metric < 0.5") -> HypothesisNode:
 
 
 def make_ev(hid: str, eid: str, **kw) -> EvidenceClaim:
+    evidence_level = kw.pop("evidence_level", EvidenceLevel.E1)
     return EvidenceClaim(
         id=eid,
         hypothesis_id=hid,
-        evidence_level=EvidenceLevel.E1,
+        evidence_level=evidence_level,
         claim="claim",
         citation_or_path="http://example.org/src",
         metric_name="acc",
@@ -64,6 +65,7 @@ def test_gates_ci95_above_threshold_reaches_e4():
         make_ev(
             "H1",
             f"ev{i}",
+            evidence_level=EvidenceLevel.E4,
             ci_95_lower=0.7,
             ci_95_upper=0.9,
             prediction="acc > 0.5",

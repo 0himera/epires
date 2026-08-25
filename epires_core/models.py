@@ -34,6 +34,7 @@ class HypothesisStatus(str, Enum):
 
 class RelationType(str, Enum):
     DEPENDS_ON = "DEPENDS_ON"  # Child hypothesis requires parent premise
+    REPLICATES = "REPLICATES"  # Independent repetition of another hypothesis; not a premise
     SUPERSEDES = "SUPERSEDES"  # New hypothesis replaces/improves upon older hypothesis
     CONFLICTS_WITH = "CONFLICTS_WITH"  # Mutually exclusive hypotheses / competing paradigms
     REFINES = "REFINES"  # Hypothesis provides higher precision / parameter specialization
