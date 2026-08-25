@@ -115,3 +115,14 @@ def test_cli_supports_runner_and_workspace_names() -> None:
     assert runner_args.output == Path("/tmp/result")
     assert alias_args.workspace == Path("/tmp/candidate")
     assert alias_args.base_revision == "abc"
+
+
+def test_openmp_is_optional_when_compiler_rejects_flag(monkeypatch) -> None:
+    grader = _load_grader()
+
+    def reject_openmp(*args, **kwargs):
+        return subprocess.CompletedProcess(args[0], 1, "", "unsupported option '-fopenmp'")
+
+    monkeypatch.setattr(grader.subprocess, "run", reject_openmp)
+
+    assert grader._openmp_flags("clang++") == ()

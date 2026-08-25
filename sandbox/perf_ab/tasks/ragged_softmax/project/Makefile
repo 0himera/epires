@@ -1,5 +1,5 @@
 CXX ?= g++
-CXXFLAGS ?= -O3 -std=c++17 -march=native -DNDEBUG -fopenmp -Iinclude -Wall -Wextra
+CXXFLAGS ?= -O3 -std=c++17 -march=native -DNDEBUG -Iinclude -Wall -Wextra
 BUILD_DIR := build
 TARGET := $(BUILD_DIR)/public_bench
 

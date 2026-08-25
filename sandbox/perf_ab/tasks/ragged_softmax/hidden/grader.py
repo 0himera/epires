@@ -49,7 +49,6 @@ COMPILE_FLAGS = (
     "-std=c++17",
     "-march=native",
     "-DNDEBUG",
-    "-fopenmp",
     "-Wall",
     "-Wextra",
 )
@@ -224,6 +223,24 @@ def _compiler_version(compiler: str) -> str:
     return result.stdout.splitlines()[0] if result.stdout else "unknown"
 
 
+def _openmp_flags(compiler: str) -> tuple[str, ...]:
+    """Enable OpenMP only when the selected compiler can compile and link it."""
+
+    try:
+        probe = subprocess.run(
+            [compiler, "-std=c++17", "-fopenmp", "-x", "c++", "-", "-o", os.devnull],
+            input="int main() { return 0; }\n",
+            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ()
+    return ("-fopenmp",) if probe.returncode == 0 else ()
+
+
 def _empty_correctness(failure: str) -> dict[str, Any]:
     return {
         "passed": False,
@@ -248,6 +265,8 @@ def grade(workspace: Path, base_revision: str | None) -> dict[str, Any]:
     diff_check, tamper_check = check_submission(workspace, base_revision)
     selected_cpus = _select_cpus()
     compiler = shutil.which(os.environ.get("CXX", "g++"))
+    openmp_flags = _openmp_flags(compiler) if compiler is not None else ()
+    compile_flags = (*COMPILE_FLAGS, *openmp_flags)
     metadata: dict[str, Any] = {
         "platform": platform.platform(),
         "machine": platform.machine(),
@@ -255,9 +274,10 @@ def grade(workspace: Path, base_revision: str | None) -> dict[str, Any]:
         "available_affinity_cpus": _available_affinity(),
         "selected_affinity_cpus": selected_cpus,
         "affinity_enforced": False,
-        "omp_threads": len(selected_cpus),
+        "omp_threads": len(selected_cpus) if openmp_flags else 1,
+        "openmp_enabled": bool(openmp_flags),
         "compiler": compiler,
-        "compile_flags": list(COMPILE_FLAGS),
+        "compile_flags": list(compile_flags),
         "paired_interleaved": True,
         "baseline_rerun_in_candidate_process": True,
     }
@@ -288,7 +308,7 @@ def grade(workspace: Path, base_revision: str | None) -> dict[str, Any]:
         executable = Path(temporary) / "hidden_driver"
         compile_command = [
             compiler,
-            *COMPILE_FLAGS,
+            *compile_flags,
             f"-I{workspace / 'include'}",
             str(workspace / "src" / "kernel.cpp"),
             str(hidden_dir / "pristine_baseline.cpp"),
