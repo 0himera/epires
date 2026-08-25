@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -391,7 +392,8 @@ def test_web_auth_is_opt_in_and_copied_without_leaking_value(tmp_path, monkeypat
     copied = Path(enabled_env["HOME"]) / ".epires" / "credentials.json"
     assert enabled_web is True
     assert copied.read_text(encoding="utf-8") == credentials.read_text(encoding="utf-8")
-    assert copied.stat().st_mode & 0o777 == 0o600
+    if os.name != "nt":
+        assert copied.stat().st_mode & 0o777 == 0o600
 
 
 def test_web_condition_refuses_to_run_without_explicit_web_auth(tmp_path, monkeypatch):

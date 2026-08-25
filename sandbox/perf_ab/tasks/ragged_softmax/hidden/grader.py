@@ -66,11 +66,10 @@ def _run_git(workspace: Path, args: list[str]) -> subprocess.CompletedProcess[st
 
 
 def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as source:
-        while block := source.read(1024 * 1024):
-            digest.update(block)
-    return digest.hexdigest()
+    # All protected benchmark assets are text. Normalize checkout line endings
+    # so the same manifest works on GitHub's Linux, macOS, and Windows runners.
+    content = path.read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(content).hexdigest()
 
 
 def _is_ignored_untracked(path: str) -> bool:
