@@ -10,7 +10,7 @@ Outputs detailed quantitative metrics, speedups, confidence intervals, and compa
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Sequence, Tuple
 import numpy as np
 
 from epires_core import (
@@ -286,7 +286,11 @@ def benchmark_4_episodic_context_compression(
     def generate_trajectory(n_steps: int) -> List[Dict[str, Any]]:
         actions = ["TOOL_INVOKE", "CODE_EDIT", "EXPERIMENT_RUN", "METRIC_COLLECT", "GATE_PASS"]
         traces = [
-            {"action": "REGISTER_HYPOTHESIS", "summary": f"H{i}: Test hypothesis on tensor parallelism", "details": {"param": "tp_size=4"}}
+            {
+                "action": "REGISTER_HYPOTHESIS",
+                "summary": f"H{i}: Test hypothesis on tensor parallelism",
+                "details": {"param": "tp_size=4"},
+            }
             for i in range(1, 4)
         ]
         for step in range(n_steps):
@@ -302,7 +306,9 @@ def benchmark_4_episodic_context_compression(
                     },
                 }
             )
-        traces.append({"action": "CONFIRM_HYPOTHESIS", "summary": "Promoted H1 to CONFIRMED at E4", "details": {"level": "E4"}})
+        traces.append(
+            {"action": "CONFIRM_HYPOTHESIS", "summary": "Promoted H1 to CONFIRMED at E4", "details": {"level": "E4"}}
+        )
         return traces
 
     trajectory_sizes = [20, 50, 100]
@@ -316,7 +322,8 @@ def benchmark_4_episodic_context_compression(
             "original_tokens": comp_res["original_tokens"],
             "compressed_tokens": comp_res["compressed_tokens"],
             "token_reduction_pct": comp_res["token_reduction_pct"],
-            "milestone_preserved": "CONFIRM_HYPOTHESIS" in comp_res["compressed_digest"] and "REGISTER_HYPOTHESIS" in comp_res["compressed_digest"],
+            "milestone_preserved": "CONFIRM_HYPOTHESIS" in comp_res["compressed_digest"]
+            and "REGISTER_HYPOTHESIS" in comp_res["compressed_digest"],
         }
 
     return {
@@ -333,26 +340,36 @@ def run_all_benchmarks() -> Dict[str, Any]:
 
     b1 = benchmark_1_dual_codebook_2hop_retrieval()
     print("\n[+] Benchmark 1 (Dual-Codebook 2-Hop Graph Retrieval) completed:")
-    print(f"    - Dual-Codebook Recall@1: {b1['dual_codebook']['recall_at_1'] * 100:.1f}% | Recall@5: {b1['dual_codebook']['recall_at_5'] * 100:.1f}%")
-    print(f"    - Single-Codebook Recall@1: {b1['single_codebook']['recall_at_1'] * 100:.1f}% | Recall@5: {b1['single_codebook']['recall_at_5'] * 100:.1f}%")
+    print(
+        f"    - Dual-Codebook Recall@1: {b1['dual_codebook']['recall_at_1'] * 100:.1f}% | Recall@5: {b1['dual_codebook']['recall_at_5'] * 100:.1f}%"
+    )
+    print(
+        f"    - Single-Codebook Recall@1: {b1['single_codebook']['recall_at_1'] * 100:.1f}% | Recall@5: {b1['single_codebook']['recall_at_5'] * 100:.1f}%"
+    )
     print(f"    - Delta Gain: +{b1['accuracy_gain_vs_baseline'] * 100:.1f}% Top-1 accuracy lift")
 
     b2 = benchmark_2_incremental_bundling_performance()
     print("\n[+] Benchmark 2 (O(B*D) Incremental Bundling vs Full Rebuild) completed:")
     for k, v in b2["results"].items():
-        print(f"    - Batch {v['batch_size']:3d}: {v['speedup_factor']:5.1f}x speedup | Retention ratio: {v['old_item_retention_ratio']:.4f}")
+        print(
+            f"    - Batch {v['batch_size']:3d}: {v['speedup_factor']:5.1f}x speedup | Retention ratio: {v['old_item_retention_ratio']:.4f}"
+        )
 
     b3 = benchmark_3_multiagent_sharding_isolation()
     print("\n[+] Benchmark 3 (Multi-Agent Sharding & Zero Contamination) completed:")
     print(f"    - Coder Cross-Contamination Rate: {b3['contamination_rate']['coder_queries']:.4f}")
     print(f"    - Auditor Cross-Contamination Rate: {b3['contamination_rate']['auditor_queries']:.4f}")
     for role, alloc in b3["dynamic_shard_allocation"].items():
-        print(f"    - {role:<10}: {alloc['num_shards']} shards (items/shard: {alloc['items_per_shard']:.1f}, SNR: {alloc['estimated_snr']})")
+        print(
+            f"    - {role:<10}: {alloc['num_shards']} shards (items/shard: {alloc['items_per_shard']:.1f}, SNR: {alloc['estimated_snr']})"
+        )
 
     b4 = benchmark_4_episodic_context_compression()
     print("\n[+] Benchmark 4 (Episodic Context Token Compression) completed:")
     for k, v in b4["results"].items():
-        print(f"    - {v['trajectory_steps']:3d} steps: {v['original_tokens']:5d} -> {v['compressed_tokens']:3d} tokens (-{v['token_reduction_pct']:.1f}% tokens, Milestone Preserved: {v['milestone_preserved']})")
+        print(
+            f"    - {v['trajectory_steps']:3d} steps: {v['original_tokens']:5d} -> {v['compressed_tokens']:3d} tokens (-{v['token_reduction_pct']:.1f}% tokens, Milestone Preserved: {v['milestone_preserved']})"
+        )
 
     print("\n" + "=" * 80)
     print("✅ BENCHMARK BATTERY COMPLETE — ALL HYPOTHESES EMPIRICALLY VALIDATED")

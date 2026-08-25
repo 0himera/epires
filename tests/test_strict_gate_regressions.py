@@ -1,7 +1,15 @@
 """Regression coverage for strict gate provenance and relation semantics."""
 
 from epires_core.gates import check_g2, check_g3, check_g4
-from epires_core.models import EvidenceClaim, EvidenceLevel, ExperimentNode, HypothesisNode, RelationEdge, RelationType, TraceEntry
+from epires_core.models import (
+    EvidenceClaim,
+    EvidenceLevel,
+    ExperimentNode,
+    HypothesisNode,
+    RelationEdge,
+    RelationType,
+    TraceEntry,
+)
 from epires_core.store import EpiresStore
 
 

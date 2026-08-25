@@ -146,7 +146,11 @@ def check_g3(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
         if hypothesis_id and trace_hypothesis_id != hypothesis_id:
             continue
         details = getattr(tr, "details", {}) if not isinstance(tr, dict) else tr.get("details", {})
-        if not isinstance(details, dict) or not isinstance(details.get("artifact_hash"), str) or not details["artifact_hash"].strip():
+        if (
+            not isinstance(details, dict)
+            or not isinstance(details.get("artifact_hash"), str)
+            or not details["artifact_hash"].strip()
+        ):
             continue
         tts = _ts(getattr(tr, "timestamp", "") if not isinstance(tr, dict) else tr.get("timestamp", "") or "")
         if tts is not None and tts < earliest:
@@ -167,7 +171,8 @@ def check_g4(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
     quantitative_evs = [
         ev
         for ev in evs
-        if getattr(getattr(ev, "evidence_level", None), "value", getattr(ev, "evidence_level", None)) in ("E3", "E4", "E5")
+        if getattr(getattr(ev, "evidence_level", None), "value", getattr(ev, "evidence_level", None))
+        in ("E3", "E4", "E5")
         and bool((getattr(ev, "metric_name", "") or "").strip())
     ]
     if not quantitative_evs:

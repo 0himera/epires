@@ -134,9 +134,7 @@ def check_submission(workspace: Path, base_revision: str | None) -> tuple[dict[s
             workspace,
             ["diff", "--relative", "--name-only", "--diff-filter=ACDMRTUXB", resolved_revision, "--", "."],
         )
-        untracked = _run_git(
-            workspace, ["ls-files", "--others", "--exclude-standard", "--", "."]
-        )
+        untracked = _run_git(workspace, ["ls-files", "--others", "--exclude-standard", "--", "."])
         if changed.returncode != 0 or untracked.returncode != 0:
             git_error = (changed.stderr + "\n" + untracked.stderr).strip()
             diff_violations.append("git diff inspection failed")
@@ -221,8 +219,7 @@ def _cpu_model() -> str | None:
 
 def _compiler_version(compiler: str) -> str:
     result = subprocess.run(
-        [compiler, "--version"], text=True, stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT, timeout=10, check=False
+        [compiler, "--version"], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=10, check=False
     )
     return result.stdout.splitlines()[0] if result.stdout else "unknown"
 
@@ -302,8 +299,13 @@ def grade(workspace: Path, base_revision: str | None) -> dict[str, Any]:
         compile_started = time.monotonic()
         try:
             compiled = subprocess.run(
-                compile_command, text=True, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, timeout=30, check=False, cwd=temporary
+                compile_command,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=30,
+                check=False,
+                cwd=temporary,
             )
         except subprocess.TimeoutExpired as error:
             result["status"] = "build_timeout"
@@ -343,9 +345,15 @@ def grade(workspace: Path, base_revision: str | None) -> dict[str, Any]:
         run_started = time.monotonic()
         try:
             executed = subprocess.run(
-                [str(executable)], text=True, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, timeout=45, check=False, cwd=temporary,
-                env=environment, preexec_fn=preexec_fn
+                [str(executable)],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=45,
+                check=False,
+                cwd=temporary,
+                env=environment,
+                preexec_fn=preexec_fn,
             )
             metadata["affinity_enforced"] = preexec_fn is not None
         except subprocess.TimeoutExpired as error:

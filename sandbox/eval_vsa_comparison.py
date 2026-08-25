@@ -15,25 +15,17 @@ Evaluates:
 
 from __future__ import annotations
 
-import json
-import os
-import shutil
 import tempfile
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-import numpy as np
 
 from epires_core import (
     BipolarVSA,
-    DualCodebookVSA,
-    EpisodicVSACompressor,
     EpiresStore,
-    EvidenceClaim,
     EvidenceLevel,
     HierarchicalShardRouter,
     HypothesisNode,
-    HypothesisStatus,
     RelationEdge,
     RelationType,
     TraceEntry,
@@ -111,12 +103,44 @@ def run_scenario_1_causal_navigation(tmp_dir: Path) -> Dict[str, Any]:
     db_adv = tmp_dir / "sc1_adv.db"
 
     def seed_graph(store: EpiresStore):
-        store.register_hypothesis(HypothesisNode(id="H_root", title="FlashAttention memory layout", a_priori_mechanism="tile", falsification_criteria="c", target_evidence_level=EvidenceLevel.E3))
-        store.register_hypothesis(HypothesisNode(id="H_mid", title="Warp tile scheduler", a_priori_mechanism="sched", falsification_criteria="c", target_evidence_level=EvidenceLevel.E3))
-        store.register_hypothesis(HypothesisNode(id="H_target", title="Tensor Core decode speedup", a_priori_mechanism="tc", falsification_criteria="c", target_evidence_level=EvidenceLevel.E3))
+        store.register_hypothesis(
+            HypothesisNode(
+                id="H_root",
+                title="FlashAttention memory layout",
+                a_priori_mechanism="tile",
+                falsification_criteria="c",
+                target_evidence_level=EvidenceLevel.E3,
+            )
+        )
+        store.register_hypothesis(
+            HypothesisNode(
+                id="H_mid",
+                title="Warp tile scheduler",
+                a_priori_mechanism="sched",
+                falsification_criteria="c",
+                target_evidence_level=EvidenceLevel.E3,
+            )
+        )
+        store.register_hypothesis(
+            HypothesisNode(
+                id="H_target",
+                title="Tensor Core decode speedup",
+                a_priori_mechanism="tc",
+                falsification_criteria="c",
+                target_evidence_level=EvidenceLevel.E3,
+            )
+        )
         # Add 20 distractor hypotheses
         for i in range(20):
-            store.register_hypothesis(HypothesisNode(id=f"H_dist_{i}", title=f"Auxiliary kernel feature {i}", a_priori_mechanism="aux", falsification_criteria="c", target_evidence_level=EvidenceLevel.E2))
+            store.register_hypothesis(
+                HypothesisNode(
+                    id=f"H_dist_{i}",
+                    title=f"Auxiliary kernel feature {i}",
+                    a_priori_mechanism="aux",
+                    falsification_criteria="c",
+                    target_evidence_level=EvidenceLevel.E2,
+                )
+            )
 
         # Causal blocker chain: H_root BLOCKS H_mid, H_mid BLOCKS H_target
         store.add_relation(RelationEdge(source_id="H_root", target_id="H_mid", relation_type=RelationType.BLOCKS))
@@ -229,8 +253,22 @@ def run_scenario_3_episodic_compression(tmp_dir: Path) -> Dict[str, Any]:
     db_adv = tmp_dir / "sc3_adv.db"
 
     def seed_traces(store: EpiresStore):
-        store.log_trace(TraceEntry(action="REGISTER_HYPOTHESIS", summary="H1: Tiled FlashAttention kernel", details={"id": "H1"}, agent_role="Lead-PI"))
-        store.log_trace(TraceEntry(action="ANOMALY", summary="Initial baseline regressed 0.85x on A100", details={"step": 2, "metric": "speedup"}, agent_role="Coder"))
+        store.log_trace(
+            TraceEntry(
+                action="REGISTER_HYPOTHESIS",
+                summary="H1: Tiled FlashAttention kernel",
+                details={"id": "H1"},
+                agent_role="Lead-PI",
+            )
+        )
+        store.log_trace(
+            TraceEntry(
+                action="ANOMALY",
+                summary="Initial baseline regressed 0.85x on A100",
+                details={"step": 2, "metric": "speedup"},
+                agent_role="Coder",
+            )
+        )
         for step in range(3, 28):
             store.log_trace(
                 TraceEntry(
@@ -240,8 +278,22 @@ def run_scenario_3_episodic_compression(tmp_dir: Path) -> Dict[str, Any]:
                     agent_role="Coder",
                 )
             )
-        store.log_trace(TraceEntry(action="GATE_PASS", summary="Cleared Gate G4 with 1.28x speedup (CI [1.22, 1.34])", details={"gate": "G4"}, agent_role="Lead-PI"))
-        store.log_trace(TraceEntry(action="CONFIRM_HYPOTHESIS", summary="Confirmed H1 at evidence level E4", details={"id": "H1", "level": "E4"}, agent_role="Lead-PI"))
+        store.log_trace(
+            TraceEntry(
+                action="GATE_PASS",
+                summary="Cleared Gate G4 with 1.28x speedup (CI [1.22, 1.34])",
+                details={"gate": "G4"},
+                agent_role="Lead-PI",
+            )
+        )
+        store.log_trace(
+            TraceEntry(
+                action="CONFIRM_HYPOTHESIS",
+                summary="Confirmed H1 at evidence level E4",
+                details={"id": "H1", "level": "E4"},
+                agent_role="Lead-PI",
+            )
+        )
 
     # 1. Baseline Agent (Full uncompressed trace)
     store_base = EpiresStore(db_path=db_base)
@@ -258,8 +310,7 @@ def run_scenario_3_episodic_compression(tmp_dir: Path) -> Dict[str, Any]:
     adv_tokens = agent_adv.tokens_consumed
 
     milestones_preserved = (
-        "CONFIRM_HYPOTHESIS" in comp_digest["compressed_digest"]
-        and "GATE_PASS" in comp_digest["compressed_digest"]
+        "CONFIRM_HYPOTHESIS" in comp_digest["compressed_digest"] and "GATE_PASS" in comp_digest["compressed_digest"]
     )
 
     return {
@@ -289,17 +340,25 @@ def run_full_pipeline() -> Dict[str, Any]:
         res3 = run_scenario_3_episodic_compression(tmp_dir)
 
     print(f"\n[+] Scenario 1: {res1['scenario']}")
-    print(f"    - Baseline Agent: Success={res1['baseline_agent']['success']} | Tool Calls={res1['baseline_agent']['tool_calls']} | Tokens={res1['baseline_agent']['tokens_consumed']} | Latency={res1['baseline_agent']['latency_ms']}ms")
-    print(f"    - Advanced Agent: Success={res1['advanced_vsa_agent']['success']} | Tool Calls={res1['advanced_vsa_agent']['tool_calls']} | Tokens={res1['advanced_vsa_agent']['tokens_consumed']} | Latency={res1['advanced_vsa_agent']['latency_ms']}ms")
+    print(
+        f"    - Baseline Agent: Success={res1['baseline_agent']['success']} | Tool Calls={res1['baseline_agent']['tool_calls']} | Tokens={res1['baseline_agent']['tokens_consumed']} | Latency={res1['baseline_agent']['latency_ms']}ms"
+    )
+    print(
+        f"    - Advanced Agent: Success={res1['advanced_vsa_agent']['success']} | Tool Calls={res1['advanced_vsa_agent']['tool_calls']} | Tokens={res1['advanced_vsa_agent']['tokens_consumed']} | Latency={res1['advanced_vsa_agent']['latency_ms']}ms"
+    )
     print(f"    - Token Reduction: -{res1['token_reduction_pct']}% tokens")
 
     print(f"\n[+] Scenario 2: {res2['scenario']}")
     print(f"    - Baseline Agent Contamination Rate: {res2['baseline_agent']['contamination_rate'] * 100:.1f}%")
-    print(f"    - Advanced Agent Contamination Rate: {res2['advanced_vsa_agent']['contamination_rate'] * 100:.1f}% (Zero-Contamination Guaranteed)")
+    print(
+        f"    - Advanced Agent Contamination Rate: {res2['advanced_vsa_agent']['contamination_rate'] * 100:.1f}% (Zero-Contamination Guaranteed)"
+    )
 
     print(f"\n[+] Scenario 3: {res3['scenario']}")
     print(f"    - Baseline Agent Tokens: {res3['baseline_agent']['tokens_consumed']} tokens")
-    print(f"    - Advanced Agent Tokens: {res3['advanced_vsa_agent']['tokens_consumed']} tokens (-{res3['token_reduction_pct']}% token savings)")
+    print(
+        f"    - Advanced Agent Tokens: {res3['advanced_vsa_agent']['tokens_consumed']} tokens (-{res3['token_reduction_pct']}% token savings)"
+    )
     print(f"    - Milestone Retention: {res3['advanced_vsa_agent']['milestones_preserved']}")
 
     print("\n" + "=" * 80)

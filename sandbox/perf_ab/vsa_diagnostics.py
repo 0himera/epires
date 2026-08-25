@@ -74,30 +74,198 @@ def build_retrieval_corpus() -> tuple[DiagnosticDocument, ...]:
     """Return a fixed medium-kernel corpus with realistic lexical confounders."""
 
     rows = (
-        ("K01", "Vectorized ragged softmax with AVX2", "SIMD exponential approximation walks row offsets without padding", "Reject if short irregular rows regress", ("ragged-softmax", "avx2", "row-offsets", "vectorization"), (("Kernel", "Softmax"), ("ISA", "AVX2"))),
-        ("K02", "Stable online maximum for irregular softmax rows", "Running maximum and rescaling prevent exponential overflow on variable lengths", "Reject on numerical error above 1e-6", ("ragged-softmax", "numerical-stability", "online-max", "irregular-rows"), (("Kernel", "Softmax"), ("Technique", "OnlineMax"))),
-        ("K03", "Fuse causal masking into ragged softmax", "Apply triangular mask while loading logits and skip masked exponentials", "Reject if causal outputs differ from reference", ("ragged-softmax", "causal-mask", "fusion", "logits"), (("Kernel", "Softmax"), ("Technique", "Fusion"))),
-        ("K04", "Dynamic scheduling for long-tail softmax rows", "Work stealing balances highly variable row lengths across worker threads", "Reject if scheduler overhead dominates median rows", ("ragged-softmax", "load-balancing", "work-stealing", "long-tail"), (("Kernel", "Softmax"), ("Technique", "Scheduling"))),
-        ("K05", "Cache blocked CSR sparse matrix vector multiply", "Reorder CSR row blocks to retain the dense input vector in cache", "Reject if matrix reordering cost is not amortized", ("spmv", "csr", "cache-blocking", "row-blocks"), (("Kernel", "SpMV"), ("Format", "CSR"))),
-        ("K06", "Gather prefetch for scattered sparse columns", "Software prefetch hides indirect x-vector gathers from column indices", "Reject when prefetch increases last-level cache misses", ("spmv", "gather", "prefetch", "column-indices"), (("Kernel", "SpMV"), ("Technique", "Prefetch"))),
-        ("K07", "Nonzero-balanced sparse row partition", "Partition by nonzero count instead of row count to reduce thread imbalance", "Reject on uniform matrices with excessive partition cost", ("spmv", "load-balancing", "nonzeros", "partition"), (("Kernel", "SpMV"), ("Technique", "Scheduling"))),
-        ("K08", "Sell-C-sigma sparse vector kernel", "Slice rows by length before SIMD execution to reduce padding", "Reject if conversion cost exceeds repeated execution savings", ("spmv", "sell-c-sigma", "simd", "row-length"), (("Kernel", "SpMV"), ("Format", "SELL"))),
-        ("K09", "One-pass Welford layer normalization", "Online mean and variance reduce memory traffic while retaining stability", "Reject if variance error exceeds tolerance", ("layernorm", "welford", "one-pass", "variance"), (("Kernel", "LayerNorm"), ("Technique", "Welford"))),
-        ("K10", "Vectorized affine layer normalization", "Fuse scale and bias with normalized output using wide SIMD stores", "Reject if unaligned tails regress", ("layernorm", "affine", "simd", "fusion"), (("Kernel", "LayerNorm"), ("Technique", "Vectorization"))),
-        ("K11", "Blocked reduction for wide layer normalization", "Each thread reduces a cache-sized feature tile before merging partials", "Reject when merge synchronization dominates", ("layernorm", "blocked-reduction", "cache", "parallel"), (("Kernel", "LayerNorm"), ("Technique", "Reduction"))),
-        ("K12", "Packed microkernel for small matrix multiply", "Register blocking and packed panels improve tiny GEMM reuse", "Reject if packing dominates one-shot matrices", ("gemm", "microkernel", "register-blocking", "packing"), (("Kernel", "GEMM"), ("Technique", "Packing"))),
-        ("K13", "Batched matrix multiply pointer hoisting", "Hoist batch strides and reuse address arithmetic across inner loops", "Reject if compiler already eliminates the arithmetic", ("gemm", "batched", "pointer-arithmetic", "hoisting"), (("Kernel", "GEMM"), ("Technique", "Hoisting"))),
-        ("K14", "Quantized int8 matrix multiply accumulation", "Widen dot products into int32 accumulators and fuse zero-point correction", "Reject on accumulator overflow", ("gemm", "int8", "quantization", "accumulation"), (("Kernel", "GEMM"), ("DType", "INT8"))),
-        ("K15", "Thread-private bins for parallel histogram", "Privatized counters avoid false sharing before a final reduction", "Reject when the bin array exceeds private cache", ("histogram", "false-sharing", "private-bins", "reduction"), (("Kernel", "Histogram"), ("Technique", "Privatization"))),
-        ("K16", "Conflict-free local histogram updates", "Replicate hot counters to reduce atomic contention on skewed keys", "Reject on uniform keys if replication overhead wins", ("histogram", "atomics", "contention", "skew"), (("Kernel", "Histogram"), ("Technique", "Replication"))),
-        ("K17", "Cache tiled separable image convolution", "Horizontal and vertical passes reuse halo pixels from a cache tile", "Reject if small images pay excess tiling overhead", ("convolution", "separable", "cache-tiling", "halo"), (("Kernel", "Convolution"), ("Technique", "Tiling"))),
-        ("K18", "Direct convolution with boundary specialization", "Separate interior loops eliminate boundary branches and checks", "Reject if code size harms instruction cache", ("convolution", "boundaries", "branch-elimination", "specialization"), (("Kernel", "Convolution"), ("Technique", "Specialization"))),
-        ("K19", "Winograd transform for three by three convolution", "Transform tiles reduce multiplication count for fixed filters", "Reject when transform error exceeds tolerance", ("convolution", "winograd", "transform", "3x3"), (("Kernel", "Convolution"), ("Technique", "Winograd"))),
-        ("K20", "Parallel Blelloch prefix scan", "Upsweep and downsweep tree compute exclusive prefix sums", "Reject below the parallel crossover size", ("prefix-scan", "blelloch", "parallel", "exclusive"), (("Kernel", "Scan"), ("Technique", "TreeReduction"))),
-        ("K21", "SIMD delimiter scan for JSON parsing", "Vector comparisons locate structural characters before scalar decoding", "Reject on strings dominated by escape sequences", ("json", "delimiter-scan", "simd", "parsing"), (("Kernel", "Parser"), ("Technique", "Vectorization"))),
-        ("K22", "Branchless UTF-8 validation", "Classify byte ranges with vector masks and validate continuation bytes", "Reject if malformed input bypasses validation", ("utf8", "branchless", "simd", "validation"), (("Kernel", "Parser"), ("Technique", "Validation"))),
-        ("K23", "Software pipelined radix partition", "Overlap histogram, prefix offsets and key scattering across blocks", "Reject if extra buffers exceed memory budget", ("radix-sort", "software-pipeline", "partition", "histogram"), (("Kernel", "Sort"), ("Technique", "Pipelining"))),
-        ("K24", "Blocked transpose with padded scratch tile", "Padding removes cache-set conflicts during matrix transpose", "Reject if scratch allocation dominates small matrices", ("transpose", "cache-blocking", "padding", "scratch"), (("Kernel", "Transpose"), ("Technique", "Tiling"))),
+        (
+            "K01",
+            "Vectorized ragged softmax with AVX2",
+            "SIMD exponential approximation walks row offsets without padding",
+            "Reject if short irregular rows regress",
+            ("ragged-softmax", "avx2", "row-offsets", "vectorization"),
+            (("Kernel", "Softmax"), ("ISA", "AVX2")),
+        ),
+        (
+            "K02",
+            "Stable online maximum for irregular softmax rows",
+            "Running maximum and rescaling prevent exponential overflow on variable lengths",
+            "Reject on numerical error above 1e-6",
+            ("ragged-softmax", "numerical-stability", "online-max", "irregular-rows"),
+            (("Kernel", "Softmax"), ("Technique", "OnlineMax")),
+        ),
+        (
+            "K03",
+            "Fuse causal masking into ragged softmax",
+            "Apply triangular mask while loading logits and skip masked exponentials",
+            "Reject if causal outputs differ from reference",
+            ("ragged-softmax", "causal-mask", "fusion", "logits"),
+            (("Kernel", "Softmax"), ("Technique", "Fusion")),
+        ),
+        (
+            "K04",
+            "Dynamic scheduling for long-tail softmax rows",
+            "Work stealing balances highly variable row lengths across worker threads",
+            "Reject if scheduler overhead dominates median rows",
+            ("ragged-softmax", "load-balancing", "work-stealing", "long-tail"),
+            (("Kernel", "Softmax"), ("Technique", "Scheduling")),
+        ),
+        (
+            "K05",
+            "Cache blocked CSR sparse matrix vector multiply",
+            "Reorder CSR row blocks to retain the dense input vector in cache",
+            "Reject if matrix reordering cost is not amortized",
+            ("spmv", "csr", "cache-blocking", "row-blocks"),
+            (("Kernel", "SpMV"), ("Format", "CSR")),
+        ),
+        (
+            "K06",
+            "Gather prefetch for scattered sparse columns",
+            "Software prefetch hides indirect x-vector gathers from column indices",
+            "Reject when prefetch increases last-level cache misses",
+            ("spmv", "gather", "prefetch", "column-indices"),
+            (("Kernel", "SpMV"), ("Technique", "Prefetch")),
+        ),
+        (
+            "K07",
+            "Nonzero-balanced sparse row partition",
+            "Partition by nonzero count instead of row count to reduce thread imbalance",
+            "Reject on uniform matrices with excessive partition cost",
+            ("spmv", "load-balancing", "nonzeros", "partition"),
+            (("Kernel", "SpMV"), ("Technique", "Scheduling")),
+        ),
+        (
+            "K08",
+            "Sell-C-sigma sparse vector kernel",
+            "Slice rows by length before SIMD execution to reduce padding",
+            "Reject if conversion cost exceeds repeated execution savings",
+            ("spmv", "sell-c-sigma", "simd", "row-length"),
+            (("Kernel", "SpMV"), ("Format", "SELL")),
+        ),
+        (
+            "K09",
+            "One-pass Welford layer normalization",
+            "Online mean and variance reduce memory traffic while retaining stability",
+            "Reject if variance error exceeds tolerance",
+            ("layernorm", "welford", "one-pass", "variance"),
+            (("Kernel", "LayerNorm"), ("Technique", "Welford")),
+        ),
+        (
+            "K10",
+            "Vectorized affine layer normalization",
+            "Fuse scale and bias with normalized output using wide SIMD stores",
+            "Reject if unaligned tails regress",
+            ("layernorm", "affine", "simd", "fusion"),
+            (("Kernel", "LayerNorm"), ("Technique", "Vectorization")),
+        ),
+        (
+            "K11",
+            "Blocked reduction for wide layer normalization",
+            "Each thread reduces a cache-sized feature tile before merging partials",
+            "Reject when merge synchronization dominates",
+            ("layernorm", "blocked-reduction", "cache", "parallel"),
+            (("Kernel", "LayerNorm"), ("Technique", "Reduction")),
+        ),
+        (
+            "K12",
+            "Packed microkernel for small matrix multiply",
+            "Register blocking and packed panels improve tiny GEMM reuse",
+            "Reject if packing dominates one-shot matrices",
+            ("gemm", "microkernel", "register-blocking", "packing"),
+            (("Kernel", "GEMM"), ("Technique", "Packing")),
+        ),
+        (
+            "K13",
+            "Batched matrix multiply pointer hoisting",
+            "Hoist batch strides and reuse address arithmetic across inner loops",
+            "Reject if compiler already eliminates the arithmetic",
+            ("gemm", "batched", "pointer-arithmetic", "hoisting"),
+            (("Kernel", "GEMM"), ("Technique", "Hoisting")),
+        ),
+        (
+            "K14",
+            "Quantized int8 matrix multiply accumulation",
+            "Widen dot products into int32 accumulators and fuse zero-point correction",
+            "Reject on accumulator overflow",
+            ("gemm", "int8", "quantization", "accumulation"),
+            (("Kernel", "GEMM"), ("DType", "INT8")),
+        ),
+        (
+            "K15",
+            "Thread-private bins for parallel histogram",
+            "Privatized counters avoid false sharing before a final reduction",
+            "Reject when the bin array exceeds private cache",
+            ("histogram", "false-sharing", "private-bins", "reduction"),
+            (("Kernel", "Histogram"), ("Technique", "Privatization")),
+        ),
+        (
+            "K16",
+            "Conflict-free local histogram updates",
+            "Replicate hot counters to reduce atomic contention on skewed keys",
+            "Reject on uniform keys if replication overhead wins",
+            ("histogram", "atomics", "contention", "skew"),
+            (("Kernel", "Histogram"), ("Technique", "Replication")),
+        ),
+        (
+            "K17",
+            "Cache tiled separable image convolution",
+            "Horizontal and vertical passes reuse halo pixels from a cache tile",
+            "Reject if small images pay excess tiling overhead",
+            ("convolution", "separable", "cache-tiling", "halo"),
+            (("Kernel", "Convolution"), ("Technique", "Tiling")),
+        ),
+        (
+            "K18",
+            "Direct convolution with boundary specialization",
+            "Separate interior loops eliminate boundary branches and checks",
+            "Reject if code size harms instruction cache",
+            ("convolution", "boundaries", "branch-elimination", "specialization"),
+            (("Kernel", "Convolution"), ("Technique", "Specialization")),
+        ),
+        (
+            "K19",
+            "Winograd transform for three by three convolution",
+            "Transform tiles reduce multiplication count for fixed filters",
+            "Reject when transform error exceeds tolerance",
+            ("convolution", "winograd", "transform", "3x3"),
+            (("Kernel", "Convolution"), ("Technique", "Winograd")),
+        ),
+        (
+            "K20",
+            "Parallel Blelloch prefix scan",
+            "Upsweep and downsweep tree compute exclusive prefix sums",
+            "Reject below the parallel crossover size",
+            ("prefix-scan", "blelloch", "parallel", "exclusive"),
+            (("Kernel", "Scan"), ("Technique", "TreeReduction")),
+        ),
+        (
+            "K21",
+            "SIMD delimiter scan for JSON parsing",
+            "Vector comparisons locate structural characters before scalar decoding",
+            "Reject on strings dominated by escape sequences",
+            ("json", "delimiter-scan", "simd", "parsing"),
+            (("Kernel", "Parser"), ("Technique", "Vectorization")),
+        ),
+        (
+            "K22",
+            "Branchless UTF-8 validation",
+            "Classify byte ranges with vector masks and validate continuation bytes",
+            "Reject if malformed input bypasses validation",
+            ("utf8", "branchless", "simd", "validation"),
+            (("Kernel", "Parser"), ("Technique", "Validation")),
+        ),
+        (
+            "K23",
+            "Software pipelined radix partition",
+            "Overlap histogram, prefix offsets and key scattering across blocks",
+            "Reject if extra buffers exceed memory budget",
+            ("radix-sort", "software-pipeline", "partition", "histogram"),
+            (("Kernel", "Sort"), ("Technique", "Pipelining")),
+        ),
+        (
+            "K24",
+            "Blocked transpose with padded scratch tile",
+            "Padding removes cache-set conflicts during matrix transpose",
+            "Reject if scratch allocation dominates small matrices",
+            ("transpose", "cache-blocking", "padding", "scratch"),
+            (("Kernel", "Transpose"), ("Technique", "Tiling")),
+        ),
     )
     return tuple(DiagnosticDocument(*row) for row in rows)
 
@@ -329,7 +497,9 @@ def _benchmark_search_backend(
 
     quality = evaluate_rankings(rankings, queries, k)
     failure_cases = [
-        row for row in quality["per_query"] if float(row["recall_at_k"]) < 1.0  # type: ignore[index]
+        row
+        for row in quality["per_query"]
+        if float(row["recall_at_k"]) < 1.0  # type: ignore[index]
     ]
     return {
         "quality": {key: value for key, value in quality.items() if key != "per_query"},
@@ -404,11 +574,7 @@ class ExactTwoHopBFS:
     def query(self, query: GraphQuery, k: int) -> list[tuple[str, float]]:
         frontier = {query.head}
         for relation in (query.relation_1, query.relation_2):
-            frontier = {
-                target
-                for source in frontier
-                for target in self.adjacency.get((source, relation), set())
-            }
+            frontier = {target for source in frontier for target in self.adjacency.get((source, relation), set())}
         return [(target, 1.0) for target in sorted(frontier)[:k]]
 
     def resident_bytes(self) -> int:
@@ -445,9 +611,7 @@ class CurrentDualVSATwoHop:
 def _benchmark_two_hop(dim: int, k: int, repeats: int) -> dict[str, object]:
     edges, queries = build_two_hop_graph()
     exact = ExactTwoHopBFS(edges)
-    ground_truth = {
-        query.id: {target: 1 for target, _ in exact.query(query, k=len(edges))} for query in queries
-    }
+    ground_truth = {query.id: {target: 1 for target, _ in exact.query(query, k=len(edges))} for query in queries}
     metric_queries = tuple(
         DiagnosticQuery(query.id, f"{query.head} {query.relation_1} {query.relation_2}", ground_truth[query.id])
         for query in queries
@@ -471,7 +635,9 @@ def _benchmark_two_hop(dim: int, k: int, repeats: int) -> dict[str, object]:
             },
             "per_query": quality["per_query"],
             "failure_cases": [
-                row for row in quality["per_query"] if float(row["recall_at_k"]) < 1.0  # type: ignore[index]
+                row
+                for row in quality["per_query"]
+                if float(row["recall_at_k"]) < 1.0  # type: ignore[index]
             ],
         }
 
@@ -505,9 +671,7 @@ def run_diagnostics(dim: int = 10_000, k: int = 5, repeats: int = 20) -> dict[st
         for factory in factories:
             backend, build_stats = _build_backend(factory)
             try:
-                retrieval_methods[backend.name] = _benchmark_search_backend(
-                    backend, queries, k, repeats, build_stats
-                )
+                retrieval_methods[backend.name] = _benchmark_search_backend(backend, queries, k, repeats, build_stats)
             finally:
                 backend.close()
 

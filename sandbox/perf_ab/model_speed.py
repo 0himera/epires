@@ -146,9 +146,7 @@ def run_speed_smoke(
             }
             (run_dir / "stdout.jsonl").write_text(result.stdout, encoding="utf-8")
             (run_dir / "stderr.log").write_text(result.stderr, encoding="utf-8")
-            (run_dir / "result.json").write_text(
-                json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-            )
+            (run_dir / "result.json").write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
             runs.append(record)
             print(
                 json.dumps(
@@ -190,9 +188,7 @@ def run_speed_smoke(
                 "errors": sum(run["status"] == "error" for run in model_runs),
                 "median_wall_seconds": _median(walls),
                 "median_first_text_event_seconds": _median(event_latencies),
-                "median_output_tokens": _median(
-                    [float(run["tokens"]["output"]) for run in successes]
-                ),
+                "median_output_tokens": _median([float(run["tokens"]["output"]) for run in successes]),
             }
         )
     summaries.sort(
@@ -214,9 +210,7 @@ def run_speed_smoke(
         "summaries": summaries,
         "runs": runs,
     }
-    (output_dir / "report.json").write_text(
-        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    (output_dir / "report.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return report
 
 
