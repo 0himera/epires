@@ -28,6 +28,16 @@ def _confirmed_h(store, h_id="H_AUD"):
         )
     )
     store.update_hypothesis(h_id, status=HypothesisStatus.CONFIRMED)
+    store.register_experiment(
+        ExperimentNode(
+            id="X1",
+            hypothesis_id=h_id,
+            name="X1",
+            script_path="x.py",
+            metrics={"rmsle": 1.5},
+            parameters={"held_out_hash": "split-sha256", "seeds": [1, 2, 3]},
+        )
+    )
     for i, lvl in enumerate(["E2", "E2", "E3"], 1):
         store.log_evidence(
             EvidenceClaim(
@@ -37,17 +47,9 @@ def _confirmed_h(store, h_id="H_AUD"):
                 source_confidence=SourceConfidence.V,
                 claim=f"c{i}",
                 citation_or_path=f"https://x.example/{i}",
+                prediction="rmsle remains below the preregistered boundary",
             )
         )
-    store.register_experiment(
-        ExperimentNode(
-            id="X1",
-            hypothesis_id=h_id,
-            name="X1",
-            script_path="x.py",
-            metrics={"rmsle": 1.5},
-        )
-    )
 
 
 def test_audit_prompt_contains_criteria_and_evidence(tmp_path):

@@ -20,7 +20,12 @@ from ..models import (
 class EvidenceMixin:
     """Provides append-only empirical evidence logging, soft retraction, and epistemic level computation."""
 
-    def log_evidence(self, ev: EvidenceClaim, emit_trace: bool = True) -> Tuple[EvidenceClaim, List[str]]:
+    def log_evidence(
+        self,
+        ev: EvidenceClaim,
+        emit_trace: bool = True,
+        auto_falsification: bool = True,
+    ) -> Tuple[EvidenceClaim, List[str]]:
         """Logs an empirical evidence claim to an immutable append-only ledger and cascades falsification/promotion."""
         now = self._now()
         ev.timestamp = ev.timestamp or now
@@ -29,7 +34,18 @@ class EvidenceMixin:
         h = self.get_hypothesis(ev.hypothesis_id)
 
         # Automatic machine evaluation of Popperian falsification criteria
-        if not ev.falsification_triggered and h and h.falsification_criteria:
+        if (
+            not ev.falsification_triggered
+            and auto_falsification
+            and h
+            and h.falsification_criteria
+            and ev.evidence_level in {EvidenceLevel.E3, EvidenceLevel.E4, EvidenceLevel.E5}
+            and bool((ev.metric_name or "").strip())
+            and any(
+                value is not None
+                for value in (ev.metric_value, ev.delta_vs_baseline, ev.ci_95_lower, ev.ci_95_upper)
+            )
+        ):
             conditions = parse_falsification_criteria(h.falsification_criteria)
             for cond in conditions:
                 eval_res = evaluate_falsification_condition(
@@ -50,41 +66,7 @@ class EvidenceMixin:
                 raise ValueError("Evidence level E4 requires 95% confidence intervals (ci_95_lower and ci_95_upper).")
 
         with self._get_connection() as conn:
-            # Check duplicate ID for strict append-only immutability
-            existing = conn.execute("SELECT id FROM evidence WHERE id = ?", (ev.id,)).fetchone()
-            if existing:
-                raise ValueError(
-                    f"Evidence claim '{ev.id}' already exists in ledger. Evidence records are immutable and append-only."
-                )
-
-            conn.execute(
-                """
-            INSERT INTO evidence (
-                id, hypothesis_id, evidence_level, source_confidence,
-                claim, metric_name, metric_value, delta_vs_baseline,
-                ci_95_lower, ci_95_upper, falsification_triggered,
-                citation_or_path, artifact_hash, timestamp, assumption_ids_json,
-                is_retracted, retraction_reason
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL)
-            """,
-                (
-                    ev.id,
-                    ev.hypothesis_id,
-                    ev.evidence_level.value,
-                    ev.source_confidence.value,
-                    ev.claim,
-                    ev.metric_name,
-                    ev.metric_value,
-                    ev.delta_vs_baseline,
-                    ev.ci_95_lower,
-                    ev.ci_95_upper,
-                    1 if ev.falsification_triggered else 0,
-                    ev.citation_or_path,
-                    ev.artifact_hash,
-                    ev.timestamp,
-                    json.dumps(ev.assumption_ids),
-                ),
-            )
+            self._insert_evidence_row(conn, ev)
 
         if h:
             if GATES_STRICT:
@@ -148,6 +130,7 @@ class EvidenceMixin:
                         else ""
                     ),
                     details={
+                        "evidence_id": ev.id,
                         "metric": ev.metric_name,
                         "value": ev.metric_value,
                         "delta": ev.delta_vs_baseline,
@@ -156,6 +139,59 @@ class EvidenceMixin:
                 )
             )
         return ev, blocked_children
+
+    @staticmethod
+    def _insert_evidence_row(conn: sqlite3.Connection, ev: EvidenceClaim) -> None:
+        """Insert one validated evidence row without graph, FTS, or trace side effects."""
+        existing = conn.execute("SELECT id FROM evidence WHERE id = ?", (ev.id,)).fetchone()
+        if existing:
+            raise ValueError(
+                f"Evidence claim '{ev.id}' already exists in ledger. Evidence records are immutable and append-only."
+            )
+        conn.execute(
+            """
+            INSERT INTO evidence (
+                id, hypothesis_id, evidence_level, source_confidence,
+                claim, metric_name, metric_value, delta_vs_baseline,
+                ci_95_lower, ci_95_upper, falsification_triggered,
+                citation_or_path, artifact_hash, commit_hash, prediction,
+                timestamp, assumption_ids_json, is_retracted, retraction_reason
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL)
+            """,
+            (
+                ev.id,
+                ev.hypothesis_id,
+                ev.evidence_level.value,
+                ev.source_confidence.value,
+                ev.claim,
+                ev.metric_name,
+                ev.metric_value,
+                ev.delta_vs_baseline,
+                ev.ci_95_lower,
+                ev.ci_95_upper,
+                1 if ev.falsification_triggered else 0,
+                ev.citation_or_path,
+                ev.artifact_hash,
+                ev.commit_hash,
+                ev.prediction,
+                ev.timestamp,
+                json.dumps(ev.assumption_ids),
+            ),
+        )
+
+    def append_evidence_row_only(self, ev: EvidenceClaim) -> Tuple[EvidenceClaim, dict[str, object]]:
+        """Append exactly one evidence row, without promotion, relations, FTS, or traces."""
+        ev.timestamp = ev.timestamp or self._now()
+        if not self.get_hypothesis(ev.hypothesis_id):
+            raise ValueError(f"Hypothesis '{ev.hypothesis_id}' does not exist in research graph.")
+        with self._get_connection() as conn:
+            self._insert_evidence_row(conn, ev)
+        return ev, {
+            "changed_tables": ["evidence"],
+            "inserted_evidence_ids": [ev.id],
+            "graph_updated": False,
+            "trace_emitted": False,
+        }
 
     def get_evidence(self, evidence_id: str) -> Optional[EvidenceClaim]:
         """Fetch a single evidence record by ID."""
@@ -270,6 +306,8 @@ class EvidenceMixin:
             falsification_triggered=bool(row["falsification_triggered"]),
             citation_or_path=row["citation_or_path"],
             artifact_hash=row["artifact_hash"],
+            commit_hash=row["commit_hash"] if "commit_hash" in row.keys() else None,
+            prediction=row["prediction"] if "prediction" in row.keys() else None,
             timestamp=row["timestamp"],
             assumption_ids=aids,
         )

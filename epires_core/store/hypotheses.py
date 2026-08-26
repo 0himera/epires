@@ -55,6 +55,14 @@ class HypothesisMixin:
             if existing.current_evidence_level.value > h.current_evidence_level.value:
                 h.current_evidence_level = existing.current_evidence_level
 
+        blocked_parent_ids = []
+        for parent_id in h.parent_ids:
+            parent = self.get_hypothesis(parent_id)
+            if parent and parent.status in {HypothesisStatus.FALSIFIED, HypothesisStatus.BLOCKED}:
+                blocked_parent_ids.append(parent_id)
+        if blocked_parent_ids and h.status != HypothesisStatus.FALSIFIED:
+            h.status = HypothesisStatus.BLOCKED
+
         # Encode VSA Hypervector
         vec = self.encoder.encode_hypothesis(h)
         vec_bytes = vec.astype(np.int8).tobytes()
@@ -126,6 +134,20 @@ class HypothesisMixin:
                 VALUES (?, ?, ?, ?)
                 """,
                     (h.id, pid, RelationType.DEPENDS_ON.value, json.dumps({})),
+                )
+
+            generated_block_metadata = json.dumps({"reason": "parent_falsified"})
+            conn.execute(
+                "DELETE FROM relations WHERE target_id = ? AND relation_type = ? AND metadata_json = ?",
+                (h.id, RelationType.BLOCKS.value, generated_block_metadata),
+            )
+            for pid in blocked_parent_ids:
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO relations (source_id, target_id, relation_type, metadata_json)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (pid, h.id, RelationType.BLOCKS.value, generated_block_metadata),
                 )
 
             # Mirror DEPENDS_ON into JTMS-lite justifications

@@ -94,6 +94,8 @@ class StoreBase:
                 falsification_triggered INTEGER NOT NULL DEFAULT 0,
                 citation_or_path TEXT,
                 artifact_hash TEXT,
+                commit_hash TEXT,
+                prediction TEXT,
                 timestamp TEXT NOT NULL,
                 assumption_ids_json TEXT NOT NULL DEFAULT '[]',
                 is_retracted INTEGER NOT NULL DEFAULT 0,
@@ -157,6 +159,14 @@ class StoreBase:
                 pass
             try:
                 conn.execute("ALTER TABLE evidence ADD COLUMN retraction_reason TEXT")
+            except Exception:
+                pass
+            try:
+                conn.execute("ALTER TABLE evidence ADD COLUMN commit_hash TEXT")
+            except Exception:
+                pass
+            try:
+                conn.execute("ALTER TABLE evidence ADD COLUMN prediction TEXT")
             except Exception:
                 pass
 

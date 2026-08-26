@@ -49,10 +49,10 @@ def store(tmp_path):
 # --- gates ---
 
 
-def test_gates_full_evidence_reaches_e2():
+def test_evidence_row_count_alone_does_not_reach_e2():
     h = make_h()
     evs = [make_ev("H1", f"ev{i}") for i in range(3)]
-    assert compute_level(evs, h) == EvidenceLevel.E2
+    assert compute_level(evs, h) == EvidenceLevel.E1
 
 
 def test_gates_no_evidence_is_e0():
@@ -79,7 +79,7 @@ def test_gates_ci95_above_threshold_reaches_e4():
         hypothesis_id="H1",
         name="n",
         script_path="s.py",
-        parameters={"held_out_hash": "abc"},
+        parameters={"held_out_hash": "abc", "seeds": [1, 2, 3]},
         created_at="",
     )
     assert compute_level(evs, h, experiments=[exp]) == EvidenceLevel.E4
@@ -98,7 +98,7 @@ def test_gates_ci95_below_threshold_caps_at_e3():
         hypothesis_id="H1",
         name="n",
         script_path="s.py",
-        parameters={"held_out_hash": "abc"},
+        parameters={"held_out_hash": "abc", "seeds": [1, 2, 3]},
         created_at="",
     )
     assert compute_level(evs, h, experiments=[exp]) == EvidenceLevel.E3
@@ -252,8 +252,16 @@ def test_store_registers_tms_and_conversation(store):
 def test_audit_passes_on_clean_hypothesis(store):
     store.register_hypothesis(make_h("H1"))
     for i in range(3):
-        store.log_evidence(make_ev("H1", f"ev{i}"))
-    store.register_experiment(ExperimentNode(id="X1", hypothesis_id="H1", name="n", script_path="s.py"))
+        store.log_evidence(make_ev("H1", f"ev{i}", prediction="acc > 0.5"))
+    store.register_experiment(
+        ExperimentNode(
+            id="X1",
+            hypothesis_id="H1",
+            name="n",
+            script_path="s.py",
+            parameters={"held_out_hash": "abc", "seeds": [1, 2, 3]},
+        )
+    )
     report = audit_hypothesis("H1", store)
     assert report["passed"] is True
     assert report["violations"] == []

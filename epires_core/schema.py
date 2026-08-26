@@ -49,6 +49,8 @@ def get_canonical_schema() -> Dict[str, Any]:
             "delta_vs_baseline": -0.05,
             "falsification_triggered": False,
             "citation_or_path": "artifacts/metrics/run1.json",
+            "artifact_hash": "SHA-256 of the cited artifact (string, required for local artifacts)",
+            "commit_hash": "Git commit associated with the evidence (string, optional)",
         },
         "python_quickstart": """
 from epires_core import EpiresStore, HypothesisNode, EvidenceClaim, EvidenceLevel, HypothesisStatus, SourceConfidence

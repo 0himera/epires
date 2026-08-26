@@ -9,10 +9,16 @@ from .models import FalsificationCondition
 
 # Matches comparison patterns: [metric/text] [operator] [signed number] [optional unit]
 _OP_REGEX = re.compile(
-    r"(?P<metric>[a-zA-Z0-9_\-\s]+?)?\s*"
+    r"(?P<metric>[a-zA-Z0-9_@.\-\s]+?)?\s*"
     r"(?P<operator>>=|<=|==|!=|>|<)\s*"
     r"(?P<value>[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*"
-    r"(?P<unit>%|pp|ms|s|kb|mb|gb)?",
+    r"(?P<unit>%|pp|ms|s|kb|mb|gb|x)?",
+    re.IGNORECASE,
+)
+
+_WORD_OP_REGEX = re.compile(
+    r"(?P<metric>.*?)\b(?P<word>at\s+most|at\s+least|below|under|less\s+than|above|over|greater\s+than)\s*"
+    r"(?P<value>[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*(?P<unit>%|pp|ms|s|kb|mb|gb|x)?\b",
     re.IGNORECASE,
 )
 
@@ -38,6 +44,27 @@ def parse_falsification_criteria(text: str | None) -> List[FalsificationConditio
     for clause in clauses:
         # Match explicit operator + threshold pattern
         matched = False
+        word_match = _WORD_OP_REGEX.search(clause)
+        if word_match:
+            word = re.sub(r"\s+", " ", word_match.group("word").lower())
+            operator = {
+                "below": "<",
+                "under": "<",
+                "less than": "<",
+                "at most": "<=",
+                "at least": ">=",
+            }.get(word, ">")
+            conditions.append(
+                FalsificationCondition(
+                    metric=(word_match.group("metric") or "").strip() or None,
+                    operator=operator,
+                    threshold=float(word_match.group("value")),
+                    unit=word_match.group("unit"),
+                    raw_text=clause,
+                )
+            )
+            matched = True
+
         for m in _OP_REGEX.finditer(clause):
             metric = (m.group("metric") or "").strip()
             operator = m.group("operator").strip()
@@ -59,8 +86,9 @@ def parse_falsification_criteria(text: str | None) -> List[FalsificationConditio
                 continue
 
         if not matched:
-            # Check for pure numerical threshold without operator
-            num_match = re.search(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", clause)
+            # A bare number is meaningful only when it is the entire clause.
+            # Do not interpret labels such as "top-10" as a threshold.
+            num_match = re.fullmatch(r"\s*[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?\s*", clause)
             if num_match:
                 try:
                     val = float(num_match.group())

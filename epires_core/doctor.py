@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 import sys
+import subprocess
+import tempfile
+from importlib import metadata as importlib_metadata
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -38,8 +41,18 @@ class DoctorCheck:
         self.message = message
         self.details = details
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "description": self.description,
+            "passed": self.passed,
+            "warning": self.warning,
+            "message": self.message,
+            "details": self.details,
+        }
 
-def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
+
+def run_epires_doctor(project_dir: Path | None = None, deep: bool = False) -> List[DoctorCheck]:
     """Runs a complete battery of diagnostic checks on the Epires installation."""
     checks: List[DoctorCheck] = []
     root = find_project_root(project_dir or Path.cwd())
@@ -52,6 +65,32 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
     else:
         c_py.fail_check(f"Python {py_ver.major}.{py_ver.minor} is unsupported. Epires requires Python >= 3.10")
     checks.append(c_py)
+
+    # 1b. Installed package provenance and project lock membership
+    c_package = DoctorCheck("Epires Package Provenance", "Reports version and whether Epires is represented in the lock")
+    try:
+        installed_version = importlib_metadata.version("epires")
+    except importlib_metadata.PackageNotFoundError:
+        installed_version = "unknown"
+    pyproject_file = root / "pyproject.toml"
+    lock_file = root / "uv.lock"
+    pyproject_text = pyproject_file.read_text(encoding="utf-8", errors="ignore") if pyproject_file.exists() else ""
+    lock_text = lock_file.read_text(encoding="utf-8", errors="ignore") if lock_file.exists() else ""
+    project_is_epires = 'name = "epires"' in pyproject_text
+    represented = project_is_epires or 'name = "epires"' in lock_text
+    if represented:
+        c_package.pass_check(
+            f"Epires {installed_version}; package is represented in the active project metadata/lock",
+            version=installed_version,
+            represented_in_lock=True,
+        )
+    else:
+        c_package.warn_check(
+            f"Epires {installed_version} is installed but absent from pyproject.toml/uv.lock",
+            version=installed_version,
+            represented_in_lock=False,
+        )
+    checks.append(c_package)
 
     # 2. Project Config (.epires/config.json)
     c_cfg = DoctorCheck("Project Configuration", "Validates .epires/config.json profile")
@@ -155,7 +194,9 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
             c_mcp.warn_check(f"MCP Server missing expected tools: {', '.join(missing)}")
         else:
             c_mcp.pass_check(
-                f"MCP Server active with {registered_count} tools registered and ready for agents.", tools=tool_names
+                f"MCP Server has {registered_count} tools registered locally; client attachment is checked separately.",
+                tools=tool_names,
+                registry_only=True,
             )
     except Exception as e:
         c_mcp.fail_check(f"Failed to instantiate MCP server: {e}")
@@ -184,7 +225,11 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
         detected_clients.append("AGENTS.md Protocol")
 
     if detected_clients:
-        c_clients.pass_check(f"Detected: {', '.join(detected_clients)}")
+        c_clients.warn_check(
+            f"Configuration detected, but no live client round trip was proven: {', '.join(detected_clients)}",
+            detected_clients=detected_clients,
+            client_round_trip=False,
+        )
     else:
         c_clients.warn_check(
             "No IDE MCP configs detected in workspace. Run 'epires init' or 'epires setup <ide>' to configure."
@@ -202,6 +247,59 @@ def run_epires_doctor(project_dir: Path | None = None) -> List[DoctorCheck]:
         )
     checks.append(c_web)
 
+    if deep:
+        c_help = DoctorCheck("CLI Help Smoke", "Runs the safety-critical log-evidence help path")
+        probe = (
+            "from epires_core.cli import main; import sys; "
+            "sys.argv=['epires','log-evidence','--help']; main()"
+        )
+        try:
+            result = subprocess.run(
+                [sys.executable, "-c", probe],
+                cwd=root,
+                text=True,
+                capture_output=True,
+                timeout=30,
+            )
+            if result.returncode == 0:
+                c_help.pass_check("log-evidence --help rendered successfully")
+            else:
+                c_help.fail_check(
+                    "log-evidence --help failed",
+                    returncode=result.returncode,
+                    stderr=result.stderr[-1000:],
+                )
+        except subprocess.TimeoutExpired:
+            c_help.fail_check("log-evidence --help timed out after 30 seconds")
+        checks.append(c_help)
+
+        c_roundtrip = DoctorCheck("Evidence Round Trip", "Writes and reads evidence in an isolated temporary database")
+        try:
+            from .models import EvidenceClaim, HypothesisNode
+
+            with tempfile.TemporaryDirectory(prefix="epires-doctor-") as tmpdir:
+                test_store = EpiresStore(db_path=str(Path(tmpdir) / "doctor.db"), trace_md_path=None)
+                test_store.register_hypothesis(
+                    HypothesisNode(
+                        id="DOCTOR-PROBE",
+                        title="Doctor probe",
+                        a_priori_mechanism="isolated consistency check",
+                        falsification_criteria="explicit falsification only",
+                    ),
+                    emit_trace=False,
+                )
+                evidence = EvidenceClaim(id="EV-DOCTOR-PROBE", hypothesis_id="DOCTOR-PROBE", claim="round trip")
+                test_store.log_evidence(evidence, emit_trace=False)
+                stored = test_store.get_evidence(evidence.id)
+                hypothesis = test_store.get_hypothesis("DOCTOR-PROBE")
+                if stored and hypothesis and hypothesis.current_evidence_level.value == "E1":
+                    c_roundtrip.pass_check("Isolated evidence write/read and level promotion succeeded")
+                else:
+                    c_roundtrip.fail_check("Isolated evidence write/read returned inconsistent state")
+        except Exception as exc:
+            c_roundtrip.fail_check(f"Isolated evidence round trip failed: {exc}")
+        checks.append(c_roundtrip)
+
     return checks
 
 
@@ -212,12 +310,14 @@ def print_doctor_report(checks: List[DoctorCheck]) -> bool:
     print("=" * 72)
 
     all_ok = True
+    has_warnings = False
     for c in checks:
         if not c.passed:
             all_ok = False
             symbol = "❌ FAIL"
         elif c.warning:
             symbol = "⚠️  WARN"
+            has_warnings = True
         else:
             symbol = "✅ PASS"
 
@@ -225,8 +325,10 @@ def print_doctor_report(checks: List[DoctorCheck]) -> bool:
         print(f"       {c.message}")
 
     print("\n" + "-" * 72)
-    if all_ok:
+    if all_ok and not has_warnings:
         print("  All essential systems verified. Epires is ready for auto-research.")
+    elif all_ok:
+        print("  Partial readiness: local checks passed, but warnings or unverified client paths remain.")
     else:
         print("  Issues detected. Please review the failed checks above.")
     print("=" * 72)

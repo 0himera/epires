@@ -162,7 +162,7 @@ def test_automatic_falsification_on_metric_violation(tmp_path):
     ev = EvidenceClaim(
         id="ev_violate",
         hypothesis_id="H_PARENT",
-        evidence_level=EvidenceLevel.E2,
+        evidence_level=EvidenceLevel.E3,
         claim="Measured loss",
         metric_name="loss",
         metric_value=0.18,

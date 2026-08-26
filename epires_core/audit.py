@@ -22,14 +22,16 @@ def _citation_resolves(citation: str) -> bool:
 
 
 def _hash_matches(citation: str, artifact_hash: str | None) -> bool:
-    if not artifact_hash:
-        return True
     c = (citation or "").strip()
-    if not c or _is_url_like(c):
+    if not c:
+        return False
+    if _is_url_like(c):
         return True
+    if not artifact_hash:
+        return False
     p = Path(c)
     if not p.is_file():
-        return True  # skip if file absent — not a mismatch, just unresolved citation
+        return False
     try:
         h = hashlib.sha256(p.read_bytes()).hexdigest()
         return h.lower() == artifact_hash.lower().strip()
@@ -62,28 +64,30 @@ def audit_hypothesis(h_id: str, store: Any) -> Dict[str, Any]:
     except Exception:
         exps = []
 
-    # G1: seed variance — ≥3 evidence claims
-    g1 = len(evs) >= 3
+    try:
+        traces = store.list_traces() if hasattr(store, "list_traces") else []
+    except Exception:
+        traces = []
+
+    from .gates import check_g1, check_g2, check_g3
+
+    # G1: seed variance — at least three distinct registered run seeds.
+    g1 = check_g1(evs, h, experiments=exps, traces=traces)
     gates["G1"] = g1
     if not g1:
-        violations.append(f"G1: insufficient evidence (need >=3, have {len(evs)})")
+        violations.append("G1: insufficient distinct experiment seeds (need >=3)")
 
-    # G2: held-out — ≥1 experiment registered
-    g2 = len(exps) >= 1
+    # G2: a hash-bound held-out split registered before the quantitative result.
+    g2 = check_g2(evs, h, experiments=exps, traces=traces)
     gates["G2"] = g2
     if not g2:
-        violations.append(f"G2: missing experiment (need >=1, have {len(exps)})")
+        violations.append("G2: missing or late hash-bound held-out experiment")
 
-    # G3: prereg — hypothesis created before first evidence
-    if evs and getattr(h, "created_at", ""):
-        first_ts = evs[0].timestamp if hasattr(evs[0], "timestamp") else ""
-        # ponytail: string compare of ISO timestamps, cheap and monotone
-        g3 = h.created_at <= first_ts if first_ts else True
-    else:
-        g3 = True  # no evidence yet -> prereg trivially ok
+    # G3: hash-bound preregistration or an explicit prediction before results.
+    g3 = check_g3(evs, h, experiments=exps, traces=traces)
     gates["G3"] = g3
     if not g3:
-        violations.append("G3: hypothesis not preregistered (created_at after evidence)")
+        violations.append("G3: no valid preregistration or pre-result prediction")
 
     # citation + artifact hash per evidence
     for e in evs:

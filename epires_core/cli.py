@@ -3,6 +3,7 @@
 from __future__ import annotations
 import argparse
 import asyncio
+import hashlib
 import json
 import sys
 import webbrowser
@@ -288,6 +289,11 @@ def main():
     # Status & Summary
     subparsers.add_parser("status", help="Print summary of research graph & evidence")
     subparsers.add_parser("summary", help="Print compact JSON summary of research state")
+    get_h_parser = subparsers.add_parser("get-hypothesis", help="Read one hypothesis as JSON")
+    get_h_parser.add_argument("hypothesis_id", help="Exact hypothesis ID")
+    list_ev_parser = subparsers.add_parser("list-evidence", help="Read evidence rows as JSON")
+    list_ev_parser.add_argument("--hypothesis", "-H", default=None, help="Optional hypothesis ID filter")
+    list_ev_parser.add_argument("--include-retracted", action="store_true", help="Include soft-retracted rows")
 
     # Mermaid DAG
     dag_parser = subparsers.add_parser("dag", help="Print Mermaid diagram of hypothesis DAG")
@@ -343,7 +349,11 @@ def main():
     compress_parser.add_argument("--limit", "-n", type=int, default=50, help="Number of recent traces to compress")
 
     # Doctor
-    subparsers.add_parser("doctor", help="Run comprehensive diagnostic checks on MCP, SQLite, and configuration")
+    doctor_parser = subparsers.add_parser(
+        "doctor", help="Run comprehensive diagnostic checks on MCP, SQLite, and configuration"
+    )
+    doctor_parser.add_argument("--deep", action="store_true", help="Run isolated CLI and evidence round-trip probes")
+    doctor_parser.add_argument("--json", action="store_true", help="Emit machine-readable diagnostic results")
 
     # Schema
     schema_parser = subparsers.add_parser(
@@ -490,13 +500,18 @@ def main():
     )
     ev_parser.add_argument("--metric", "-m", default=None, help="Primary metric name (e.g. RMSLE, AUC, loss)")
     ev_parser.add_argument("--delta", "-d", type=float, default=None, help="Delta vs baseline (positive or negative)")
-    ev_parser.add_argument("--ci", default=None, help="95% Confidence interval as '[lower, upper]' or 'lower,upper'")
+    ev_parser.add_argument("--ci", default=None, help="95%% Confidence interval as '[lower, upper]' or 'lower,upper'")
     ev_parser.add_argument(
         "--falsified",
         "--falsification-triggered",
         dest="falsification_triggered",
         action="store_true",
         help="Mark evidence as triggering falsification",
+    )
+    ev_parser.add_argument(
+        "--no-auto-falsification",
+        action="store_true",
+        help="Record numeric provenance without automatically evaluating the hypothesis criterion",
     )
     ev_parser.add_argument(
         "--status",
@@ -512,6 +527,10 @@ def main():
     )
     ev_parser.add_argument("--commit", default=None, help="Git commit SHA associated with evidence")
     ev_parser.add_argument("--artifact", default=None, help="Path to primary artifact")
+    retract_parser = subparsers.add_parser("retract-evidence", help="Soft-retract an evidence row")
+    retract_parser.add_argument("evidence_id", help="Evidence ID to retract")
+    retract_parser.add_argument("--reason", required=True, help="Append-only retraction reason")
+    retract_parser.add_argument("--agent-role", default="Lead-PI", help="Role recorded in the retraction trace")
 
     # Scaffold Experiment
     scaffold_parser = subparsers.add_parser(
@@ -562,8 +581,25 @@ def main():
     elif args.command == "doctor":
         from .doctor import run_epires_doctor, print_doctor_report
 
-        checks = run_epires_doctor()
-        ok = print_doctor_report(checks)
+        checks = run_epires_doctor(deep=args.deep)
+        if args.json:
+            ok = all(check.passed for check in checks)
+            doctor_root = find_project_root()
+            doctor_config = EpiresProjectConfig.load(doctor_root)
+            print(
+                json.dumps(
+                    {
+                        "essential_checks_passed": ok,
+                        "fully_ready": ok and not any(check.warning for check in checks),
+                        "canonical_db": str(doctor_root / doctor_config.paths.db_path),
+                        "checks": [check.to_dict() for check in checks],
+                    },
+                    indent=2,
+                    ensure_ascii=False,
+                )
+            )
+        else:
+            ok = print_doctor_report(checks)
         sys.exit(0 if ok else 1)
 
     elif args.command == "schema":
@@ -713,10 +749,52 @@ def main():
                 "PROPOSED": "🔵",
                 "REFINED": "🟣",
             }.get(h.status.value, "⚪")
+            audit_label = ""
+            if h.status.value == "CONFIRMED":
+                audit = store.audit_pass(h.id)
+                audit_label = ", Audit: PASS" if audit.get("passed") else ", Audit: FAIL"
+                if not audit.get("passed"):
+                    status_icon = "🟠"
             print(
-                f"{status_icon} [{h.id}] {h.title} (Level: {h.current_evidence_level.value}, Status: {h.status.value})"
+                f"{status_icon} [{h.id}] {h.title} "
+                f"(Level: {h.current_evidence_level.value}, Status: {h.status.value}{audit_label})"
             )
         print("================================================================\n")
+
+    elif args.command == "get-hypothesis":
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        hypothesis = store.get_hypothesis(args.hypothesis_id)
+        if hypothesis is None:
+            print(json.dumps({"error": "hypothesis not found", "id": args.hypothesis_id}))
+            sys.exit(1)
+        print(hypothesis.model_dump_json(indent=2))
+
+    elif args.command == "list-evidence":
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        evidence = store.list_evidence(
+            hypothesis_id=args.hypothesis,
+            include_retracted=args.include_retracted,
+        )
+        print(json.dumps([item.model_dump(mode="json") for item in evidence], indent=2, ensure_ascii=False))
+
+    elif args.command == "retract-evidence":
+        root = find_project_root()
+        config = EpiresProjectConfig.load(root)
+        store = EpiresStore(db_path=str(root / config.paths.db_path))
+        evidence, unblocked = store.retract_evidence(args.evidence_id, args.reason, agent_role=args.agent_role)
+        if evidence is None:
+            print(json.dumps({"error": "evidence not found", "id": args.evidence_id}))
+            sys.exit(1)
+        print(
+            json.dumps(
+                {"retracted_evidence_id": evidence.id, "hypothesis_id": evidence.hypothesis_id, "unblocked": unblocked},
+                ensure_ascii=False,
+            )
+        )
 
     elif args.command == "version":
         print(f"epires {__version__}")
@@ -795,6 +873,7 @@ def main():
         config = EpiresProjectConfig.load(root)
         store = EpiresStore(db_path=str(root / config.paths.db_path))
 
+        audit_ok = True
         if args.h_id:
             if args.deep:
                 from .auditor import independent_audit
@@ -802,8 +881,10 @@ def main():
                 print(f"[*] Running S3* LLM Independent Audit on '{args.h_id}' ...")
                 res = independent_audit(args.h_id, store)
                 print(json.dumps(res, indent=2, ensure_ascii=False))
+                audit_ok = str(res.get("verdict", "")).lower() == "pass"
             else:
                 res = audit_hypothesis(args.h_id, store)
+                audit_ok = bool(res["passed"])
                 icon = "🟢" if res["passed"] else "🔴"
                 print(f"{icon} Audit for '{args.h_id}': {'PASSED' if res['passed'] else 'FAILED'}")
                 if res.get("violations"):
@@ -826,6 +907,9 @@ def main():
                 else:
                     passed_cnt += 1
             print(f"\n[+] Audit summary: {passed_cnt}/{len(confirmed)} passed.\n")
+            audit_ok = passed_cnt == len(confirmed)
+        if not audit_ok:
+            sys.exit(1)
 
     elif args.command == "posiwid":
         from .audit import posiwid_report
@@ -952,6 +1036,17 @@ def main():
 
         assumptions = [a.strip() for a in args.assumptions.split(",") if a.strip()] if args.assumptions else []
 
+        artifact_path = args.artifact or ""
+        artifact_hash = None
+        if artifact_path:
+            artifact_file = Path(artifact_path)
+            if not artifact_file.is_absolute():
+                artifact_file = root / artifact_file
+            if not artifact_file.is_file():
+                print(f"[!] Error: Evidence artifact is not a readable file: {artifact_path}")
+                sys.exit(1)
+            artifact_hash = hashlib.sha256(artifact_file.read_bytes()).hexdigest()
+
         ev = EvidenceClaim(
             hypothesis_id=args.hypothesis.strip(),
             evidence_level=EvidenceLevel(args.level),
@@ -964,13 +1059,15 @@ def main():
             falsification_triggered=args.falsification_triggered or (args.status == "FALSIFIED"),
             assumption_ids=assumptions,
             commit_hash=args.commit,
-            citation_or_path=args.artifact or "",
+            citation_or_path=artifact_path,
+            artifact_hash=artifact_hash,
         )
 
-        ev, blocked_children = store.log_evidence(ev)
+        ev, blocked_children = store.log_evidence(ev, auto_falsification=not args.no_auto_falsification)
         if args.status:
-            target_h.status = HypothesisStatus(args.status)
-            store.register_hypothesis(target_h, allow_status_override=True, emit_trace=False)
+            fresh_h = store.get_hypothesis(args.hypothesis.strip())
+            fresh_h.status = HypothesisStatus(args.status)
+            store.register_hypothesis(fresh_h, allow_status_override=True, emit_trace=False)
 
         updated_h = store.get_hypothesis(args.hypothesis.strip())
         status_icon = (

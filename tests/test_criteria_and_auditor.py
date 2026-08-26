@@ -69,6 +69,18 @@ class TestFalsificationCriteriaParsing:
         assert conds[0].threshold == 0.1
         assert conds[1].operator == "degradation"
 
+    def test_labels_do_not_create_numeric_thresholds(self):
+        conds = parse_falsification_criteria("ordered top-10 exact")
+        assert len(conds) == 1
+        assert conds[0].operator == "text_match"
+
+    def test_word_direction_and_metric_are_parsed(self):
+        conds = parse_falsification_criteria("below 6.0x")
+        assert len(conds) == 1
+        assert conds[0].operator == "<"
+        assert conds[0].threshold == 6.0
+        assert conds[0].unit == "x"
+
 
 class TestConditionEvaluation:
     def test_evaluate_greater_than(self):

@@ -27,6 +27,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from mcp.server.mcpserver import MCPServer
 
@@ -205,8 +206,10 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         ci_95_lower: Optional[float] = None,
         ci_95_upper: Optional[float] = None,
         falsification_triggered: bool = False,
+        auto_falsification: bool = True,
         citation_or_path: str = "",
         artifact_hash: Optional[str] = None,
+        commit_hash: Optional[str] = None,
         assumption_ids: Optional[Union[List[str], str]] = None,
     ) -> str:
         """Record empirical evidence for a hypothesis.
@@ -228,6 +231,11 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         timestamp_ms = int(time.time() * 1000)
         ev_id = f"ev_{hypothesis_id}_{timestamp_ms}_{claim_hash}"
 
+        if citation_or_path and not artifact_hash:
+            artifact = Path(citation_or_path)
+            if artifact.is_file():
+                artifact_hash = hashlib.sha256(artifact.read_bytes()).hexdigest()
+
         claim_obj = EvidenceClaim(
             id=ev_id,
             hypothesis_id=hypothesis_id,
@@ -242,9 +250,10 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             falsification_triggered=falsification_triggered,
             citation_or_path=citation_or_path,
             artifact_hash=artifact_hash,
+            commit_hash=commit_hash,
             assumption_ids=assumption_ids or [],
         )
-        saved_ev, blocked_children = store.log_evidence(claim_obj)
+        saved_ev, blocked_children = store.log_evidence(claim_obj, auto_falsification=auto_falsification)
 
         msg = f"Evidence [{saved_ev.evidence_level.value}, {saved_ev.source_confidence.value}] recorded for {hypothesis_id}."
         if saved_ev.falsification_triggered:

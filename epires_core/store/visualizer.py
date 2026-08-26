@@ -127,6 +127,8 @@ class VisualizerMixin:
         active_frontier: list[dict] = []
         blocked_branches: list[str] = []
         falsified_nodes: list[str] = []
+        confirmed_audit_passed: list[str] = []
+        confirmed_audit_debt: list[str] = []
 
         for h in all_h:
             s = h.status.value
@@ -149,6 +151,10 @@ class VisualizerMixin:
                 blocked_branches.append(h.id)
             elif h.status == HypothesisStatus.FALSIFIED:
                 falsified_nodes.append(h.id)
+            if h.status == HypothesisStatus.CONFIRMED:
+                audit = self.audit_pass(h.id)
+                target = confirmed_audit_passed if audit.get("passed") else confirmed_audit_debt
+                target.append(h.id)
 
         with self._get_connection() as conn:
             ev_count = conn.execute("SELECT COUNT(*) FROM evidence WHERE is_retracted = 0").fetchone()[0]
@@ -162,6 +168,9 @@ class VisualizerMixin:
             "active_frontier": active_frontier,
             "blocked_branches": blocked_branches,
             "falsified_nodes": falsified_nodes,
+            "audit_version": "gates-v2",
+            "confirmed_audit_passed": confirmed_audit_passed,
+            "confirmed_audit_debt": confirmed_audit_debt,
             "evidence_count": ev_count,
             "experiments_count": exp_count,
             "traces_count": trace_count,

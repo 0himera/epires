@@ -5,7 +5,7 @@ import re
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class EvidenceLevel(str, Enum):
@@ -64,6 +64,8 @@ from pydantic import BaseModel, Field
 
 
 class EvidenceClaim(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     id: str = Field(default_factory=lambda: f"EV-{uuid4().hex[:8]}")
     hypothesis_id: str
     evidence_level: EvidenceLevel = EvidenceLevel.E1
@@ -77,6 +79,7 @@ class EvidenceClaim(BaseModel):
     falsification_triggered: bool = False
     citation_or_path: str = ""
     artifact_hash: Optional[str] = None
+    commit_hash: Optional[str] = None
     timestamp: str = ""
     observer_id: str = ""
     criteria_version: str = "v1"
