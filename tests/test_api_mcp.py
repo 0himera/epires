@@ -141,6 +141,45 @@ def test_mcp_server_tools():
         assert "epires_record_trace" in tool_names
         assert "epires_system_status" in tool_names
 
+        # Agent-facing schemas must expose the compact confidence vocabulary directly.
+        # Otherwise models tend to guess verbose values such as "HIGH_CONFIDENCE".
+        log_evidence_tool = next(tool for tool in mcp._tool_manager.list_tools() if tool.name == "epires_log_evidence")
+        confidence_schema = log_evidence_tool.parameters["properties"]["source_confidence"]
+        confidence_ref = confidence_schema["$ref"].split("/")[-1]
+        assert log_evidence_tool.parameters["$defs"][confidence_ref]["enum"] == ["V", "P", "D"]
+        assert "V = verified primary artifact" in confidence_schema["description"]
+        assert "Use exactly one of V, P, or D" in confidence_schema["description"]
+        assert "Do not combine paths, commands, or notes" in log_evidence_tool.parameters["properties"]["citation_or_path"]["description"]
+        assert "prediction" in log_evidence_tool.parameters["properties"]
+
+        expected_enum_refs = {
+            ("epires_register_hypothesis", "target_evidence_level"): "EvidenceLevel",
+            ("epires_log_evidence", "evidence_level"): "EvidenceLevel",
+            ("epires_update_hypothesis", "status"): "HypothesisStatus",
+            ("epires_update_hypothesis", "target_evidence_level"): "EvidenceLevel",
+            ("epires_add_relation", "relation_type"): "RelationType",
+            ("epires_list_relations", "relation_type"): "RelationType",
+            ("epires_query_graph", "status"): "HypothesisStatus",
+            ("epires_associative_search", "status"): "HypothesisStatus",
+        }
+        tools_by_name = {tool.name: tool for tool in mcp._tool_manager.list_tools()}
+        for (tool_name, parameter), enum_name in expected_enum_refs.items():
+            parameter_schema = tools_by_name[tool_name].parameters["properties"][parameter]
+            serialized = json.dumps(parameter_schema)
+            assert f"#/$defs/{enum_name}" in serialized
+            assert enum_name in tools_by_name[tool_name].parameters["$defs"]
+
+        for tool_name in ("epires_parallel_web_search", "epires_parallel_extract"):
+            parallel_schema = tools_by_name[tool_name].parameters
+            assert "kwargs" not in parallel_schema["properties"]
+            assert "kwargs" not in parallel_schema.get("required", [])
+        assert tools_by_name["epires_parallel_web_search"].parameters["properties"]["mode"]["enum"] == [
+            "turbo",
+            "fast",
+            "basic",
+            "advanced",
+        ]
+
         # Test schema retrieval
         get_schema = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_get_schema")
         schema_dict = json.loads(get_schema())
@@ -181,18 +220,25 @@ def test_mcp_server_tools():
         assert "Successfully registered experiment" in exp_res
         exps_json = list_exp(hypothesis_id="H-TEST-MCP")
         assert "Smoke run" in exps_json
+        log_ev(
+            hypothesis_id="H-TEST-MCP",
+            claim="Preregistered smoke prediction",
+            evidence_level="E2",
+            prediction="rmsle < 1.30",
+        )
         log_ev(hypothesis_id="H-TEST-MCP", claim="Erroneous fail", evidence_level="E3", falsification_triggered=True)
         query = next(tool.fn for tool in mcp._tool_manager.list_tools() if tool.name == "epires_query_graph")
         res1 = json.loads(query(h_id="H-TEST-MCP"))
         assert res1["hypothesis"]["status"] == "FALSIFIED"
+        assert any(ev["prediction"] == "rmsle < 1.30" for ev in res1["evidence"])
 
-        ev_id = res1["evidence"][0]["id"]
+        ev_id = next(ev["id"] for ev in res1["evidence"] if ev["falsification_triggered"])
         retract_msg = retract(evidence_id=ev_id, reason="Correction of benchmark error")
         assert "successfully retracted" in retract_msg
 
         res2 = json.loads(query(h_id="H-TEST-MCP"))
-        assert res2["hypothesis"]["status"] == "PROPOSED"
-        assert res2["hypothesis"]["current_evidence_level"] == "E0"
+        assert res2["hypothesis"]["status"] == "IN_PROGRESS"
+        assert res2["hypothesis"]["current_evidence_level"] == "E2"
 
         # Test epires_update_hypothesis (e.g. mark REFINED)
         up_msg = update_h(id="H-TEST-MCP", status="REFINED", target_evidence_level="E4")

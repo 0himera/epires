@@ -1,6 +1,6 @@
 """FastMCP Server for Epires Research Harness.
 
-Exposes 28 deterministic tools for LLM agents:
+Exposes 33 deterministic tools for LLM agents, including:
 - epires_get_schema (Canonical data format & python migration template)
 - epires_register_hypothesis (Popperian criteria & DAG cycle detection)
 - epires_register_experiment (Explicit reproducibility metadata & execution parameters)
@@ -28,8 +28,9 @@ import hashlib
 import json
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 from mcp.server.mcpserver import MCPServer
+from pydantic import Field
 
 from epires_core.models import (
     Entity,
@@ -49,6 +50,30 @@ from epires_core.schema import get_canonical_schema
 from epires_core.store import EpiresStore
 from epires_core.tracer import AutoTracer
 from tools.web_search import ParallelWebSearcher, get_parallel_api_key
+
+
+EvidenceLevelArg = Annotated[
+    EvidenceLevel,
+    Field(description="Evidence tier. Use exactly one of E0, E1, E2, E3, E4, or E5."),
+]
+HypothesisStatusArg = Annotated[
+    HypothesisStatus,
+    Field(
+        description=(
+            "Hypothesis lifecycle status. Use exactly one of PROPOSED, IN_PROGRESS, CONFIRMED, "
+            "FALSIFIED, BLOCKED, or REFINED."
+        )
+    ),
+]
+RelationTypeArg = Annotated[
+    RelationType,
+    Field(
+        description=(
+            "Graph relation type. Use exactly one of DEPENDS_ON, REPLICATES, SUPERSEDES, "
+            "CONFLICTS_WITH, REFINES, BLOCKS, FALSIFIES, PRODUCES, or GATED_BY."
+        )
+    ),
+]
 
 
 def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "docs/agent-trace.md") -> MCPServer:
@@ -102,10 +127,11 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         entity_types: Optional[Union[List[str], str]] = None,
         entity_values: Optional[Union[List[str], str]] = None,
         entities: Optional[Union[List[Dict[str, str]], List[str], str]] = None,
-        target_evidence_level: str = "E3",
-        proposed_by: str = "Lead-PI",
-        initial_confidence: float = 0.5,
-        preregistration_artifact: Optional[str] = None,
+        target_evidence_level: EvidenceLevelArg = EvidenceLevel.E3,
+        preregistration_artifact: Annotated[
+            Optional[str],
+            Field(description="Path to a readable preregistration artifact; Epires stores its SHA-256 in the trace."),
+        ] = None,
     ) -> str:
         """Register a new hypothesis in the VSA Hypergraph.
 
@@ -124,11 +150,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             for t, v in zip(t_list, v_list):
                 ents.append(Entity(type=str(t), value=str(v)))
 
-        target_enum = (
-            EvidenceLevel(target_evidence_level)
-            if target_evidence_level in EvidenceLevel._value2member_map_
-            else EvidenceLevel.E3
-        )
+        target_enum = EvidenceLevel(target_evidence_level)
 
         node = HypothesisNode(
             id=id,
@@ -198,23 +220,58 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     def epires_log_evidence(
         hypothesis_id: str,
         claim: Optional[str] = None,
-        evidence_level: str = "E2",
-        source_confidence: str = "V",
+        evidence_level: EvidenceLevelArg = EvidenceLevel.E2,
+        source_confidence: Annotated[
+            SourceConfidence,
+            Field(
+                description=(
+                    "Source provenance: V = verified primary artifact or directly read primary source; "
+                    "P = externally reported secondary source; D = inferred or derived evidence. "
+                    "Use exactly one of V, P, or D."
+                )
+            ),
+        ] = SourceConfidence.V,
         metric_name: Optional[str] = None,
         metric_value: Optional[float] = None,
         delta_vs_baseline: Optional[float] = None,
         ci_95_lower: Optional[float] = None,
         ci_95_upper: Optional[float] = None,
-        falsification_triggered: bool = False,
-        auto_falsification: bool = True,
-        citation_or_path: str = "",
-        artifact_hash: Optional[str] = None,
-        commit_hash: Optional[str] = None,
+        falsification_triggered: Annotated[
+            bool,
+            Field(description="Set true only when this evidence directly meets the registered falsification criterion."),
+        ] = False,
+        auto_falsification: Annotated[
+            bool,
+            Field(description="For E3-E5 metric evidence, evaluate the registered falsification criterion automatically."),
+        ] = True,
+        citation_or_path: Annotated[
+            str,
+            Field(
+                description=(
+                    "One resolvable source citation or one local artifact path. Do not combine paths, commands, or notes; "
+                    "use the claim field for narrative context."
+                )
+            ),
+        ] = "",
+        artifact_hash: Annotated[
+            Optional[str],
+            Field(description="SHA-256 of citation_or_path. Omit when citation_or_path is a readable local file; Epires computes it."),
+        ] = None,
+        commit_hash: Annotated[
+            Optional[str],
+            Field(description="Git commit hash associated with the evidence, when available."),
+        ] = None,
         assumption_ids: Optional[Union[List[str], str]] = None,
+        prediction: Annotated[
+            Optional[str],
+            Field(description="Prediction recorded before results; used by the G3 preregistration gate."),
+        ] = None,
     ) -> str:
         """Record empirical evidence for a hypothesis.
 
         claim: Optional descriptive summary. If omitted, will be auto-generated from metric_name/metric_value.
+        source_confidence: Use V for a verified artifact or primary source, P for an externally
+        reported secondary source, and D for inferred or derived evidence.
         If falsification_triggered is True (or metrics violate falsification_criteria),
         the hypothesis is marked FALSIFIED and all dependent child hypotheses in the DAG are automatically BLOCKED.
         """
@@ -252,6 +309,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             artifact_hash=artifact_hash,
             commit_hash=commit_hash,
             assumption_ids=assumption_ids or [],
+            prediction=prediction,
         )
         saved_ev, blocked_children = store.log_evidence(claim_obj, auto_falsification=auto_falsification)
 
@@ -281,8 +339,8 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     @mcp.tool()
     def epires_update_hypothesis(
         id: str,
-        status: Optional[str] = None,
-        target_evidence_level: Optional[str] = None,
+        status: Annotated[Optional[HypothesisStatus], Field(description=HypothesisStatusArg.__metadata__[0].description)] = None,
+        target_evidence_level: Annotated[Optional[EvidenceLevel], Field(description=EvidenceLevelArg.__metadata__[0].description)] = None,
         title: Optional[str] = None,
         a_priori_mechanism: Optional[str] = None,
         falsification_criteria: Optional[str] = None,
@@ -292,7 +350,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         tags: Optional[List[str]] = None,
         agent_role: str = "Lead-PI",
     ) -> str:
-        """Explicitly update properties or status of an existing hypothesis (e.g. set REFINED, PAUSED, IN_PROGRESS, or edit target level/tags)."""
+        """Explicitly update an existing hypothesis, including its status, target evidence level, text, DAG parents, entities, or tags."""
         entities = None
         if entity_types is not None and entity_values is not None:
             if len(entity_types) != len(entity_values):
@@ -322,7 +380,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     def epires_add_relation(
         source_id: str,
         target_id: str,
-        relation_type: str = "REFINES",
+        relation_type: RelationTypeArg = RelationType.REFINES,
         metadata: Optional[Union[Dict[str, Any], str]] = None,
     ) -> str:
         """Create a semantic graph relation between hypotheses, experiments, or evidence.
@@ -347,7 +405,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             except Exception:
                 meta_dict = {"raw": metadata}
 
-        rel_enum = RelationType(relation_type.upper())
+        rel_enum = RelationType(relation_type)
         edge = RelationEdge(
             source_id=source_id,
             target_id=target_id,
@@ -358,9 +416,11 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         return f"Successfully linked {saved.source_id} ==[{saved.relation_type.value}]==> {saved.target_id}"
 
     @mcp.tool()
-    def epires_list_relations(relation_type: Optional[str] = None) -> str:
+    def epires_list_relations(
+        relation_type: Annotated[Optional[RelationType], Field(description=RelationTypeArg.__metadata__[0].description)] = None,
+    ) -> str:
         """List persisted graph relation edges, optionally filtered by relation type."""
-        rel_enum = RelationType(relation_type.upper()) if relation_type else None
+        rel_enum = RelationType(relation_type) if relation_type else None
         relations = store.list_relations(relation_type=rel_enum)
         return json.dumps(
             [
@@ -414,11 +474,11 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
 
     @mcp.tool()
     def epires_query_graph(
-        status: Optional[str] = None,
+        status: Annotated[Optional[HypothesisStatus], Field(description=HypothesisStatusArg.__metadata__[0].description)] = None,
         h_id: Optional[str] = None,
         compact: bool = True,
     ) -> str:
-        """Query hypotheses in the research graph by status (PROPOSED, CONFIRMED, FALSIFIED, BLOCKED) or ID.
+        """Query hypotheses by ID or by any lifecycle status.
 
         compact: If True (default), returns compact summary (id, title, status, level, parents) without verbose mechanisms.
         """
@@ -509,7 +569,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     @mcp.tool()
     def epires_find_gaps(
         dimensions: List[str],
-        min_tested: int = 1,
+        min_tested: Annotated[int, Field(ge=1, description="Minimum experiment count required to consider a combination tested.")] = 1,
     ) -> str:
         """Find untested or under-explored parameter/feature/model combinations (White Spot Gap Analysis).
 
@@ -522,8 +582,8 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     @mcp.tool()
     def epires_associative_search(
         query: Optional[str] = None,
-        status: Optional[str] = None,
-        limit: int = 5,
+        status: Annotated[Optional[HypothesisStatus], Field(description=HypothesisStatusArg.__metadata__[0].description)] = None,
+        limit: Annotated[int, Field(ge=1, description="Maximum number of search results.")] = 5,
     ) -> str:
         """Perform VSA cosine similarity search across the hypothesis hypergraph."""
         stat_enum = HypothesisStatus(status) if status else None
@@ -539,7 +599,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         head_id: str,
         relation_1: str,
         relation_2: str,
-        top_k: int = 5,
+        top_k: Annotated[int, Field(ge=1, description="Maximum number of two-hop matches.")] = 5,
     ) -> str:
         """Execute a 2-hop causal/relational query on the knowledge graph using Dual-Codebook VSA (VSAR-034).
 
@@ -558,7 +618,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     def epires_sharded_search(
         query: str,
         agent_role: str = "Lead-PI",
-        top_k: int = 5,
+        top_k: Annotated[int, Field(ge=1, description="Maximum number of isolated-memory matches.")] = 5,
         allowed_roles: Optional[Union[List[str], str]] = None,
     ) -> str:
         """Perform multi-agent isolated memory search with zero cross-agent context contamination (VSAR-032/033)."""
@@ -578,7 +638,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         return json.dumps(results, indent=2, ensure_ascii=False)
 
     @mcp.tool()
-    def epires_compress_context(limit: int = 50) -> str:
+    def epires_compress_context(
+        limit: Annotated[int, Field(ge=1, description="Maximum number of recent trace entries to compress.")] = 50,
+    ) -> str:
         """Compress recent execution traces and notes into a dense VSA semantic digest, cutting tokens by >=50% (VSAR-007)."""
         res = store.compress_trace_context(limit=limit)
         return json.dumps(res, indent=2, ensure_ascii=False)
@@ -586,9 +648,17 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     @mcp.tool()
     def epires_export_mermaid_dag(
         root_id: Optional[str] = None,
-        depth: int = -1,
+        depth: Annotated[int, Field(ge=-1, description="Maximum hops from root_id; -1 means all reachable nodes.")] = -1,
         frontier_only: bool = False,
-        status_filter: Optional[Union[List[str], str]] = None,
+        status_filter: Annotated[
+            Optional[Union[List[HypothesisStatus], str]],
+            Field(
+                description=(
+                    "Optional statuses as an array or comma-separated string. Allowed values: PROPOSED, "
+                    "IN_PROGRESS, CONFIRMED, FALSIFIED, BLOCKED, REFINED."
+                )
+            ),
+        ] = None,
     ) -> str:
         """Export the hypothesis dependency DAG as Mermaid markdown for visualization.
 
@@ -602,7 +672,7 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             if isinstance(status_filter, str):
                 statuses = [s.strip() for s in status_filter.split(",") if s.strip()]
             else:
-                statuses = status_filter
+                statuses = [s.value if isinstance(s, HypothesisStatus) else str(s) for s in status_filter]
 
         return store.export_mermaid_dag(
             root_id=root_id,
@@ -615,10 +685,12 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     def epires_parallel_web_search(
         queries: List[str],
         objective: Optional[str] = None,
-        mode: str = "fast",
-        max_chars: Optional[int] = None,
-        max_results: Optional[int] = None,
-        **kwargs,
+        mode: Annotated[
+            Literal["turbo", "fast", "basic", "advanced"],
+            Field(description="Parallel search preset: turbo, fast, basic, or advanced."),
+        ] = "fast",
+        max_chars: Annotated[Optional[int], Field(gt=0, description="Optional positive total character budget.")] = None,
+        max_results: Annotated[Optional[int], Field(gt=0, description="Optional positive result-count limit.")] = None,
     ) -> str:
         """Execute parallel multi-topic literature and web search using parallel-web 1.3.0 SDK.
 
@@ -631,7 +703,6 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             mode=mode,
             max_chars=max_chars,
             max_results=max_results,
-            **kwargs,
         )
         return json.dumps(res, indent=2, ensure_ascii=False)
 
@@ -639,10 +710,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     def epires_parallel_extract(
         urls: List[str],
         objective: Optional[str] = None,
-        **kwargs,
     ) -> str:
         """Extract structured full text/markdown from specific research URLs via Parallel SDK."""
-        res = web_searcher.extract(urls=urls, objective=objective, **kwargs)
+        res = web_searcher.extract(urls=urls, objective=objective)
         return json.dumps(res, indent=2, ensure_ascii=False)
 
     @mcp.tool()
@@ -682,14 +752,16 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         return json.dumps(store.audit_pass(hypothesis_id), indent=2)
 
     @mcp.tool()
-    def algedonic_check(n_failures_threshold: int = 3) -> str:
+    def algedonic_check(
+        n_failures_threshold: Annotated[int, Field(ge=1, description="Minimum blocked descendants for an n_failures trigger.")] = 3,
+    ) -> str:
         """Check algedonic triggers (pain signals) across the graph, filtered by failure threshold."""
         triggers = [t for t in store.check_algedonic() if t.get("n_failures", 0) >= n_failures_threshold]
         return json.dumps(triggers, indent=2)
 
     @mcp.tool()
     def algedonic_freeze(node_id: str) -> str:
-        """Freeze a hypothesis branch (cascade FROZEN status down the DAG subtree)."""
+        """Quarantine a hypothesis branch by cascading BLOCKED status to its downstream dependency subtree."""
         from epires_core.algedonic import freeze_branch
 
         frozen = freeze_branch(node_id, store)
@@ -702,7 +774,10 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         return json.dumps([{"id": cid, "score": round(score, 4)} for cid, score in ranked], indent=2)
 
     @mcp.tool()
-    def calibrated_p(agent_id: str, stated_p: float) -> str:
+    def calibrated_p(
+        agent_id: str,
+        stated_p: Annotated[float, Field(ge=0.0, le=1.0, description="Agent's stated probability in the closed interval [0, 1].")],
+    ) -> str:
         """Compute the calibration-corrected probability for an agent's stated probability."""
         return json.dumps(
             {"agent_id": agent_id, "stated_p": stated_p, "calibrated_p": store.calibrated_p(agent_id, stated_p)}

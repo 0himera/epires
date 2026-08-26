@@ -383,10 +383,10 @@ Epires exposes 33 deterministic MCP tools for AI agents:
 | `epires_list_experiments` | Lists recorded experiments with metrics and artifacts |
 | `epires_log_evidence` | Logs empirical evidence, metrics, CI95, and cascades falsification (auto-generated claim fallback) |
 | `epires_retract_evidence` | Retracts erroneous evidence, recalculates evidence level, and cascades unblocking |
-| `epires_update_hypothesis` | Explicitly updates hypothesis status (REFINED, PAUSED), target level, tags, or text |
+| `epires_update_hypothesis` | Updates hypothesis status (`PROPOSED`, `IN_PROGRESS`, `CONFIRMED`, `FALSIFIED`, `BLOCKED`, `REFINED`), target level, DAG parents, entities, tags, or text |
 | `epires_add_relation` | Links hypotheses, experiments, and evidence with semantic relations (SUPERSEDES, CONFLICTS_WITH, REFINES, BLOCKS, GATED_BY) |
 | `epires_list_relations` | Lists persisted graph relation edges, optionally filtered by relation type |
-| `epires_bulk_import` | Ingests a batch of hypotheses, evidence, relations, experiments, and traces in a single fast transaction |
+| `epires_bulk_import` | Ingests batches of hypotheses and evidence from JSON in one transaction |
 | `epires_export_graph` | Exports entire research memory to portable versioned JSON with SHA256 checksum |
 | `epires_import_graph` | Reproducibly imports research graph bundle from JSON with full entity fidelity |
 | `epires_query_graph` | Queries hypotheses by ID or status with compact mode support to prevent context bloat |
@@ -396,6 +396,14 @@ Epires exposes 33 deterministic MCP tools for AI agents:
 | `epires_parallel_extract` | Structured full text/markdown extraction from specific URLs |
 | `epires_export_mermaid_dag` | Exports knowledge graph DAG into Mermaid Markdown with subtree filtering (`root_id`, `depth`) |
 | `epires_record_trace` | Logs strategic rationale into SQLite traces and Markdown ledger |
+| `audit_hypothesis` | Runs deterministic provenance, gate, and ledger-integrity checks for one hypothesis |
+| `algedonic_check` | Finds contradiction, audit-failure, repeated-blocking, and trace-budget pain signals |
+| `algedonic_freeze` | Quarantines a branch by cascading `BLOCKED` to downstream dependencies |
+| `score_experiments` | Ranks candidate experiments against a supplied quality-weight vector |
+| `calibrated_p` | Corrects an agent's stated probability using its calibration history |
+| `pheromone_rank` | Ranks hypotheses by stigmergic activity weight |
+| `compute_evidence_level` | Recomputes the gated aggregate evidence level from selected evidence IDs |
+| `s3_audit_confirmed` | Runs the independent S3* audit over all `CONFIRMED` hypotheses |
 
 ---
 
@@ -412,9 +420,7 @@ EPIRES_EVAL_MODEL=opencode/x-preview-f-free \
   python -m sandbox.run_eval --all --variant protocol --agent opencode
 ```
 
-17 scenarios cover: Duhem–Quine attribution (`planted_bug`, `hidden_confound`, `baseline_stale`), selection bias (`selection_bias`, `survivor_bias`), metric traps (`goal_metric_mismatch`, `seed_luck`), leakage (`leakage_gap`, `open_leak_hunt`), test manipulation (`planted_manipulation`), premature commitment (`commitment_trap`, `repro_flip`), self-evaluation bias (`double_blind_missing`), vacuous confirmation (`vacuous_confirm`), drift (`metric_drift`), conflicts (`conflicting`, `open_web_prior`).
-
-Measured result (protocol.md decision prompt): frontier-class model 15/15 PASS; free-tier models pass the easy half only — the battery discriminates.
+The current suite contains 22 scenarios covering Duhem–Quine attribution, selection bias, metric traps, leakage, test manipulation, premature commitment, self-evaluation bias, vacuous confirmation, drift, conflicts, bootstrap gates, quarantine, reward hacking, and multi-hop reasoning. Results are written per model and prompt variant; the README does not treat a historical best-of-N run as a current benchmark.
 
 ## 9. Testing & Mathematical Fuzzing
 
@@ -422,7 +428,7 @@ The engine is verified using **property-based fuzz testing** powered by `hypothe
 
 ```bash
 pytest -v
-============================== 38 passed in 4.08s ==============================
+201 passed, 2 skipped
 ```
 
 ### Verified Mathematical Invariants:

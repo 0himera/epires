@@ -51,6 +51,8 @@ def get_canonical_schema() -> Dict[str, Any]:
             "citation_or_path": "artifacts/metrics/run1.json",
             "artifact_hash": "SHA-256 of the cited artifact (string, required for local artifacts)",
             "commit_hash": "Git commit associated with the evidence (string, optional)",
+            "assumption_ids": ["Auxiliary assumption IDs implicated by this evidence"],
+            "prediction": "Prediction recorded before results (string, optional; contributes to G3)",
         },
         "python_quickstart": """
 from epires_core import EpiresStore, HypothesisNode, EvidenceClaim, EvidenceLevel, HypothesisStatus, SourceConfidence
