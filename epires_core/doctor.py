@@ -67,7 +67,9 @@ def run_epires_doctor(project_dir: Path | None = None, deep: bool = False) -> Li
     checks.append(c_py)
 
     # 1b. Installed package provenance and project lock membership
-    c_package = DoctorCheck("Epires Package Provenance", "Reports version and whether Epires is represented in the lock")
+    c_package = DoctorCheck(
+        "Epires Package Provenance", "Reports version and whether Epires is represented in the lock"
+    )
     try:
         installed_version = importlib_metadata.version("epires")
     except importlib_metadata.PackageNotFoundError:
@@ -249,10 +251,7 @@ def run_epires_doctor(project_dir: Path | None = None, deep: bool = False) -> Li
 
     if deep:
         c_help = DoctorCheck("CLI Help Smoke", "Runs the safety-critical log-evidence help path")
-        probe = (
-            "from epires_core.cli import main; import sys; "
-            "sys.argv=['epires','log-evidence','--help']; main()"
-        )
+        probe = "from epires_core.cli import main; import sys; sys.argv=['epires','log-evidence','--help']; main()"
         try:
             result = subprocess.run(
                 [sys.executable, "-c", probe],

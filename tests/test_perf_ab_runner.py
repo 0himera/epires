@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -340,8 +341,7 @@ def test_web_ablation_skill_policies_change_only_the_registered_factor(
     runner._apply_epires_condition_policy(workspace, condition)
 
     policies = [
-        (workspace / relative).read_text(encoding="utf-8")
-        for relative in runner.EPIRES_SKILL_RELATIVE_PATHS[:2]
+        (workspace / relative).read_text(encoding="utf-8") for relative in runner.EPIRES_SKILL_RELATIVE_PATHS[:2]
     ]
     assert len(set(policies)) == 1
     assert must_contain in policies[0]
@@ -377,9 +377,7 @@ def test_web_auth_is_opt_in_and_copied_without_leaking_value(tmp_path, monkeypat
     monkeypatch.delenv("PARALLEL_API_KEY", raising=False)
 
     disabled = RunConfig(task_dir=tmp_path, condition="bare", model="provider/model")
-    disabled_env, _, disabled_web = runner._isolated_env(
-        disabled, "epires", tmp_path / "disabled-env"
-    )
+    disabled_env, _, disabled_web = runner._isolated_env(disabled, "epires", tmp_path / "disabled-env")
     assert disabled_web is False
     assert "PARALLEL_API_KEY" not in disabled_env
     assert not (Path(disabled_env["HOME"]) / ".epires" / "credentials.json").exists()
@@ -390,13 +388,12 @@ def test_web_auth_is_opt_in_and_copied_without_leaking_value(tmp_path, monkeypat
         model="provider/model",
         enable_web_auth=True,
     )
-    enabled_env, _, enabled_web = runner._isolated_env(
-        enabled, "epires", tmp_path / "enabled-env"
-    )
+    enabled_env, _, enabled_web = runner._isolated_env(enabled, "epires", tmp_path / "enabled-env")
     copied = Path(enabled_env["HOME"]) / ".epires" / "credentials.json"
     assert enabled_web is True
     assert copied.read_text(encoding="utf-8") == credentials.read_text(encoding="utf-8")
-    assert copied.stat().st_mode & 0o777 == 0o600
+    if os.name != "nt":
+        assert copied.stat().st_mode & 0o777 == 0o600
 
 
 def test_web_condition_refuses_to_run_without_explicit_web_auth(tmp_path, monkeypatch):

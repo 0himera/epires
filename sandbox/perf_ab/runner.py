@@ -340,9 +340,7 @@ def _apply_direct_implementation_ablation(workspace: Path) -> None:
     for skill_path in skill_paths:
         skill = skill_path.read_text(encoding="utf-8")
         if skill_law not in skill:
-            raise RuntimeError(
-                f"cannot apply direct ablation: canonical Iron Law not found in {skill_path}"
-            )
+            raise RuntimeError(f"cannot apply direct ablation: canonical Iron Law not found in {skill_path}")
         skill = skill.replace(skill_law, direct_law, 1)
         skill = skill.replace("[Delegate to Coder]", "[Implement Directly]", 1)
         skill = skill.replace(
@@ -502,9 +500,7 @@ def _install_agents_only_policy(workspace: Path, *, policy: str, mode: str) -> N
         if separator:
             body = remainder
     (workspace / "AGENTS.md").write_text(
-        "# AGENTS.md — Epires benchmark policy\n\n"
-        f"Mode: `{mode}`.\n\n"
-        + body.lstrip(),
+        f"# AGENTS.md — Epires benchmark policy\n\nMode: `{mode}`.\n\n" + body.lstrip(),
         encoding="utf-8",
     )
 
@@ -544,7 +540,9 @@ def _apply_epires_condition_policy(workspace: Path, condition: Condition) -> Non
     raise ValueError(f"unsupported Epires condition policy: {condition.value}")
 
 
-def _prepare_workspace(config: RunConfig, workspace: Path, env: Mapping[str, str], epires_bin: str) -> list[_CommandResult]:
+def _prepare_workspace(
+    config: RunConfig, workspace: Path, env: Mapping[str, str], epires_bin: str
+) -> list[_CommandResult]:
     setup_results: list[_CommandResult] = []
     if config.condition is not Condition.BARE:
         setup_results.append(

@@ -49,7 +49,6 @@ COMPILE_FLAGS = (
     "-std=c++17",
     "-march=native",
     "-DNDEBUG",
-    "-fopenmp",
     "-Wall",
     "-Wextra",
 )
@@ -67,11 +66,10 @@ def _run_git(workspace: Path, args: list[str]) -> subprocess.CompletedProcess[st
 
 
 def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as source:
-        while block := source.read(1024 * 1024):
-            digest.update(block)
-    return digest.hexdigest()
+    # All protected benchmark assets are text. Normalize checkout line endings
+    # so the same manifest works on GitHub's Linux, macOS, and Windows runners.
+    content = path.read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(content).hexdigest()
 
 
 def _is_ignored_untracked(path: str) -> bool:
@@ -134,9 +132,7 @@ def check_submission(workspace: Path, base_revision: str | None) -> tuple[dict[s
             workspace,
             ["diff", "--relative", "--name-only", "--diff-filter=ACDMRTUXB", resolved_revision, "--", "."],
         )
-        untracked = _run_git(
-            workspace, ["ls-files", "--others", "--exclude-standard", "--", "."]
-        )
+        untracked = _run_git(workspace, ["ls-files", "--others", "--exclude-standard", "--", "."])
         if changed.returncode != 0 or untracked.returncode != 0:
             git_error = (changed.stderr + "\n" + untracked.stderr).strip()
             diff_violations.append("git diff inspection failed")
@@ -221,10 +217,27 @@ def _cpu_model() -> str | None:
 
 def _compiler_version(compiler: str) -> str:
     result = subprocess.run(
-        [compiler, "--version"], text=True, stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT, timeout=10, check=False
+        [compiler, "--version"], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=10, check=False
     )
     return result.stdout.splitlines()[0] if result.stdout else "unknown"
+
+
+def _openmp_flags(compiler: str) -> tuple[str, ...]:
+    """Enable OpenMP only when the selected compiler can compile and link it."""
+
+    try:
+        probe = subprocess.run(
+            [compiler, "-std=c++17", "-fopenmp", "-x", "c++", "-", "-o", os.devnull],
+            input="int main() { return 0; }\n",
+            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ()
+    return ("-fopenmp",) if probe.returncode == 0 else ()
 
 
 def _empty_correctness(failure: str) -> dict[str, Any]:
@@ -251,6 +264,8 @@ def grade(workspace: Path, base_revision: str | None) -> dict[str, Any]:
     diff_check, tamper_check = check_submission(workspace, base_revision)
     selected_cpus = _select_cpus()
     compiler = shutil.which(os.environ.get("CXX", "g++"))
+    openmp_flags = _openmp_flags(compiler) if compiler is not None else ()
+    compile_flags = (*COMPILE_FLAGS, *openmp_flags)
     metadata: dict[str, Any] = {
         "platform": platform.platform(),
         "machine": platform.machine(),
@@ -258,9 +273,10 @@ def grade(workspace: Path, base_revision: str | None) -> dict[str, Any]:
         "available_affinity_cpus": _available_affinity(),
         "selected_affinity_cpus": selected_cpus,
         "affinity_enforced": False,
-        "omp_threads": len(selected_cpus),
+        "omp_threads": len(selected_cpus) if openmp_flags else 1,
+        "openmp_enabled": bool(openmp_flags),
         "compiler": compiler,
-        "compile_flags": list(COMPILE_FLAGS),
+        "compile_flags": list(compile_flags),
         "paired_interleaved": True,
         "baseline_rerun_in_candidate_process": True,
     }
@@ -291,7 +307,7 @@ def grade(workspace: Path, base_revision: str | None) -> dict[str, Any]:
         executable = Path(temporary) / "hidden_driver"
         compile_command = [
             compiler,
-            *COMPILE_FLAGS,
+            *compile_flags,
             f"-I{workspace / 'include'}",
             str(workspace / "src" / "kernel.cpp"),
             str(hidden_dir / "pristine_baseline.cpp"),
@@ -302,8 +318,13 @@ def grade(workspace: Path, base_revision: str | None) -> dict[str, Any]:
         compile_started = time.monotonic()
         try:
             compiled = subprocess.run(
-                compile_command, text=True, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, timeout=30, check=False, cwd=temporary
+                compile_command,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=30,
+                check=False,
+                cwd=temporary,
             )
         except subprocess.TimeoutExpired as error:
             result["status"] = "build_timeout"
@@ -343,9 +364,15 @@ def grade(workspace: Path, base_revision: str | None) -> dict[str, Any]:
         run_started = time.monotonic()
         try:
             executed = subprocess.run(
-                [str(executable)], text=True, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, timeout=45, check=False, cwd=temporary,
-                env=environment, preexec_fn=preexec_fn
+                [str(executable)],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=45,
+                check=False,
+                cwd=temporary,
+                env=environment,
+                preexec_fn=preexec_fn,
             )
             metadata["affinity_enforced"] = preexec_fn is not None
         except subprocess.TimeoutExpired as error:

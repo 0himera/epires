@@ -149,7 +149,10 @@ def test_mcp_server_tools():
         assert log_evidence_tool.parameters["$defs"][confidence_ref]["enum"] == ["V", "P", "D"]
         assert "V = verified primary artifact" in confidence_schema["description"]
         assert "Use exactly one of V, P, or D" in confidence_schema["description"]
-        assert "Do not combine paths, commands, or notes" in log_evidence_tool.parameters["properties"]["citation_or_path"]["description"]
+        assert (
+            "Do not combine paths, commands, or notes"
+            in log_evidence_tool.parameters["properties"]["citation_or_path"]["description"]
+        )
         assert "prediction" in log_evidence_tool.parameters["properties"]
 
         expected_enum_refs = {

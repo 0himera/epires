@@ -42,8 +42,7 @@ class EvidenceMixin:
             and ev.evidence_level in {EvidenceLevel.E3, EvidenceLevel.E4, EvidenceLevel.E5}
             and bool((ev.metric_name or "").strip())
             and any(
-                value is not None
-                for value in (ev.metric_value, ev.delta_vs_baseline, ev.ci_95_lower, ev.ci_95_upper)
+                value is not None for value in (ev.metric_value, ev.delta_vs_baseline, ev.ci_95_lower, ev.ci_95_upper)
             )
         ):
             conditions = parse_falsification_criteria(h.falsification_criteria)

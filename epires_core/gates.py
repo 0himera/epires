@@ -108,10 +108,7 @@ def check_g2(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
     # E0/E1 preregistration and implementation records must not move the
     # temporal anchor earlier than the first E3+ result.
     times = [
-        t
-        for e in evs
-        for t in [_ts(_field(e, "timestamp", ""))]
-        if t is not None and _level(e) in ("E3", "E4", "E5")
+        t for e in evs for t in [_ts(_field(e, "timestamp", ""))] if t is not None and _level(e) in ("E3", "E4", "E5")
     ]
     # Before a quantitative result exists, registration itself is sufficient
     # for the historical G2 predicate; once an E3+ result exists the temporal
@@ -149,11 +146,7 @@ def check_g3(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
         return False
     # E0 evidence can be the preregistration itself, so compare preregistration
     # records to the first later evidence rather than to themselves.
-    result_times = [
-        _ts(_field(e, "timestamp", ""))
-        for e in evs
-        if _level(e) in ("E3", "E4", "E5")
-    ]
+    result_times = [_ts(_field(e, "timestamp", "")) for e in evs if _level(e) in ("E3", "E4", "E5")]
     result_times = [t for t in result_times if t is not None]
     earliest = min(result_times or times)
     hypothesis_id = getattr(hypothesis, "id", None)
@@ -191,11 +184,7 @@ def check_g3(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
             original_ts = _ts(details.get("original_evidence_timestamp", ""))
             path = str(details.get("artifact_path", "") or "")
             digest = str(details.get("artifact_hash", "") or "").strip().lower()
-            if (
-                original_ts is None
-                or not path
-                or not re.fullmatch(r"[0-9a-f]{64}", digest)
-            ):
+            if original_ts is None or not path or not re.fullmatch(r"[0-9a-f]{64}", digest):
                 continue
             # The migration timestamp is allowed to be after the result, but
             # the claimed historical timestamp must be grounded in an active
@@ -216,6 +205,7 @@ def check_g3(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
                 continue
             try:
                 import hashlib
+
                 if hashlib.sha256(p.read_bytes()).hexdigest().lower() != digest:
                     continue
             except OSError:
@@ -223,7 +213,6 @@ def check_g3(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
             tts = _ts(_field(tr, "timestamp", "") or "")
             if tts is not None:
                 return True
-            continue
         if (
             not isinstance(details, dict)
             or not isinstance(details.get("artifact_hash"), str)
@@ -247,10 +236,7 @@ def check_g4(evidence: Any, hypothesis: Any = None, experiments: Any = None, tra
     conditions = parse_falsification_criteria(crit)
 
     quantitative_evs = [
-        ev
-        for ev in evs
-        if _level(ev) in ("E3", "E4", "E5")
-        and bool((_field(ev, "metric_name", "") or "").strip())
+        ev for ev in evs if _level(ev) in ("E3", "E4", "E5") and bool((_field(ev, "metric_name", "") or "").strip())
     ]
     if not quantitative_evs:
         return False
@@ -306,11 +292,16 @@ def _condition_matches_metric(cond: Any, metric_name: str) -> bool:
         return True
     if not cond_metric or not evidence_metric:
         return False
+
     def norm(value: str) -> set[str]:
         return set(re.findall(r"[a-z0-9]+", value.replace("_", " ")))
 
     left, right = norm(cond_metric), norm(evidence_metric)
-    return bool(left and right and (cond_metric in evidence_metric or evidence_metric in cond_metric or left <= right or right <= left))
+    return bool(
+        left
+        and right
+        and (cond_metric in evidence_metric or evidence_metric in cond_metric or left <= right or right <= left)
+    )
 
 
 def check_g5(evidence: Any, hypothesis: Any = None, experiments: Any = None, traces: Any = None, **kw: Any) -> bool:

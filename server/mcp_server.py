@@ -238,11 +238,15 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         ci_95_upper: Optional[float] = None,
         falsification_triggered: Annotated[
             bool,
-            Field(description="Set true only when this evidence directly meets the registered falsification criterion."),
+            Field(
+                description="Set true only when this evidence directly meets the registered falsification criterion."
+            ),
         ] = False,
         auto_falsification: Annotated[
             bool,
-            Field(description="For E3-E5 metric evidence, evaluate the registered falsification criterion automatically."),
+            Field(
+                description="For E3-E5 metric evidence, evaluate the registered falsification criterion automatically."
+            ),
         ] = True,
         citation_or_path: Annotated[
             str,
@@ -255,7 +259,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
         ] = "",
         artifact_hash: Annotated[
             Optional[str],
-            Field(description="SHA-256 of citation_or_path. Omit when citation_or_path is a readable local file; Epires computes it."),
+            Field(
+                description="SHA-256 of citation_or_path. Omit when citation_or_path is a readable local file; Epires computes it."
+            ),
         ] = None,
         commit_hash: Annotated[
             Optional[str],
@@ -339,8 +345,12 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     @mcp.tool()
     def epires_update_hypothesis(
         id: str,
-        status: Annotated[Optional[HypothesisStatus], Field(description=HypothesisStatusArg.__metadata__[0].description)] = None,
-        target_evidence_level: Annotated[Optional[EvidenceLevel], Field(description=EvidenceLevelArg.__metadata__[0].description)] = None,
+        status: Annotated[
+            Optional[HypothesisStatus], Field(description=HypothesisStatusArg.__metadata__[0].description)
+        ] = None,
+        target_evidence_level: Annotated[
+            Optional[EvidenceLevel], Field(description=EvidenceLevelArg.__metadata__[0].description)
+        ] = None,
         title: Optional[str] = None,
         a_priori_mechanism: Optional[str] = None,
         falsification_criteria: Optional[str] = None,
@@ -417,7 +427,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
 
     @mcp.tool()
     def epires_list_relations(
-        relation_type: Annotated[Optional[RelationType], Field(description=RelationTypeArg.__metadata__[0].description)] = None,
+        relation_type: Annotated[
+            Optional[RelationType], Field(description=RelationTypeArg.__metadata__[0].description)
+        ] = None,
     ) -> str:
         """List persisted graph relation edges, optionally filtered by relation type."""
         rel_enum = RelationType(relation_type) if relation_type else None
@@ -474,7 +486,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
 
     @mcp.tool()
     def epires_query_graph(
-        status: Annotated[Optional[HypothesisStatus], Field(description=HypothesisStatusArg.__metadata__[0].description)] = None,
+        status: Annotated[
+            Optional[HypothesisStatus], Field(description=HypothesisStatusArg.__metadata__[0].description)
+        ] = None,
         h_id: Optional[str] = None,
         compact: bool = True,
     ) -> str:
@@ -569,7 +583,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     @mcp.tool()
     def epires_find_gaps(
         dimensions: List[str],
-        min_tested: Annotated[int, Field(ge=1, description="Minimum experiment count required to consider a combination tested.")] = 1,
+        min_tested: Annotated[
+            int, Field(ge=1, description="Minimum experiment count required to consider a combination tested.")
+        ] = 1,
     ) -> str:
         """Find untested or under-explored parameter/feature/model combinations (White Spot Gap Analysis).
 
@@ -582,7 +598,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     @mcp.tool()
     def epires_associative_search(
         query: Optional[str] = None,
-        status: Annotated[Optional[HypothesisStatus], Field(description=HypothesisStatusArg.__metadata__[0].description)] = None,
+        status: Annotated[
+            Optional[HypothesisStatus], Field(description=HypothesisStatusArg.__metadata__[0].description)
+        ] = None,
         limit: Annotated[int, Field(ge=1, description="Maximum number of search results.")] = 5,
     ) -> str:
         """Perform VSA cosine similarity search across the hypothesis hypergraph."""
@@ -648,7 +666,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     @mcp.tool()
     def epires_export_mermaid_dag(
         root_id: Optional[str] = None,
-        depth: Annotated[int, Field(ge=-1, description="Maximum hops from root_id; -1 means all reachable nodes.")] = -1,
+        depth: Annotated[
+            int, Field(ge=-1, description="Maximum hops from root_id; -1 means all reachable nodes.")
+        ] = -1,
         frontier_only: bool = False,
         status_filter: Annotated[
             Optional[Union[List[HypothesisStatus], str]],
@@ -689,7 +709,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
             Literal["turbo", "fast", "basic", "advanced"],
             Field(description="Parallel search preset: turbo, fast, basic, or advanced."),
         ] = "fast",
-        max_chars: Annotated[Optional[int], Field(gt=0, description="Optional positive total character budget.")] = None,
+        max_chars: Annotated[
+            Optional[int], Field(gt=0, description="Optional positive total character budget.")
+        ] = None,
         max_results: Annotated[Optional[int], Field(gt=0, description="Optional positive result-count limit.")] = None,
     ) -> str:
         """Execute parallel multi-topic literature and web search using parallel-web 1.3.0 SDK.
@@ -753,7 +775,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
 
     @mcp.tool()
     def algedonic_check(
-        n_failures_threshold: Annotated[int, Field(ge=1, description="Minimum blocked descendants for an n_failures trigger.")] = 3,
+        n_failures_threshold: Annotated[
+            int, Field(ge=1, description="Minimum blocked descendants for an n_failures trigger.")
+        ] = 3,
     ) -> str:
         """Check algedonic triggers (pain signals) across the graph, filtered by failure threshold."""
         triggers = [t for t in store.check_algedonic() if t.get("n_failures", 0) >= n_failures_threshold]
@@ -776,7 +800,9 @@ def create_mcp_server(db_path: str = ".epires/hypotheses.db", trace_md: str = "d
     @mcp.tool()
     def calibrated_p(
         agent_id: str,
-        stated_p: Annotated[float, Field(ge=0.0, le=1.0, description="Agent's stated probability in the closed interval [0, 1].")],
+        stated_p: Annotated[
+            float, Field(ge=0.0, le=1.0, description="Agent's stated probability in the closed interval [0, 1].")
+        ],
     ) -> str:
         """Compute the calibration-corrected probability for an agent's stated probability."""
         return json.dumps(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -19,9 +20,15 @@ def _load_grader():
     return module
 
 
-def _pristine_repo(tmp_path: Path) -> Path:
+def _pristine_repo(tmp_path: Path, *, crlf: bool = False) -> Path:
     workspace = tmp_path / "submission"
     shutil.copytree(TASK / "project", workspace)
+    if crlf:
+        manifest = json.loads((TASK / "hidden" / "protected_manifest.json").read_text(encoding="utf-8"))["sha256"]
+        for relative in manifest:
+            protected = workspace / relative
+            content = protected.read_bytes().replace(b"\r\n", b"\n")
+            protected.write_bytes(content.replace(b"\n", b"\r\n"))
     subprocess.run(["git", "init", "-q"], cwd=workspace, check=True)
     subprocess.run(["git", "add", "."], cwd=workspace, check=True)
     subprocess.run(
@@ -90,6 +97,19 @@ def test_integrity_ignores_tracked_epires_trace_telemetry(tmp_path: Path) -> Non
     assert tamper_check["passed"] is True
 
 
+def test_integrity_accepts_windows_crlf_checkout(tmp_path: Path) -> None:
+    grader = _load_grader()
+    workspace = _pristine_repo(tmp_path, crlf=True)
+    kernel = workspace / "src" / "kernel.cpp"
+    with kernel.open("a", encoding="utf-8", newline="") as output:
+        output.write("\r\n// candidate optimization\r\n")
+
+    diff_check, tamper_check = grader.check_submission(workspace, "HEAD")
+
+    assert diff_check["passed"] is True
+    assert tamper_check["passed"] is True
+
+
 def test_integrity_rejects_protected_and_untracked_code(tmp_path: Path) -> None:
     grader = _load_grader()
     workspace = _pristine_repo(tmp_path)
@@ -115,3 +135,14 @@ def test_cli_supports_runner_and_workspace_names() -> None:
     assert runner_args.output == Path("/tmp/result")
     assert alias_args.workspace == Path("/tmp/candidate")
     assert alias_args.base_revision == "abc"
+
+
+def test_openmp_is_optional_when_compiler_rejects_flag(monkeypatch) -> None:
+    grader = _load_grader()
+
+    def reject_openmp(*args, **kwargs):
+        return subprocess.CompletedProcess(args[0], 1, "", "unsupported option '-fopenmp'")
+
+    monkeypatch.setattr(grader.subprocess, "run", reject_openmp)
+
+    assert grader._openmp_flags("clang++") == ()

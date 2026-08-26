@@ -184,15 +184,10 @@ def test_row_only_append_changes_only_evidence_table(tmp_path):
                 )
                 if row[0] != "evidence"
             ]
-            return {
-                table: sorted(map(repr, conn.execute(f'SELECT * FROM "{table}"').fetchall()))
-                for table in tables
-            }
+            return {table: sorted(map(repr, conn.execute(f'SELECT * FROM "{table}"').fetchall())) for table in tables}
 
     before = snapshot()
-    _, report = store.append_evidence_row_only(
-        EvidenceClaim(id="EV-ROW", hypothesis_id="H-ROW", claim="authorization")
-    )
+    _, report = store.append_evidence_row_only(EvidenceClaim(id="EV-ROW", hypothesis_id="H-ROW", claim="authorization"))
     assert snapshot() == before
     assert report == {
         "changed_tables": ["evidence"],
