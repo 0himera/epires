@@ -307,7 +307,15 @@ if __name__ == "__main__":
             f"{method.upper():<20} | {metrics['MRR']:<15.4f} | {metrics['Recall@1']:<15.4f} | {metrics['Recall@5']:<15.4f}"
         )
     print("-" * 75)
-    print(">> OBSERVATION: Hybrid FTS5+VSA outperforms Pure VSA and Pure FTS5 across all metrics.\n")
+    metric_names = ("MRR", "Recall@1", "Recall@5")
+    winners = {
+        metric: max(eval_metrics, key=lambda method: eval_metrics[method][metric]).upper() for metric in metric_names
+    }
+    print(
+        ">> OBSERVATION: Best measured method by metric: "
+        + ", ".join(f"{metric}={winners[metric]}" for metric in metric_names)
+        + ".\n"
+    )
 
     # 2. Latency and Scalability
     print("[2/4] Benchmarking Latency & Scaling across corpus sizes...")
@@ -320,7 +328,12 @@ if __name__ == "__main__":
             f"{row['scale_n']:<12} | {row['vsa_matrix_latency_ms']:<18.4f} | {row['hybrid_search_latency_ms']:<20.4f} | {row['throughput_qps']:<15.1f}"
         )
     print("-" * 75)
-    print(">> OBSERVATION: Sub-millisecond latency (<0.8ms) maintained up to 2,000 active nodes.\n")
+    largest = scaling_results[-1]
+    print(
+        f">> OBSERVATION: At {largest['scale_n']:,} nodes, measured VSA matrix latency was "
+        f"{largest['vsa_matrix_latency_ms']:.4f} ms and hybrid search latency was "
+        f"{largest['hybrid_search_latency_ms']:.4f} ms ({largest['throughput_qps']:.1f} QPS).\n"
+    )
 
     # 3. DAG Cascading Falsification
     print("[3/4] Benchmarking DAG Cascading Falsification & Tree Invalidation...")
@@ -330,7 +343,10 @@ if __name__ == "__main__":
     print(f"Cascaded BLOCKED:    {dag_res['blocked_nodes_count']} hypotheses")
     print(f"Propagation Latency: {dag_res['cascade_latency_ms']} ms")
     print("-" * 75)
-    print(">> OBSERVATION: Instantaneous DAG cascading across hundreds of dependent nodes in <1ms.\n")
+    print(
+        f">> OBSERVATION: Cascaded BLOCKED to {dag_res['blocked_nodes_count']} dependent hypotheses in "
+        f"{dag_res['cascade_latency_ms']:.3f} ms.\n"
+    )
 
     # 4. Real Data Profiling
     print("[4/4] Profiling Real-world Research Databases (ozonecup & socomputing)...")
